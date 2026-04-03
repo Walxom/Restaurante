@@ -1,0 +1,263 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  username        String    @unique
+  name            String
+  password        String
+  role            String    @default("MESERO")
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  invoices        Invoice[]
+  orders          Order[]
+  updatedPrinters Printer[] @relation("PrinterUpdater")
+  createdPrinters Printer[] @relation("PrinterCreator")
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal
+  isAvailable Boolean     @default(true)
+  isActive    Boolean     @default(true)
+  categoryId  String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+  category    Category    @relation(fields: [categoryId], references: [id])
+  recipe      Recipe?
+
+  @@map("products")
+}
+
+model Table {
+  id        String   @id @default(cuid())
+  number    Int      @unique
+  capacity  Int
+  status    String   @default("DISPONIBLE")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+
+  @@map("tables")
+}
+
+model Order {
+  id                       String      @id @default(cuid())
+  orderNumber              String      @unique
+  type                     String      @default("MESA")
+  status                   String      @default("CONFIRMED")
+  totalAmount              Decimal     @default(0)
+  tableId                  String?
+  userId                   String
+  customerName             String?
+  customerDni              String?
+  customerPhone            String?
+  customerAddress          String?
+  customerAddressReference String?
+  notes                    String?
+  startDate                DateTime?
+  endDate                  DateTime?
+  createdAt                DateTime    @default(now())
+  updatedAt                DateTime    @updatedAt
+  invoice                  Invoice?
+  orderItems               OrderItem[]
+  user                     User        @relation(fields: [userId], references: [id])
+  table                    Table?      @relation(fields: [tableId], references: [id])
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  quantity  Int
+  unitPrice Decimal
+  subtotal  Decimal
+  notes     String?
+  status    String   @default("PENDING")
+  orderId   String
+  productId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+model IngredientCategory {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  color       String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  ingredients Ingredient[]
+
+  @@map("ingredient_categories")
+}
+
+model Ingredient {
+  id                String              @id @default(cuid())
+  name              String              @unique
+  unit              String
+  unitCategory      String?
+  currentStock      Float
+  minStock          Float
+  maxStock          Float?
+  cost              Float?
+  categoryId        String?
+  isActive          Boolean             @default(true)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  category          IngredientCategory? @relation(fields: [categoryId], references: [id])
+  recipeIngredients RecipeIngredient[]
+
+  @@map("ingredients")
+}
+
+model Recipe {
+  id           String             @id @default(cuid())
+  productId    String             @unique
+  instructions String?
+  prepTime     Int?
+  servings     Int                @default(1)
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  ingredients  RecipeIngredient[]
+  product      Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("recipes")
+}
+
+model RecipeIngredient {
+  id           String     @id @default(cuid())
+  recipeId     String
+  ingredientId String
+  quantity     Float
+  unit         String
+  notes        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, ingredientId])
+  @@map("recipe_ingredients")
+}
+
+model SystemConfig {
+  id                      String   @id @default(cuid())
+  companyName             String
+  companyAddress          String?
+  companyPhone            String?
+  companyRuc              String?
+  taxRate                 Float    @default(0.18)
+  currency                String   @default("PEN")
+  timezone                String   @default("America/Lima")
+  isPrinterServiceEnabled Boolean  @default(true)
+  lastBoletaNumber        Int      @default(0)
+  lastFacturaNumber       Int      @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("system_config")
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  number          String        @unique
+  type            String
+  orderId         String?       @unique
+  customerName    String?
+  customerRuc     String?
+  customerAddress String?
+  subtotal        Decimal
+  igv             Decimal
+  total           Decimal
+  paymentMethod   String
+  amountPaid      Decimal
+  change          Decimal       @default(0)
+  issuedAt        DateTime      @default(now())
+  issuedBy        String
+  status          String        @default("ISSUED")
+  cancelledAt     DateTime?
+  cancelReason    String?
+  items           InvoiceItem[]
+  user            User          @relation(fields: [issuedBy], references: [id])
+  order           Order?        @relation(fields: [orderId], references: [id])
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Int
+  unitPrice   Decimal
+  total       Decimal
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_items")
+}
+
+model Printer {
+  id                String   @id @default(cuid())
+  name              String
+  type              String
+  connectionType    String
+  ipAddress         String?
+  port              Int?
+  usbPath           String?
+  serialPort        String?
+  bluetoothAddress  String?
+  paperWidth        Int      @default(58)
+  charactersPerLine Int      @default(32)
+  timeout           Int      @default(15000)
+  reconnectAttempts Int      @default(3)
+  reconnectDelay    Int      @default(2000)
+  charset           String   @default("PC437")
+  codepage          String   @default("437")
+  status            String   @default("ACTIVE")
+  isDefault         Boolean  @default(false)
+  description       String?
+  location          String?
+  headerText        String?
+  footerText        String?
+  logo              String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  createdBy         String
+  updatedBy         String?
+  updater           User?    @relation("PrinterUpdater", fields: [updatedBy], references: [id])
+  creator           User     @relation("PrinterCreator", fields: [createdBy], references: [id])
+
+  @@map("printers")
+}
