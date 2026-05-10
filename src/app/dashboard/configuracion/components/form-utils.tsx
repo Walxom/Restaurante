@@ -12,6 +12,7 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { LucideIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface ConfigFieldProps {
   label: string
@@ -22,17 +23,24 @@ interface ConfigFieldProps {
 
 export function ConfigField({ label, icon: Icon, children, prefix }: ConfigFieldProps) {
   return (
-    <div className="space-y-2">
-      <Label className="text-xs uppercase font-bold text-gray-500 tracking-wider">{label}</Label>
+    <div className="space-y-2 group">
+      <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-widest opacity-70 group-focus-within:text-primary group-focus-within:opacity-100 transition-all">
+        {label}
+      </Label>
       <div className="relative flex">
         {prefix && (
-          <div className="flex items-center px-3 border border-r-0 rounded-l-md bg-gray-50 text-gray-500 text-sm font-medium">
+          <div className="flex items-center px-4 border border-r-0 border-border/50 rounded-l-xl bg-background/50 text-muted-foreground text-xs font-black uppercase tracking-widest">
             {prefix}
           </div>
         )}
         <div className="relative flex-1">
-          <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10 pointer-events-none" />
-          {children}
+          <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-40 z-10 pointer-events-none group-focus-within:text-primary group-focus-within:opacity-100 transition-all" />
+          <div className={cn(
+            "relative",
+            prefix ? "[&>input]:rounded-l-none [&>select]:rounded-l-none" : ""
+          )}>
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -53,19 +61,27 @@ export function TimeZoneSelect({ value, onValueChange, timezones }: TimeZoneSele
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className="bg-white pl-10 w-full">
+      <SelectTrigger className="bg-background/50 border-border/50 rounded-xl h-11 pl-11 text-sm font-bold focus:ring-primary/20 hover:bg-background/80 transition-all">
         <SelectValue />
       </SelectTrigger>
-      <SelectContent className="max-h-[300px]">
+      <SelectContent className="bg-card/95 backdrop-blur-xl border-border/50 rounded-2xl shadow-2xl max-h-[300px]">
         {groups.map((group, idx) => (
           <div key={group.label}>
             <SelectGroup>
-              <SelectLabel>{group.label}</SelectLabel>
+              <SelectLabel className="px-4 py-2 text-[9px] font-black uppercase tracking-[0.2em] text-primary/70">
+                {group.label}
+              </SelectLabel>
               {timezones.filter(group.filter).map((tz: any) => (
-                <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
+                <SelectItem 
+                  key={tz.value} 
+                  value={tz.value} 
+                  className="px-4 py-2 font-bold text-xs uppercase tracking-widest focus:bg-primary/10 focus:text-primary transition-colors"
+                >
+                  {tz.label}
+                </SelectItem>
               ))}
             </SelectGroup>
-            {idx < groups.length - 1 && <Separator className="my-2" />}
+            {idx < groups.length - 1 && <Separator className="my-2 opacity-50" />}
           </div>
         ))}
       </SelectContent>

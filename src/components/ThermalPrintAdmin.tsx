@@ -39,49 +39,40 @@ export default function ThermalPrintAdmin() {
   return (
     <div className="space-y-6">
       {/* CARD PRINCIPAL DE CONTROL */}
-      <Card className="border-gray-200 shadow-xl overflow-hidden bg-white">
-        <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <CardTitle className="text-2xl font-bold flex items-center gap-3 text-gray-900">
-                <div className="p-2 bg-blue-600 rounded-lg shadow-blue-200 shadow-lg">
-                  <Printer className="w-6 h-6 text-white" />
-                </div>
-                Servicio de Impresión
-              </CardTitle>
-              <CardDescription className="text-gray-500">
-                Gestión del servidor de impresión térmica local
-              </CardDescription>
+      <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 shadow-sm overflow-hidden transition-all duration-500 hover:shadow-md animate-in fade-in slide-in-from-left-4">
+        <div className="p-6 border-b border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-foreground/5">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-lg shadow-primary/10">
+              <Printer className="w-6 h-6 text-primary" />
             </div>
-
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => checkStatus(true)}
-                disabled={isLoading}
-                className="rounded-full bg-white hover:bg-gray-50"
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Actualizar
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={clearQueue}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Limpiar Cola
-              </Button>
+            <div>
+              <h2 className="text-sm font-black text-foreground uppercase tracking-widest">
+                Estado del Servicio
+              </h2>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                Control del servidor local
+              </p>
             </div>
           </div>
-        </CardHeader>
 
-        <CardContent className="p-0">
-          <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => checkStatus(true)}
+              disabled={isLoading}
+              className="h-8 rounded-xl font-black uppercase tracking-widest text-[9px] border-border/50 bg-background/30 hover:bg-background/50 transition-all"
+            >
+              <RefreshCw className={`w-3 h-3 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Sincronizar
+            </Button>
+          </div>
+        </div>
+
+        <div className="p-0">
+          <div className="grid grid-cols-1">
             {/* PANEL DE ESTADO */}
-            <div className="p-8 space-y-8 border-b md:border-b-0 md:border-r border-gray-100">
+            <div className="p-8 space-y-8 border-b border-border/50">
               <StatusIndicator 
                 serviceStatus={serviceStatus} 
                 hardwareStatus={hardwareStatus} 
@@ -89,19 +80,19 @@ export default function ThermalPrintAdmin() {
               />
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                  <div className="flex items-center gap-2 text-gray-500 mb-1">
-                    <Activity className="w-4 h-4" />
-                    <span className="text-xs font-semibold uppercase tracking-wider">Conexión</span>
+                <div className="p-4 rounded-2xl bg-background/40 border border-border/50 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <Activity className="w-3.5 h-3.5" />
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em]">Conexión</span>
                   </div>
-                  <p className="text-sm font-bold text-gray-900">{connectionType || 'Desconocida'}</p>
+                  <p className="text-xs font-black text-foreground uppercase tracking-widest">{connectionType || '---'}</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                  <div className="flex items-center gap-2 text-gray-500 mb-1">
-                    <Clock className="w-4 h-4" />
-                    <span className="text-xs font-semibold uppercase tracking-wider">Visto</span>
+                <div className="p-4 rounded-2xl bg-background/40 border border-border/50 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em]">Sincro</span>
                   </div>
-                  <p className="text-sm font-bold text-gray-900">
+                  <p className="text-xs font-black text-foreground uppercase tracking-widest">
                     {lastChecked ? lastChecked.toLocaleTimeString() : '--:--:--'}
                   </p>
                 </div>
@@ -109,40 +100,50 @@ export default function ThermalPrintAdmin() {
             </div>
 
             {/* PANEL DE ACCIONES */}
-            <div className="p-8 bg-gray-50/30 flex flex-col justify-center gap-6">
-              <div className="space-y-4">
+            <div className="p-8 bg-foreground/[0.02] flex flex-col justify-center gap-6">
+              <div className="space-y-6">
                 {serviceStatus === 'inactive' || serviceStatus === 'error' ? (
                   <Button 
                     onClick={startService}
                     disabled={isLoading}
-                    className="w-full h-14 text-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100 rounded-2xl transition-all active:scale-95"
+                    className="w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] bg-primary shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 group"
                   >
-                    <Play className="w-6 h-6 mr-3 fill-current" />
-                    Iniciar Servicio
+                    <Play className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" />
+                    Activar Servidor
                   </Button>
                 ) : (
                   <Button 
                     variant="outline"
                     onClick={() => setShowStopModal(true)}
                     disabled={isLoading}
-                    className="w-full h-14 text-lg font-bold border-red-200 text-red-600 hover:bg-red-50 rounded-2xl transition-all"
+                    className="w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] border-rose-500/30 text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 transition-all"
                   >
-                    <Square className="w-5 h-5 mr-3 fill-current" />
+                    <Square className="w-4 h-4 mr-3 fill-current" />
                     Detener Servicio
                   </Button>
                 )}
 
-                <div className="flex items-start gap-3 p-4 bg-white border border-gray-200 rounded-2xl">
-                  <Info className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    El servicio debe estar <span className="font-bold text-blue-600">Activo</span> para poder enviar pedidos a cocina y generar boletas.
+                <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/10 rounded-2xl">
+                  <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <p className="text-[10px] font-bold text-primary/70 leading-relaxed uppercase tracking-wider">
+                    El servidor centraliza todas las peticiones de impresión de la red local.
                   </p>
                 </div>
+
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={clearQueue}
+                  className="w-full h-10 rounded-xl font-black uppercase tracking-widest text-[9px] text-rose-500/60 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+                >
+                  <Trash2 className="w-3 h-3 mr-2" />
+                  Vaciar Cola de Impresión
+                </Button>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* DIALOGO DE CONFIRMACIÓN */}
       <ConfirmationModal
@@ -154,7 +155,7 @@ export default function ThermalPrintAdmin() {
         }}
         title="¿Detener el servicio?"
         description="Al detener el servicio de impresión, el sistema no podrá imprimir tickets ni boletas hasta que se inicie nuevamente de forma manual."
-        confirmText="Sí, detener servicio"
+        confirmText="Confirmar"
         cancelText="Cancelar"
         variant="danger"
         icon={AlertCircle}
@@ -167,43 +168,52 @@ export default function ThermalPrintAdmin() {
 // SUB-COMPONENTES INTERNOS PARA MEJORAR LA LEGIBILIDAD
 
 function StatusIndicator({ serviceStatus, hardwareStatus, message }: any) {
-  const getStatusColor = () => {
-    if (serviceStatus === 'active') {
-      return hardwareStatus === 'connected' ? 'text-emerald-600' : 'text-amber-600'
-    }
-    if (serviceStatus === 'error') return 'text-red-600'
-    return 'text-gray-400'
-  }
+  const isOnline = serviceStatus === 'active' && hardwareStatus === 'connected'
+  const isWarning = serviceStatus === 'active' && hardwareStatus !== 'connected'
+  const isError = serviceStatus === 'error'
 
-  const getBadgeVariant = () => {
-    if (serviceStatus === 'active') return hardwareStatus === 'connected' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-    return 'bg-gray-100 text-gray-600'
+  const getStatusColor = () => {
+    if (isOnline) return 'text-emerald-500'
+    if (isWarning) return 'text-orange-500'
+    if (isError) return 'text-rose-500'
+    return 'text-muted-foreground'
   }
 
   return (
-    <div className="flex flex-col items-center text-center space-y-4">
+    <div className="flex flex-col items-center text-center space-y-6">
       <div className="relative">
-        <div className={`p-6 rounded-full bg-white border-4 ${getStatusColor().replace('text', 'border')} shadow-xl`}>
-          <Printer className={`w-12 h-12 ${getStatusColor()}`} />
+        <div className={`p-8 rounded-[2.5rem] bg-background/50 border-4 ${getStatusColor().replace('text', 'border')}/20 shadow-2xl backdrop-blur-xl transition-all duration-500`}>
+          <Printer className={`w-14 h-14 ${getStatusColor()} transition-all duration-500 ${isOnline ? 'drop-shadow-[0_0_15px_rgba(16,185,129,0.4)]' : ''}`} />
         </div>
+        
         {serviceStatus === 'active' && (
-          <span className="absolute bottom-1 right-1 flex h-6 w-6">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${hardwareStatus === 'connected' ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
-            <span className={`relative inline-flex rounded-full h-6 w-6 ${hardwareStatus === 'connected' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+          <span className="absolute -top-1 -right-1 flex h-8 w-8">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isOnline ? 'bg-emerald-400' : 'bg-orange-400'}`}></span>
+            <span className={`relative inline-flex rounded-full h-8 w-8 ${isOnline ? 'bg-emerald-500 shadow-lg shadow-emerald-500/40' : 'bg-orange-500 shadow-lg shadow-orange-500/40'} border-4 border-background`}></span>
           </span>
         )}
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-center gap-2">
-          <Badge variant="outline" className={`px-3 py-1 rounded-full font-bold border-none ${getBadgeVariant()}`}>
-            Servicio: {serviceStatus.toUpperCase()}
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Badge variant="outline" className={`px-4 py-1.5 rounded-xl font-black uppercase tracking-[0.2em] text-[9px] border-none shadow-sm ${
+            isOnline ? 'bg-emerald-500/10 text-emerald-500' : 
+            isWarning ? 'bg-orange-500/10 text-orange-500' :
+            isError ? 'bg-rose-500/10 text-rose-500' : 'bg-muted text-muted-foreground'
+          }`}>
+            Software: {serviceStatus.toUpperCase()}
           </Badge>
-          <Badge variant="outline" className="px-3 py-1 rounded-full font-bold bg-white text-gray-500">
+          <Badge variant="outline" className={`px-4 py-1.5 rounded-xl font-black uppercase tracking-[0.2em] text-[9px] border-none shadow-sm ${
+            hardwareStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
+          }`}>
             Hardware: {hardwareStatus.replace('_', ' ').toUpperCase()}
           </Badge>
         </div>
-        <p className="text-sm font-medium text-gray-600">{message}</p>
+        <div className="max-w-xs mx-auto">
+          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed opacity-80 italic">
+            "{message}"
+          </p>
+        </div>
       </div>
     </div>
   )

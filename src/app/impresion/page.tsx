@@ -14,49 +14,54 @@ export default function ImpresionPage() {
 
   return (
     <RoleGuard allowedRoles={["JEFE"]}>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        {/* Header responsivo */}
-        <header className="bg-white/90 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0">
+      <div className="min-h-screen bg-background transition-colors duration-500">
+        {/* Fondo con gradientes dinámicos */}
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col">
+          {/* Header Premium */}
+          <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50 transition-all duration-300">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3 sm:gap-6">
                 <Button 
                   onClick={() => router.push("/dashboard")} 
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-600 hover:text-gray-900 flex-shrink-0 p-2 sm:p-3"
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-9 w-9 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all duration-300"
                 >
-                  <ArrowLeft className="w-4 h-4 sm:mr-1 lg:mr-2" />
-                  <span className="hidden sm:inline text-xs sm:text-sm">Dashboard</span>
+                  <ArrowLeft className="w-5 h-5" />
                 </Button>
-                <div className="h-4 sm:h-6 w-px bg-gray-300 hidden sm:block flex-shrink-0"></div>
-                <h1 className="text-sm sm:text-lg lg:text-xl font-semibold text-gray-900 truncate">
-                  <span className="sm:hidden">Impresión</span>
-                  <span className="hidden sm:inline lg:hidden">Admin. Impresión</span>
-                  <span className="hidden lg:inline">Administración de Impresión Térmica</span>
-                </h1>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <Printer className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex flex-col">
+                    <h1 className="text-sm sm:text-base font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+                      Administración de Impresión
+                    </h1>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                      Servicios y Configuración de Hardware
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                <Printer className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+            </div>
+          </header>
+
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Columna de Administración de Servicio (Software) */}
+              <div className="lg:col-span-5 xl:col-span-4">
+                <ThermalPrintAdmin />
+              </div>
+
+              {/* Columna de Configuración de Impresoras (Hardware) */}
+              <div className="lg:col-span-7 xl:col-span-8">
+                <PrinterConfiguration />
               </div>
             </div>
-          </div>
-        </header>
-
-        <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 pb-6 sm:pb-8">
-          {/* Contenedor principal responsivo */}
-          <div className="space-y-4 sm:space-y-6">
-            {/* Configuración de Impresoras */}
-            <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 xl:p-8 shadow-sm border border-gray-200">
-              <PrinterConfiguration />
-            </div>
-
-            {/* Administración de Impresión */}
-            <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 xl:p-8 shadow-sm border border-gray-200">
-              <ThermalPrintAdmin />
-            </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </RoleGuard>
   )

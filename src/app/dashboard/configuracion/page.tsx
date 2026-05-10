@@ -133,27 +133,37 @@ export default function ConfiguracionSistemaPage() {
 
   return (
     <RoleGuard allowedRoles={["JEFE"]}>
-      <div className="min-h-screen bg-gray-50/50">
-        <ConfigHeader 
-          hasChanges={hasChanges} 
-          isSaving={isSaving} 
-          onReset={handleReset} 
-          onSubmit={handleSubmit} 
-        />
+      <div className="min-h-screen bg-background transition-colors duration-500">
+        {/* Fondo con gradientes dinámicos */}
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col">
+          <ConfigHeader 
+            hasChanges={hasChanges} 
+            isSaving={isSaving} 
+            onReset={handleReset} 
+            onSubmit={handleSubmit} 
+          />
 
-        <main className="max-w-5xl mx-auto px-4 py-8">
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
           {isLoading ? (
             <ConfigSkeleton />
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 space-y-6">
                 <Tabs defaultValue="empresa" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6 bg-white border border-gray-200 p-1 rounded-xl h-12">
-                    <TabsTrigger value="empresa" className="rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none">
+                  <TabsList className="flex w-full bg-card/40 backdrop-blur-md border border-border/50 p-1.5 rounded-2xl h-auto mb-8 shadow-sm">
+                    <TabsTrigger 
+                      value="empresa" 
+                      className="flex-1 py-3 rounded-xl font-black uppercase tracking-[0.15em] text-[10px] transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20"
+                    >
                       <Building2 className="w-4 h-4 mr-2" />
                       Información Empresa
                     </TabsTrigger>
-                    <TabsTrigger value="sistema" className="rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none">
+                    <TabsTrigger 
+                      value="sistema" 
+                      className="flex-1 py-3 rounded-xl font-black uppercase tracking-[0.15em] text-[10px] transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20"
+                    >
                       <Settings className="w-4 h-4 mr-2" />
                       Ajustes de Sistema
                     </TabsTrigger>
@@ -187,6 +197,7 @@ export default function ConfiguracionSistemaPage() {
           )}
         </main>
       </div>
-    </RoleGuard>
-  )
+    </div>
+  </RoleGuard>
+)
 }

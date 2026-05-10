@@ -9,20 +9,26 @@ interface StatusIndicatorProps {
 export function StatusIndicator({ hasChanges }: StatusIndicatorProps) {
   if (!hasChanges) {
     return (
-      <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 shadow-sm">
-        <div className="bg-emerald-500 p-1 rounded-full">
-          <CheckCircle2 className="w-4 h-4 text-white" />
+      <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-4 transition-all duration-500">
+        <div className="bg-emerald-500/20 p-2 rounded-xl">
+          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
         </div>
-        <p className="text-xs text-emerald-700 font-semibold tracking-tight">Sin cambios pendientes</p>
+        <div>
+          <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none">Sistema al día</p>
+          <p className="text-[9px] font-bold text-emerald-500/60 uppercase tracking-widest mt-1">Sin cambios pendientes</p>
+        </div>
       </div>
     )
   }
   return (
-    <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3 shadow-sm animate-pulse">
-      <div className="bg-amber-500 p-1 rounded-full">
-        <AlertCircle className="w-4 h-4 text-white" />
+    <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl flex items-center gap-4 animate-pulse">
+      <div className="bg-orange-500/20 p-2 rounded-xl">
+        <AlertCircle className="w-4 h-4 text-orange-500" />
       </div>
-      <p className="text-xs text-amber-700 font-semibold tracking-tight">Tienes cambios sin guardar</p>
+      <div>
+        <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest leading-none">Cambios Detectados</p>
+        <p className="text-[9px] font-bold text-orange-500/60 uppercase tracking-widest mt-1 text-balance">Necesitas guardar para aplicar</p>
+      </div>
     </div>
   )
 }
