@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import TableModal from "@/components/TableModal"
 import StatusChangeModal from "@/components/StatusChangeModal"
-import { Plus, ArrowLeft, Users, Settings } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Plus, ArrowLeft, Users, Settings, ChefHat } from "lucide-react"
 
 interface Table {
   id: string
@@ -18,17 +19,17 @@ interface Table {
 }
 
 const statusColors = {
-  DISPONIBLE: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100",
-  OCUPADA: "bg-red-50 border-red-200 hover:bg-red-100",
-  FUERA_DE_SERVICIO: "bg-gray-50 border-gray-200 hover:bg-gray-100",
-  ESPERANDO: "bg-amber-50 border-amber-200 hover:bg-amber-100",
+  DISPONIBLE: "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 shadow-emerald-500/5",
+  OCUPADA: "bg-red-500/10 border-red-500/20 hover:bg-red-500/20 text-red-700 dark:text-red-400 shadow-red-500/5",
+  FUERA_DE_SERVICIO: "bg-slate-500/10 border-slate-500/20 hover:bg-slate-500/20 text-slate-700 dark:text-slate-400 shadow-slate-500/5",
+  ESPERANDO: "bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 shadow-amber-500/5",
 }
 
 const statusDotColors = {
-  DISPONIBLE: "bg-emerald-500",
-  OCUPADA: "bg-red-500",
-  FUERA_DE_SERVICIO: "bg-gray-500",
-  ESPERANDO: "bg-amber-500",
+  DISPONIBLE: "bg-emerald-500 shadow-lg shadow-emerald-500/50",
+  OCUPADA: "bg-red-500 shadow-lg shadow-red-500/50",
+  FUERA_DE_SERVICIO: "bg-slate-500 shadow-lg shadow-slate-500/50",
+  ESPERANDO: "bg-amber-500 shadow-lg shadow-amber-500/50",
 }
 
 const statusLabels = {
@@ -111,38 +112,43 @@ export default function MesasPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando mesas...</p>
+          <div className="relative w-16 h-16 mx-auto mb-6">
+            <div className="absolute inset-0 rounded-full border-4 border-blue-600/20"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-muted-foreground font-medium animate-pulse">Organizando el plano...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-background transition-colors duration-500">
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/20 dark:from-slate-950 dark:via-blue-950/10 dark:to-slate-950 pointer-events-none" />
+      <div className="relative z-10 flex flex-col">
       {/* Header minimalista */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+      <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
            <div className="flex items-center justify-between">
              <div className="flex items-center gap-2 sm:gap-4">
                <Button 
                  onClick={() => router.push("/dashboard")} 
                  variant="ghost"
                  size="sm"
-                 className="text-gray-600 hover:text-gray-900"
+                 className="text-muted-foreground hover:text-foreground hover:bg-accent"
                >
                  <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
                  <span className="hidden sm:inline">Dashboard</span>
                </Button>
-               <div className="h-6 w-px bg-gray-300 hidden sm:block"></div>
-               <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Mesas</h1>
+               <div className="h-6 w-px bg-border/50 hidden sm:block"></div>
+               <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">Gestión de Mesas</h1>
              </div>
              <Button 
                onClick={() => setShowCreateModal(true)}
                size="sm"
-               className="bg-blue-600 hover:bg-blue-700 text-white"
+               className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 rounded-xl"
              >
                <Plus className="w-4 h-4 mr-1 sm:mr-2" />
                <span className="hidden sm:inline">Nueva Mesa</span>
@@ -154,66 +160,57 @@ export default function MesasPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Estadísticas minimalistas */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-              <span className="text-xl sm:text-2xl font-bold text-gray-900">{getStatusCount("DISPONIBLE")}</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
+          {[
+            { label: 'Disponibles', count: getStatusCount("DISPONIBLE"), color: 'bg-emerald-500' },
+            { label: 'Ocupadas', count: getStatusCount("OCUPADA"), color: 'bg-red-500' },
+            { label: 'Esperando', count: getStatusCount("ESPERANDO"), color: 'bg-amber-500' },
+            { label: 'Inactivas', count: getStatusCount("FUERA_DE_SERVICIO"), color: 'bg-slate-500' },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-card/40 backdrop-blur-md border border-border/50 rounded-2xl p-4 text-center shadow-sm">
+              <div className="flex items-center justify-center gap-3 mb-1">
+                <div className={cn("w-2.5 h-2.5 rounded-full shadow-lg", stat.color)}></div>
+                <span className="text-2xl sm:text-3xl font-black text-foreground tracking-tighter">{stat.count}</span>
+              </div>
+              <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</p>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600">Disponibles</p>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <div className="w-3 h-3 rounded-full bg-red-500"></div>
-              <span className="text-xl sm:text-2xl font-bold text-gray-900">{getStatusCount("OCUPADA")}</span>
-            </div>
-            <p className="text-xs sm:text-sm text-gray-600">Ocupadas</p>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-              <span className="text-xl sm:text-2xl font-bold text-gray-900">{getStatusCount("ESPERANDO")}</span>
-            </div>
-            <p className="text-xs sm:text-sm text-gray-600">Esperando</p>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-              <span className="text-xl sm:text-2xl font-bold text-gray-900">{getStatusCount("FUERA_DE_SERVICIO")}</span>
-            </div>
-            <p className="text-xs sm:text-sm text-gray-600">Fuera de Servicio</p>
-          </div>
+          ))}
         </div>
 
         {/* Filtros minimalistas */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-gray-600 mr-2 hidden sm:inline">Filtrar:</span>
+        <div className="mb-6 sm:mb-8 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex items-center gap-2 min-w-max">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mr-4">Filtro:</span>
             <Button
-              variant={filter === "ALL" ? "default" : "ghost"}
+              variant={filter === "ALL" ? "default" : "outline"}
               size="sm"
               onClick={() => setFilter("ALL")}
-              className="text-xs"
+              className={cn(
+                "rounded-full text-xs px-5 h-9 transition-all duration-300",
+                filter === "ALL" ? "shadow-lg shadow-primary/20" : "bg-card/40 border-border/50 text-muted-foreground hover:bg-accent"
+              )}
             >
-              Todas
+              Todas las Mesas
             </Button>
             {Object.entries(statusLabels).map(([status, label]) => (
               <Button
                 key={status}
-                variant={filter === status ? "default" : "ghost"}
+                variant={filter === status ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilter(status)}
-                className="text-xs"
+                className={cn(
+                  "rounded-full text-xs px-5 h-9 transition-all duration-300",
+                  filter === status ? "shadow-lg shadow-primary/20" : "bg-card/40 border-border/50 text-muted-foreground hover:bg-accent"
+                )}
               >
-                <span className="hidden sm:inline">{label}</span>
-                <span className="sm:hidden">{label.split(' ')[0]}</span>
+                {label}
               </Button>
             ))}
           </div>
         </div>
 
         {/* Vista de mesas como plano de restaurante */}
-        <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-sm border border-gray-200">
+        <div className="bg-card/30 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-xl border border-border/50">
           <div className="flex flex-wrap gap-4 sm:gap-6 lg:gap-8 justify-center items-center min-h-[300px] sm:min-h-[400px]">
             {filteredTables.map((table) => (
               <div key={table.id} className="relative group">
@@ -223,24 +220,23 @@ export default function MesasPage() {
                     ${getTableSize(table.capacity)} 
                     ${getTableShape(table.capacity)}
                     ${statusColors[table.status]}
-                    border-2 cursor-pointer transition-all duration-200
+                    border-2 cursor-pointer transition-all duration-500
                     flex flex-col items-center justify-center
-                    shadow-sm hover:shadow-md
-                    relative
+                    relative group-hover:scale-110 active:scale-95
                   `}
                   onClick={() => openStatusModal(table)}
                 >
                   {/* Indicador de estado */}
-                  <div className={`absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full ${statusDotColors[table.status]} border-2 border-white`}></div>
+                  <div className={`absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full ${statusDotColors[table.status]} border-2 border-background`}></div>
                   
                   {/* Número de mesa */}
-                  <div className="text-base sm:text-lg font-bold text-gray-900 mb-1">
+                  <div className="text-xl sm:text-2xl font-black tracking-tighter">
                     {table.number}
                   </div>
                   
                   {/* Capacidad */}
-                  <div className="flex items-center text-xs text-gray-600">
-                    <Users className="w-3 h-3 mr-1" />
+                  <div className="flex items-center text-[10px] font-bold opacity-80 uppercase tracking-widest mt-1">
+                    <Users className="w-2.5 h-2.5 mr-1" />
                     {table.capacity}
                   </div>
                 </div>
@@ -308,6 +304,7 @@ export default function MesasPage() {
         onSave={handleModalSave}
         table={selectedTable}
       />
+    </div>
     </div>
   )
 }

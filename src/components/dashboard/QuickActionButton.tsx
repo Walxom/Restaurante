@@ -40,21 +40,45 @@ export const QuickActionButton = ({
   color,
   disabled = false
 }: QuickActionButtonProps) => {
+  const getHoverShadow = () => {
+    switch(color) {
+      case 'orange': return 'hover:shadow-orange-500/20';
+      case 'purple': return 'hover:shadow-purple-500/20';
+      case 'indigo': return 'hover:shadow-indigo-500/20';
+      case 'pink': return 'hover:shadow-pink-500/20';
+      case 'teal': return 'hover:shadow-teal-500/20';
+      case 'blue': return 'hover:shadow-blue-500/20';
+      default: return 'hover:shadow-gray-500/20';
+    }
+  }
+
   return (
     <Button
       onClick={onClick}
       variant="outline"
       className={cn(
-        "h-16 sm:h-18 lg:h-20 flex flex-col items-center justify-center gap-1 sm:gap-2 transition-all duration-200 rounded-lg sm:rounded-xl group",
-        colorThemes[color]
+        "h-16 sm:h-20 flex flex-col items-center justify-center gap-2 transition-all duration-300 rounded-2xl group",
+        "bg-card/40 backdrop-blur-md border-border/50",
+        "hover:bg-foreground/5 hover:border-foreground/20 hover:scale-[1.02] shadow-sm",
+        getHoverShadow(),
+        disabled && "opacity-50 grayscale pointer-events-none"
       )}
       disabled={disabled}
     >
-      <Icon className={cn(
-        "h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 group-hover:scale-110 transition-transform duration-200",
-        iconColors[color]
-      )} />
-      <span className="text-xs sm:text-sm font-medium text-center text-gray-700 group-hover:text-inherit">
+      <div className={cn(
+        "p-2 rounded-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
+        "bg-background/80 dark:bg-black/40 shadow-sm border border-border/30",
+        color === 'orange' && "text-orange-500",
+        color === 'purple' && "text-purple-500",
+        color === 'indigo' && "text-indigo-500",
+        color === 'pink' && "text-pink-500",
+        color === 'teal' && "text-teal-500",
+        color === 'gray' && "text-gray-500",
+        color === 'blue' && "text-blue-500",
+      )}>
+        <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+      </div>
+      <span className="text-[10px] sm:text-[11px] font-black text-center text-foreground uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">
         {label}
       </span>
     </Button>

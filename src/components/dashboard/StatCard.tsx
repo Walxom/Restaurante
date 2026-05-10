@@ -13,24 +13,24 @@ interface StatCardProps {
 
 const colorThemes = {
   blue: {
-    bg: 'bg-blue-100',
-    text: 'text-blue-600',
+    bg: 'bg-blue-100 dark:bg-blue-500/20',
+    text: 'text-blue-600 dark:text-blue-400',
   },
   orange: {
-    bg: 'bg-orange-100',
-    text: 'text-orange-600',
+    bg: 'bg-orange-100 dark:bg-orange-500/20',
+    text: 'text-orange-600 dark:text-orange-400',
   },
   green: {
-    bg: 'bg-green-100',
-    text: 'text-green-600',
+    bg: 'bg-green-100 dark:bg-green-500/20',
+    text: 'text-green-600 dark:text-green-400',
   },
   purple: {
-    bg: 'bg-purple-100',
-    text: 'text-purple-600',
+    bg: 'bg-purple-100 dark:bg-purple-500/20',
+    text: 'text-purple-600 dark:text-purple-400',
   },
   teal: {
-    bg: 'bg-teal-100',
-    text: 'text-teal-600',
+    bg: 'bg-teal-100 dark:bg-teal-500/20',
+    text: 'text-teal-600 dark:text-teal-400',
   }
 };
 
@@ -45,22 +45,22 @@ export const StatCard = ({
   const theme = colorThemes[color];
 
   return (
-    <div className="bg-white/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-200/50 hover:shadow-lg transition-all duration-300 group">
+    <div className="bg-card/40 backdrop-blur-md rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-border/50 hover:border-border hover:shadow-xl transition-all duration-300 group">
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+          <p className="text-[10px] sm:text-xs font-bold text-foreground/60 uppercase tracking-widest mb-1.5">
             {label}
           </p>
           <div className="flex flex-col">
-            <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+            <p className="text-xl sm:text-2xl font-bold text-foreground truncate">
               {loading ? (
-                <span className="inline-block w-12 h-6 bg-gray-200 animate-pulse rounded" />
+                <span className="inline-block w-12 h-6 bg-muted animate-pulse rounded" />
               ) : (
                 value
               )}
             </p>
             {subValue && !loading && (
-              <p className="text-[10px] sm:text-xs text-gray-400 font-medium mt-0.5 truncate">
+              <p className="text-[10px] sm:text-xs text-foreground/50 font-medium mt-1 truncate">
                 {subValue}
               </p>
             )}

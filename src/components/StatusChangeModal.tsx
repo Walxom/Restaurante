@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { AlertCircle, LayoutGrid } from "lucide-react"
 
 interface Table {
   id: string
@@ -27,23 +28,23 @@ interface StatusChangeModalProps {
 const statusConfig = {
   DISPONIBLE: {
     label: "Disponible",
-    color: "bg-green-100 text-green-800 border-green-200",
-    description: "Mesa lista para ser ocupada",
+    color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
+    description: "Mesa lista para recibir nuevos comensales",
   },
   OCUPADA: {
     label: "Ocupada",
-    color: "bg-red-100 text-red-800 border-red-200",
-    description: "Mesa con clientes actualmente",
-  },
-  FUERA_DE_SERVICIO: {
-    label: "Fuera de Servicio",
-    color: "bg-gray-100 text-gray-800 border-gray-200",
-    description: "Mesa no disponible temporalmente",
+    color: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
+    description: "Mesa con servicios y pedidos en curso",
   },
   ESPERANDO: {
     label: "Esperando",
-    color: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    description: "Mesa reservada o en espera",
+    color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
+    description: "Mesa reservada o pendiente de limpieza rápida",
+  },
+  FUERA_DE_SERVICIO: {
+    label: "Fuera de Servicio",
+    color: "bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20",
+    description: "Mesa inactiva por mantenimiento o limpieza profunda",
   },
 }
 
@@ -80,22 +81,26 @@ export default function StatusChangeModal({ isOpen, onClose, onSave, table }: St
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-lg">
-        <CardHeader>
-          <CardTitle>
-            Cambiar Estado - Mesa {table.number}
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+      <Card className="w-full max-w-lg bg-background border-none shadow-2xl rounded-2xl overflow-hidden scale-in-center">
+        <CardHeader className="text-center pt-8 pb-4">
+          <div className="mx-auto w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4 ring-8 ring-blue-500/10">
+            <LayoutGrid className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+          </div>
+          <CardTitle className="text-xl font-bold text-foreground">
+            Mesa {table.number}
           </CardTitle>
-          <p className="text-sm text-gray-600">
-            Estado actual: <span className={`px-2 py-1 rounded-full text-xs border ${statusConfig[table.status].color}`}>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Estado Actual:</span>
+            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border shadow-sm ${statusConfig[table.status].color}`}>
               {statusConfig[table.status].label}
             </span>
-          </p>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <p className="text-sm text-gray-700 mb-4">
-              Selecciona el nuevo estado para la mesa:
+          <div className="space-y-4">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">
+              Selecciona el nuevo estado:
             </p>
 
             <div className="grid gap-3">
@@ -104,21 +109,29 @@ export default function StatusChangeModal({ isOpen, onClose, onSave, table }: St
                   key={status}
                   onClick={() => handleStatusChange(status)}
                   disabled={isLoading || status === table.status}
-                  className={`p-4 rounded-lg border-2 text-left transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`group p-4 rounded-xl border-2 text-left transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed ${
                     status === table.status
-                      ? 'border-gray-300 bg-gray-50'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                      ? 'border-primary bg-primary/5 shadow-inner ring-2 ring-primary/10'
+                      : 'border-border/50 bg-card hover:border-primary/50 hover:bg-muted/50 hover:shadow-lg hover:scale-[1.01]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className={`inline-block px-3 py-1 rounded-full text-sm border ${config.color}`}>
+                    <div className="flex-1">
+                      <div className={`inline-block px-2.5 py-0.5 rounded-lg text-xs font-bold border uppercase shadow-sm ${config.color}`}>
                         {config.label}
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{config.description}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1.5 font-medium leading-relaxed group-hover:text-foreground transition-colors">
+                        {config.description}
+                      </p>
                     </div>
-                    {status === table.status && (
-                      <span className="text-xs text-gray-500 font-medium">ACTUAL</span>
+                    {status === table.status ? (
+                      <div className="ml-4 p-2 bg-primary/20 rounded-full">
+                        <span className="text-[10px] text-primary font-black uppercase tracking-tighter">Actual</span>
+                      </div>
+                    ) : (
+                      <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                      </div>
                     )}
                   </div>
                 </button>
@@ -126,17 +139,19 @@ export default function StatusChangeModal({ isOpen, onClose, onSave, table }: St
             </div>
 
             {error && (
-              <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
+              <div className="text-red-600 dark:text-red-400 text-xs font-bold uppercase tracking-wide bg-red-500/10 p-3 rounded-xl border border-red-500/20 animate-shake flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
                 {error}
               </div>
             )}
 
-            <div className="flex justify-end space-x-3 pt-4 border-t">
+            <div className="flex justify-end pt-4 mt-4 border-t border-border/50 -mx-6 px-6 py-4 bg-muted/30 dark:bg-muted/10">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={onClose}
                 disabled={isLoading}
+                className="text-muted-foreground hover:text-foreground rounded-xl px-6 font-medium transition-all"
               >
                 Cancelar
               </Button>

@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { FileText, Plus, TrendingUp, Clock } from 'lucide-react'
+import { FileText, Plus, TrendingUp, Clock, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface InvoiceStats {
@@ -29,7 +27,6 @@ function InvoiceWidget() {
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
 
-  // Definir la función antes del useEffect
   const fetchInvoiceStats = async () => {
     try {
       const response = await fetch('/api/dashboard/invoice-stats')
@@ -49,24 +46,29 @@ function InvoiceWidget() {
     fetchInvoiceStats()
   }, [])
 
-  // Evitar problemas de hidratación
-  if (!mounted) {
+  if (!mounted || loading) {
     return (
-      <Card className="col-span-1 lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Facturación
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+      <div className="bg-card/40 backdrop-blur-md rounded-xl sm:rounded-2xl border border-border/50 overflow-hidden shadow-sm animate-pulse">
+        <div className="p-4 sm:p-6 border-b border-border/50 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 bg-blue-500/10 rounded-xl" />
+             <div className="h-5 bg-foreground/10 rounded w-32" />
           </div>
-        </CardContent>
-      </Card>
+          <div className="h-8 bg-foreground/10 rounded-xl w-20" />
+        </div>
+        <div className="p-4 sm:p-6 space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-20 bg-foreground/5 rounded-2xl" />
+            ))}
+          </div>
+          <div className="space-y-3">
+            {[1, 2].map(i => (
+              <div key={i} className="h-14 bg-foreground/5 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </div>
     )
   }
 
@@ -87,109 +89,87 @@ function InvoiceWidget() {
   const getTypeBadge = (type: string) => {
     switch (type) {
       case 'BOLETA':
-        return <Badge variant="outline" className="border-blue-500 text-blue-700 text-xs">B</Badge>
+        return <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-black text-blue-500 tracking-tighter">B</span>
       case 'FACTURA':
-        return <Badge variant="outline" className="border-green-500 text-green-700 text-xs">F</Badge>
+        return <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[10px] font-black text-emerald-500 tracking-tighter">F</span>
       default:
-        return <Badge variant="secondary" className="text-xs">{type}</Badge>
+        return <span className="px-2 py-0.5 bg-foreground/10 border border-border/50 rounded-lg text-[10px] font-black text-muted-foreground tracking-tighter">{type}</span>
     }
   }
 
-  if (loading) {
-    return (
-      <Card className="col-span-1 lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Facturación
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
-    <Card className="col-span-1 lg:col-span-2">
-      <CardHeader>
+    <div className="bg-card/40 backdrop-blur-md rounded-xl sm:rounded-2xl border border-border/50 overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md">
+      <div className="p-4 sm:p-6 border-b border-border/50">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+          <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-3 uppercase tracking-tighter">
+            <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+              <FileText className="h-5 w-5" />
+            </div>
             Facturación Hoy
-          </CardTitle>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => router.push('/dashboard/facturacion')}
-            >
-              Ver Todo
-            </Button>
-          </div>
+          </h2>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => router.push('/dashboard/facturacion')}
+            className="rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-foreground/5"
+          >
+            Ver Todo
+          </Button>
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+
+      <div className="p-4 sm:p-6">
         {stats ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Estadísticas principales */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {stats.todayInvoices}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {[
+                { label: 'Comprobantes', value: stats.todayInvoices, color: 'blue' },
+                { label: 'Ingresos', value: formatCurrency(stats.todayRevenue).replace('PEN', 'S/'), color: 'emerald' },
+                { label: 'Sin Facturar', value: stats.pendingOrders, color: 'orange' },
+                { label: 'Ticket Promedio', value: formatCurrency(stats.averageTicket).replace('PEN', 'S/'), color: 'purple' },
+              ].map((stat) => (
+                <div key={stat.label} className="p-4 bg-foreground/5 rounded-2xl border border-border/30 text-center flex flex-col items-center justify-center space-y-1">
+                  <div className={`text-xl sm:text-2xl font-black tracking-tighter text-${stat.color}-500`}>
+                    {stat.value}
+                  </div>
+                  <div className="text-[9px] uppercase font-black text-muted-foreground tracking-[0.1em] opacity-60">
+                    {stat.label}
+                  </div>
                 </div>
-                <div className="text-xs text-gray-500">Comprobantes</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {formatCurrency(stats.todayRevenue).replace('PEN', 'S/')}
-                </div>
-                <div className="text-xs text-gray-500">Ingresos</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">
-                  {stats.pendingOrders}
-                </div>
-                <div className="text-xs text-gray-500">Sin Facturar</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {formatCurrency(stats.averageTicket).replace('PEN', 'S/')}
-                </div>
-                <div className="text-xs text-gray-500">Ticket Promedio</div>
-              </div>
+              ))}
             </div>
 
             {/* Comprobantes recientes */}
             {stats.recentInvoices.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Últimos Comprobantes</h4>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2 ml-1">
+                  <Clock className="w-3 h-3" />
+                  Últimos Movimientos
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
                   {stats.recentInvoices.map((invoice) => (
                     <div
                       key={invoice.id}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                      className="group flex items-center justify-between p-3 bg-foreground/5 rounded-xl border border-border/30 hover:border-foreground/20 transition-all cursor-pointer"
                       onClick={() => router.push(`/dashboard/facturacion/${invoice.id}`)}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         {getTypeBadge(invoice.type)}
-                        <span className="font-mono text-sm">{invoice.number}</span>
-                        <span className="text-xs text-gray-500">
-                          {invoice.customerName || 'Cliente General'}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="font-mono text-xs font-black text-foreground">{invoice.number}</span>
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight truncate max-w-[120px]">
+                            {invoice.customerName || 'Cliente General'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-green-600">
+                      <div className="text-right">
+                        <div className="text-sm font-black text-foreground">
                           {formatCurrency(invoice.total).replace('PEN', 'S/')}
-                        </span>
-                        <span className="text-xs text-gray-400">
+                        </div>
+                        <div className="text-[9px] font-bold text-muted-foreground">
                           {formatTime(invoice.issuedAt)}
-                        </span>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -197,41 +177,24 @@ function InvoiceWidget() {
               </div>
             )}
 
-            {/* Acciones rápidas */}
-            <div className="flex gap-2 pt-2 border-t">
-              <Button
-                size="sm"
-                className="flex-1 bg-green-600 hover:bg-green-700"
-                onClick={() => router.push('/dashboard/facturacion')}
-              >
-                <FileText className="h-4 w-4 mr-1" />
-                Crear Factura
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1"
-                onClick={() => router.push('/dashboard/ventas')}
-              >
-                <TrendingUp className="h-4 w-4 mr-1" />
-                Ver Reportes
-              </Button>
-            </div>
-
             {/* Alerta de pedidos sin facturar */}
             {stats.pendingOrders > 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-yellow-600" />
-                  <span className="text-sm text-yellow-800">
-                    Tienes <strong>{stats.pendingOrders}</strong> pedidos completados sin facturar
-                  </span>
+              <div className="bg-orange-500/5 border border-orange-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in duration-500">
+                <div className="flex items-center gap-4 text-center sm:text-left">
+                  <div className="w-10 h-10 bg-orange-500/10 rounded-full flex items-center justify-center shrink-0">
+                    <AlertCircle className="h-5 w-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest">Atención Pendiente</p>
+                    <p className="text-xs font-bold text-foreground leading-tight">
+                      Hay <span className="text-orange-500">{stats.pendingOrders}</span> órdenes listas para facturación.
+                    </p>
+                  </div>
                 </div>
                 <Button
                   size="sm"
-                  variant="outline"
-                  className="mt-2 border-yellow-300 text-yellow-700 hover:bg-yellow-100"
                   onClick={() => router.push('/dashboard/facturacion')}
+                  className="w-full sm:w-auto h-9 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-black uppercase tracking-widest text-[9px] px-6 shadow-lg shadow-orange-600/20"
                 >
                   Facturar Ahora
                 </Button>
@@ -239,21 +202,23 @@ function InvoiceWidget() {
             )}
           </div>
         ) : (
-          <div className="text-center py-4">
-            <FileText className="h-12 w-12 mx-auto text-gray-300 mb-2" />
-            <p className="text-gray-500 text-sm">No hay datos de facturación disponibles</p>
+          <div className="text-center py-12 flex flex-col items-center">
+            <div className="w-16 h-16 bg-foreground/5 rounded-full flex items-center justify-center mb-4">
+              <FileText className="h-8 w-8 text-muted-foreground opacity-20" />
+            </div>
+            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest opacity-60">Sin datos de facturación</p>
             <Button
               size="sm"
               variant="outline"
-              className="mt-2"
+              className="mt-6 rounded-xl font-black uppercase tracking-widest text-[10px]"
               onClick={() => router.push('/dashboard/facturacion')}
             >
               Ir a Facturación
             </Button>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
@@ -265,21 +230,22 @@ export default dynamic(() => Promise.resolve(InvoiceWidget), {
     const { Card, CardHeader, CardTitle, CardContent } = require('@/components/ui/card')
     
     return (
-      <Card className="col-span-1 lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Facturación
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+      <div className="bg-card/40 backdrop-blur-md rounded-xl sm:rounded-2xl border border-border/50 overflow-hidden shadow-sm animate-pulse">
+        <div className="p-4 sm:p-6 border-b border-border/50 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 bg-blue-500/10 rounded-xl" />
+             <div className="h-5 bg-foreground/10 rounded w-32" />
           </div>
-        </CardContent>
-      </Card>
+          <div className="h-8 bg-foreground/10 rounded-xl w-20" />
+        </div>
+        <div className="p-4 sm:p-6 space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-20 bg-foreground/5 rounded-2xl" />
+            ))}
+          </div>
+        </div>
+      </div>
     )
   }
 })

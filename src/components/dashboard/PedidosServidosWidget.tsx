@@ -8,7 +8,8 @@ import {
   Package, 
   Utensils, 
   Truck, 
-  AlertCircle 
+  AlertCircle,
+  Clock
 } from "lucide-react"
 
 interface Order {
@@ -114,13 +115,13 @@ export default function PedidosServidosWidget({
   const getOrderTypeIcon = (type: string) => {
     switch (type) {
       case 'MESA':
-        return <Utensils className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
+        return <Utensils className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
       case 'DELIVERY':
-        return <Truck className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
+        return <Truck className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
       case 'PARA_LLEVAR':
-        return <Package className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />
+        return <Package className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500 flex-shrink-0" />
       default:
-        return <Package className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 flex-shrink-0" />
+        return <Package className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
     }
   }
 
@@ -165,15 +166,15 @@ export default function PedidosServidosWidget({
   }
 
   return (
-    <div className={`bg-white/70 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-gray-200/50 overflow-hidden ${className}`}>
+    <div className={`bg-card/40 backdrop-blur-md rounded-xl sm:rounded-2xl border border-border/50 overflow-hidden shadow-sm ${className}`}>
       {showHeader && (
-        <div className="p-4 sm:p-6 border-b border-gray-200/50">
+        <div className="p-4 sm:p-6 border-b border-border/50">
           <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+            <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
               {title}
             </h2>
-            <span className="px-2 sm:px-3 py-1 bg-green-100 rounded-full text-xs sm:text-sm font-medium text-green-600">
+            <span className="px-2 sm:px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-xs sm:text-sm font-bold text-green-600">
               {orders.length}
             </span>
           </div>
@@ -210,36 +211,41 @@ export default function PedidosServidosWidget({
                 {orders.map((order) => (
                   <div 
                     key={order.id}
-                    className="group p-3 sm:p-4 bg-white/50 hover:bg-white/80 border border-gray-200/50 rounded-lg sm:rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.01]"
+                    className="group p-3 sm:p-4 bg-muted/30 hover:bg-muted/50 border border-border/40 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01]"
                     onClick={() => handleOrderClick(order.id)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          {getOrderTypeIcon(order.type)}
-                          <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <div className="p-1.5 bg-background/50 dark:bg-black/40 rounded-lg">
+                            {getOrderTypeIcon(order.type)}
+                          </div>
+                          <p className="text-sm font-bold text-foreground truncate">
                             {getOrderTypeName(order)}
                           </p>
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/20">
                             ✓ Servido
                           </span>
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">
-                          #{order.orderNumber} - {order.user.name}
+                        <p className="text-xs text-muted-foreground mb-2 truncate">
+                          #{order.orderNumber} • {order.user.name}
                         </p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-gray-900">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-black text-foreground">
                             {formatCurrency(order.totalAmount || 0)}
                           </span>
                           {order.updatedAt && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
                               {getRelativeTime(order.updatedAt)}
                             </span>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center justify-center">
-                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                      <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="p-2 bg-primary/10 rounded-full">
+                          <Eye className="h-4 w-4 text-primary" />
+                        </div>
                       </div>
                     </div>
                   </div>

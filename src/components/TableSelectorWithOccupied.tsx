@@ -18,6 +18,8 @@ interface TableSelectorWithOccupiedProps {
   showOccupied?: boolean
 }
 
+import { cn } from "@/lib/utils"
+
 export default function TableSelectorWithOccupied({ 
   tables, 
   selectedTable, 
@@ -31,20 +33,16 @@ export default function TableSelectorWithOccupied({
 
   const handleAdditionalOrder = async (table: Table) => {
     try {
-      // Buscar todos los pedidos de la mesa que no estén cancelados o completados
       const response = await fetch(`/api/orders?tableId=${table.id}`)
       if (response.ok) {
         const allOrders = await response.json()
-        // Filtrar pedidos que no estén cancelados o completados
         const activeOrders = allOrders.filter((order: any) => 
           !['CANCELLED', 'COMPLETED'].includes(order.status)
         )
         
         if (activeOrders.length > 0) {
-          // Redirigir al primer pedido activo para ver detalles
           router.push(`/pedidos/${activeOrders[0].id}/detalles`)
         } else {
-          // Si no hay pedidos activos, crear uno nuevo
           router.push('/pedidos/nuevo')
         }
       }
@@ -57,123 +55,131 @@ export default function TableSelectorWithOccupied({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DISPONIBLE':
-        return 'bg-green-100 text-green-800'
+        return 'bg-emerald-500/10 text-emerald-500 ring-emerald-500/20'
       case 'ESPERANDO':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-amber-500/10 text-amber-500 ring-amber-500/20'
       case 'OCUPADA':
-        return 'bg-red-100 text-red-800'
-      case 'FUERA_DE_SERVICIO':
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-rose-500/10 text-rose-500 ring-rose-500/20'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-muted text-muted-foreground ring-border/50'
     }
   }
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'DISPONIBLE':
-        return 'Disponible'
-      case 'ESPERANDO':
-        return 'Esperando'
-      case 'OCUPADA':
-        return 'Ocupada'
-      case 'FUERA_DE_SERVICIO':
-        return 'Fuera de servicio'
-      default:
-        return status
+      case 'DISPONIBLE': return 'Disponible'
+      case 'ESPERANDO': return 'Esperando'
+      case 'OCUPADA': return 'Ocupada'
+      case 'FUERA_DE_SERVICIO': return 'Inactivo'
+      default: return status
     }
   }
 
   if (availableTables.length === 0 && occupiedTables.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500 text-lg">No hay mesas disponibles</p>
-        <p className="text-gray-400 text-sm mt-2">
-          Todas las mesas están fuera de servicio
-        </p>
+      <div className="text-center py-12 animate-in fade-in zoom-in duration-500">
+        <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Users className="w-8 h-8 text-muted-foreground opacity-20" />
+        </div>
+        <p className="text-muted-foreground font-medium">No hay mesas configuradas</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Mesas Disponibles */}
       {availableTables.length > 0 && (
-        <div>
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
-            {availableTables.map((table) => (
-              <button
-                key={table.id}
-                className={`p-2 rounded-lg border text-center transition-all duration-200 ${
-                  selectedTable?.id === table.id
-                    ? "ring-2 ring-blue-500 bg-blue-50 border-blue-200"
-                    : "hover:bg-gray-50 border-gray-200"
-                }`}
-                onClick={() => onSelectTable(table)}
-              >
-                <div className="text-lg font-semibold text-gray-900">
-                  {table.number}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {table.capacity}p
-                </div>
-              </button>
-            ))}
+        <div className="animate-in fade-in duration-700">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+            {availableTables.map((table) => {
+              const isSelected = selectedTable?.id === table.id
+              return (
+                <button
+                  key={table.id}
+                  onClick={() => onSelectTable(table)}
+                  className={cn(
+                    "relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 active:scale-95 group",
+                    isSelected 
+                      ? "bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/30 ring-4 ring-blue-500/10" 
+                      : "bg-background/40 border-border/50 hover:border-border/80 hover:bg-background/60"
+                  )}
+                >
+                  <div className={cn(
+                    "text-xl font-black mb-0.5 tracking-tighter",
+                    isSelected ? "text-white" : "text-foreground group-hover:text-blue-500"
+                  )}>
+                    {table.number}
+                  </div>
+                  <div className={cn(
+                    "flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider",
+                    isSelected ? "text-blue-100" : "text-muted-foreground"
+                  )}>
+                    <Users className="w-3 h-3" />
+                    {table.capacity}p
+                  </div>
+                  {isSelected && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-md">
+                      <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse" />
+                    </div>
+                  )}
+                </button>
+              )
+            })}
           </div>
         </div>
       )}
 
       {/* Mesas Ocupadas */}
       {showOccupied && occupiedTables.length > 0 && (
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-            <Users className="h-5 w-5 mr-2 text-red-600" />
-            Mesas con Pedidos Activos ({occupiedTables.length})
+        <div className="animate-in slide-in-from-bottom duration-500">
+          <h3 className="text-sm font-black text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+            <Users className="w-4 h-4 text-rose-500" />
+            Mesas Ocupadas o en Espera ({occupiedTables.length})
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {occupiedTables.map((table) => (
-              <Card
+              <div
                 key={table.id}
-                className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:bg-gray-50 border-red-200"
+                className="bg-card/40 backdrop-blur-sm border border-border/50 rounded-3xl p-5 transition-all hover:shadow-lg hover:shadow-rose-500/5 group"
               >
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-gray-900 mb-1">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="text-3xl font-black text-foreground group-hover:text-rose-500 transition-colors leading-none">
                     {table.number}
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {table.capacity} {table.capacity === 1 ? "persona" : "personas"}
-                  </div>
-                  <div className="mt-2">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(table.status)}`}>
-                      {getStatusText(table.status)}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => handleAdditionalOrder(table)}
-                    className="mt-3 w-full bg-orange-600 text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-orange-700 transition-colors flex items-center justify-center"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Ver Pedidos
-                  </button>
-                </CardContent>
-              </Card>
+                  <span className={cn(
+                    "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ring-1",
+                    getStatusColor(table.status)
+                  )}>
+                    {getStatusText(table.status)}
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-2 text-xs text-muted-foreground font-bold mb-5">
+                  <Users className="w-4 h-4" />
+                  {table.capacity} Personas
+                </div>
+                
+                <button
+                  onClick={() => handleAdditionalOrder(table)}
+                  className="w-full bg-foreground/5 hover:bg-foreground/10 text-foreground py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 border border-border/50"
+                >
+                  Ver Detalles
+                </button>
+              </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Mensaje cuando no hay mesas disponibles */}
-      {availableTables.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-500 text-lg">No hay mesas disponibles</p>
-          <p className="text-gray-400 text-sm mt-2">
-            {occupiedTables.length > 0 
-              ? "Puede crear pedidos adicionales en las mesas ocupadas"
-              : "Todas las mesas están ocupadas o fuera de servicio"
-            }
-          </p>
+      {/* Estado vacío local */}
+      {availableTables.length === 0 && !showOccupied && (
+        <div className="bg-amber-500/5 border border-amber-500/20 rounded-3xl p-8 text-center animate-in fade-in">
+          <Users className="w-12 h-12 text-amber-500/20 mx-auto mb-4" />
+          <p className="text-amber-500/80 font-bold text-sm uppercase tracking-widest">No hay mesas disponibles en este momento</p>
+          <p className="text-muted-foreground text-xs mt-2 font-medium">Todas las mesas del restaurante están ocupadas o inactivas.</p>
         </div>
       )}
     </div>
   )
-}
+}

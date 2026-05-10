@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { LucideIcon, AlertTriangle } from "lucide-react"
+import { LucideIcon, AlertTriangle, CheckCircle2, Info, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface ConfirmationModalProps {
@@ -40,38 +40,38 @@ export function ConfirmationModal({
   isLoading = false,
   showCancel = true,
 }: ConfirmationModalProps) {
-  
+
   const variantStyles = {
-    primary: "bg-blue-600 hover:bg-blue-700 text-white",
-    danger: "bg-red-600 hover:bg-red-700 text-white",
-    warning: "bg-yellow-600 hover:bg-yellow-700 text-white",
-    success: "bg-green-600 hover:bg-green-700 text-white",
-    info: "bg-blue-600 hover:bg-blue-700 text-white",
+    primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20",
+    danger: "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/20",
+    warning: "bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg shadow-yellow-500/20",
+    success: "bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20",
+    info: "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20",
   };
 
   const iconBgStyles = {
-    primary: "bg-blue-100",
-    danger: "bg-red-100",
-    warning: "bg-yellow-100",
-    success: "bg-green-100",
-    info: "bg-blue-100",
+    primary: "bg-blue-100 dark:bg-blue-900/30",
+    danger: "bg-red-100 dark:bg-red-900/30",
+    warning: "bg-yellow-100 dark:bg-yellow-900/30",
+    success: "bg-green-100 dark:bg-green-900/30",
+    info: "bg-blue-100 dark:bg-blue-900/30",
   };
 
   const iconTextStyles = {
-    primary: "text-blue-600",
-    danger: "text-red-600",
-    warning: "text-yellow-600",
-    success: "text-green-600",
-    info: "text-blue-600",
+    primary: "text-blue-600 dark:text-blue-400",
+    danger: "text-red-600 dark:text-red-400",
+    warning: "text-yellow-600 dark:text-yellow-400",
+    success: "text-green-600 dark:text-green-400",
+    info: "text-blue-600 dark:text-blue-400",
   };
 
   // Ícono por defecto según variante si no se provee uno
   const DefaultIcon = {
     danger: AlertTriangle,
     warning: AlertTriangle,
-    success: () => <div className="w-6 h-6 border-2 border-current rounded-full flex items-center justify-center font-bold">✓</div>,
-    info: () => <div className="w-6 h-6 border-2 border-current rounded-full flex items-center justify-center font-bold">i</div>,
-    primary: AlertTriangle,
+    success: CheckCircle2,
+    info: Info,
+    primary: Info,
   }[variant];
 
   const FinalIcon = Icon || DefaultIcon;
@@ -82,29 +82,34 @@ export function ConfirmationModal({
         <div className="p-6">
           <div className="flex flex-col items-center text-center">
             <div className={cn(
-              "w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-transform duration-300 scale-110",
-              iconBgStyles[variant]
+              "w-14 h-14 rounded-full flex items-center justify-center mb-5 transition-all duration-500 scale-110",
+              "ring-8 ring-offset-0 ring-opacity-10",
+              variant === 'danger' && "ring-red-500/20 bg-red-100 dark:bg-red-900/30",
+              variant === 'primary' && "ring-blue-500/20 bg-blue-100 dark:bg-blue-900/30",
+              variant === 'warning' && "ring-yellow-500/20 bg-yellow-100 dark:bg-yellow-900/30",
+              variant === 'success' && "ring-green-500/20 bg-green-100 dark:bg-green-900/30",
+              variant === 'info' && "ring-blue-500/20 bg-blue-100 dark:bg-blue-900/30",
             )}>
-              {typeof FinalIcon === 'function' ? <FinalIcon /> : <FinalIcon className={cn("w-6 h-6", iconTextStyles[variant])} />}
+              <FinalIcon className={cn("w-7 h-7", iconTextStyles[variant])} />
             </div>
-            
-            <DialogHeader className="space-y-2">
-              <DialogTitle className="text-xl font-bold text-gray-900">
+
+            <DialogHeader className="space-y-2 text-center sm:text-center">
+              <DialogTitle className="text-xl font-bold text-foreground">
                 {title}
               </DialogTitle>
-              <DialogDescription className="text-gray-500 text-sm leading-relaxed">
+              <DialogDescription className="text-muted-foreground text-sm leading-relaxed max-w-[320px]">
                 {description}
               </DialogDescription>
             </DialogHeader>
           </div>
         </div>
 
-        <DialogFooter className="bg-gray-50 p-4 sm:p-6 flex flex-row gap-3 mt-0">
+        <DialogFooter className="bg-muted/30 dark:bg-muted/10 p-4 sm:p-6 flex flex-row gap-3 mt-0 border-t border-border/50">
           {showCancel && (
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={onClose}
-              className="flex-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 h-11 rounded-xl font-medium transition-all"
+              className="flex-1 bg-background border-border text-foreground hover:bg-accent h-11 rounded-xl font-medium transition-all"
               disabled={isLoading}
             >
               {cancelText}

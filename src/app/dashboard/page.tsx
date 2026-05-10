@@ -68,7 +68,9 @@ export default function DashboardPage() {
 
   return (
     <RoleGuard allowedRoles={["JEFE"]}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="min-h-screen bg-background transition-colors duration-500">
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
+        <div className="relative z-10 flex flex-col">
       {/* Prefetch de rutas principales para mejorar navegación */}
       <div className="hidden">
         <Link href="/mesas" prefetch={true}><span></span></Link>
@@ -83,27 +85,27 @@ export default function DashboardPage() {
       </div>
 
       {/* Header minimalista */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
+      <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50 transition-all duration-300">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                <ChefHat className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 bg-gradient-to-tr from-blue-600/90 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 ring-4 ring-blue-500/5">
+                <ChefHat className="w-6 h-6 text-white drop-shadow-md" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">
+                <h1 className="text-lg font-bold text-foreground tracking-tight leading-none mb-1">
                   {companyName}
                 </h1>
                 <div className="flex items-center gap-2">
-                  <p className="text-xs text-gray-500">
+                  <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-widest">
                     {session?.user?.name}
                   </p>
-                  <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${ordersConnected && tablesConnected
-                      ? 'bg-green-500'
-                      : 'bg-red-500'
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-muted/50 rounded-full border border-border/30">
+                    <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${ordersConnected && tablesConnected
+                      ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                      : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'
                       }`}></div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
                       {ordersConnected && tablesConnected ? 'En línea' : 'Desconectado'}
                     </span>
                   </div>
@@ -116,23 +118,21 @@ export default function DashboardPage() {
               <div className="relative">
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="text-gray-600 hover:text-gray-900 relative"
+                  size="icon"
+                  className="w-10 h-10 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all active:scale-95"
                   onClick={() => setIsNotificationDrawerOpen(true)}
                 >
                   {getAlertsCount() > 0 ? (
-                    <BellRing className="w-4 h-4" />
+                    <BellRing className="w-5 h-5 animate-bounce-subtle" />
                   ) : (
-                    <Bell className="w-4 h-4" />
+                    <Bell className="w-5 h-5" />
                   )}
                 </Button>
 
                 {/* Badge de contador de alertas */}
                 {getAlertsCount() > 0 && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-semibold text-white">
-                      {getAlertsCount() > 9 ? '9+' : getAlertsCount()}
-                    </span>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 dark:bg-red-600 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-lg shadow-red-500/40 border-2 border-background animate-in zoom-in-50 duration-300">
+                    {getAlertsCount() > 9 ? '9+' : getAlertsCount()}
                   </div>
                 )}
               </div>
@@ -141,7 +141,7 @@ export default function DashboardPage() {
                 onClick={handleSignOut}
                 variant="ghost"
                 size="sm"
-                className="text-gray-600 hover:text-gray-900"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Salir
@@ -153,17 +153,17 @@ export default function DashboardPage() {
 
       <main className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Alerta de Estado de Impresión */}
-        <div className={`mb-6 p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 transition-all duration-500 ${
+        <div className={`mb-6 p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 transition-all duration-500 shadow-sm ${
           serviceStatus === 'active' 
-            ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
-            : 'bg-amber-50 border-amber-100 text-amber-800 animate-pulse'
+            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400' 
+            : 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400 animate-pulse'
         }`}>
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-full ${serviceStatus === 'active' ? 'bg-emerald-200' : 'bg-amber-200'}`}>
+            <div className={`p-2 rounded-full ${serviceStatus === 'active' ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
               <Printer className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-bold">
+              <p className="text-sm font-bold uppercase tracking-wide">
                 Servicio de Impresión: {serviceStatus === 'active' ? 'ACTIVO' : 'DETENIDO'}
               </p>
               <p className="text-xs opacity-80">
@@ -177,8 +177,8 @@ export default function DashboardPage() {
             size="sm" 
             variant="outline" 
             onClick={navigateToImpresion}
-            className={`rounded-full border-current hover:bg-white/50 ${
-              serviceStatus === 'active' ? 'text-emerald-700' : 'text-amber-700'
+            className={`rounded-full border-current/30 hover:bg-white/10 dark:hover:bg-black/10 transition-colors ${
+              serviceStatus === 'active' ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'
             }`}
           >
             Gestionar Impresión
@@ -286,15 +286,17 @@ export default function DashboardPage() {
         {/* Widgets administrativos */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
           {/* Acciones Rápidas - Ocupa 2 columnas en pantallas grandes */}
-          <Card className="xl:col-span-3 hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
+          <div className="xl:col-span-3 bg-card/40 backdrop-blur-md rounded-xl sm:rounded-2xl border border-border/50 overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md">
+            <div className="p-4 sm:p-6 border-b border-border/50">
+              <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-3 uppercase tracking-tighter">
+                <div className="p-2 bg-purple-500/10 rounded-xl">
+                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
+                </div>
                 Acciones Rápidas
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+              </h2>
+            </div>
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
                   { label: 'Menú', icon: BookOpen, color: 'orange' as ActionColor, onClick: navigateToMenu },
                   { label: 'Inventario', icon: Package, color: 'purple' as ActionColor, onClick: navigateToInventario },
@@ -313,8 +315,8 @@ export default function DashboardPage() {
                   />
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
         </div>
 
@@ -337,6 +339,7 @@ export default function DashboardPage() {
           icon={LogOut}
         />
       </main>
+    </div>
     </div>
     </RoleGuard>
   )

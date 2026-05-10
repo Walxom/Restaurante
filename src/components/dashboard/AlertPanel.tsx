@@ -19,17 +19,17 @@ interface AlertPanelProps {
 export function AlertPanel({ stats, loading }: AlertPanelProps) {
   if (loading || !stats) {
     return (
-      <Card className="hover:shadow-md transition-shadow duration-200">
+      <Card className="bg-card/40 backdrop-blur-md border-border/50 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          <CardTitle className="text-base sm:text-lg font-bold flex items-center gap-2 text-foreground">
+            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
             Alertas del Sistema
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-center py-6 sm:py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-sm text-gray-500">Cargando alertas...</span>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <span className="ml-3 text-sm text-muted-foreground font-medium">Cargando alertas...</span>
           </div>
         </CardContent>
       </Card>
@@ -83,49 +83,58 @@ export function AlertPanel({ stats, loading }: AlertPanelProps) {
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow duration-200">
+    <Card className="bg-card/40 backdrop-blur-md border-border/50 shadow-sm transition-all duration-300 hover:shadow-lg">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-          {alerts.length > 0 ? (
-            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
-          ) : (
-            <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
-          )}
+        <CardTitle className="text-base sm:text-lg font-bold flex items-center gap-3 text-foreground">
+          <div className={`p-2 rounded-lg ${alerts.length > 0 ? 'bg-amber-500/10' : 'bg-emerald-500/10'}`}>
+            {alerts.length > 0 ? (
+              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
+            ) : (
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500" />
+            )}
+          </div>
           Alertas del Sistema
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         {alerts.length === 0 ? (
-          <div className="flex items-center gap-2 sm:gap-3 text-green-600 py-3 sm:py-4">
-            <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="text-sm sm:text-base font-medium">Todo funcionando correctamente</span>
+          <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400 py-3 sm:py-4 px-2">
+            <div className="p-1.5 bg-emerald-500/10 rounded-full">
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+            </div>
+            <span className="text-sm sm:text-base font-bold">Todo funcionando correctamente</span>
           </div>
         ) : (
           <div className="space-y-2 sm:space-y-3">
             {alerts.map((alert, index) => {
               const Icon = alert.icon
               const colorClasses = {
-                error: 'border-red-200 bg-red-50 text-red-800',
-                warning: 'border-yellow-200 bg-yellow-50 text-yellow-800',
-                info: 'border-blue-200 bg-blue-50 text-blue-800'
+                error: 'border-red-500/20 bg-red-500/5 dark:bg-red-500/10 text-red-700 dark:text-red-400',
+                warning: 'border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',
+                info: 'border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400'
               }
               
               return (
-                <Alert key={index} className={`${colorClasses[alert.type]} rounded-lg sm:rounded-xl border transition-all duration-200 hover:shadow-sm`}>
-                  <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <AlertDescription>
-                    <div className="flex flex-col gap-1 sm:gap-1.5">
-                      <span className="font-semibold text-xs sm:text-sm">
-                        {alert.title}
-                      </span>
-                      <span className="text-xs sm:text-sm leading-relaxed">
-                        {alert.message}
-                      </span>
-                      <span className="text-xs opacity-75 mt-1 font-medium">
-                        💡 {alert.action}
-                      </span>
+                <Alert key={index} className={`${colorClasses[alert.type]} rounded-xl border shadow-sm transition-all duration-300 hover:scale-[1.01]`}>
+                  <div className="flex gap-3">
+                    <div className="p-2 bg-background/50 dark:bg-black/20 rounded-lg h-fit">
+                      <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
-                  </AlertDescription>
+                    <AlertDescription>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-xs sm:text-sm tracking-tight">
+                          {alert.title}
+                        </span>
+                        <span className="text-xs sm:text-sm leading-relaxed opacity-80 mt-0.5">
+                          {alert.message}
+                        </span>
+                        <div className="flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest mt-3 opacity-70">
+                          <span className="p-1 bg-current/10 rounded-md">💡</span>
+                          {alert.action}
+                        </div>
+                      </div>
+                    </AlertDescription>
+                  </div>
                 </Alert>
               )
             })}

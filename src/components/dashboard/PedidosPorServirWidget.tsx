@@ -110,15 +110,15 @@ export default function PedidosPorServirWidget({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return 'bg-red-100 text-red-700'
+        return 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
       case 'CONFIRMED':
-        return 'bg-orange-100 text-orange-700'
+        return 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20'
       case 'PREPARING':
-        return 'bg-blue-100 text-blue-700'
+        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
       case 'READY':
-        return 'bg-green-100 text-green-700'
+        return 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
       default:
-        return 'bg-gray-100 text-gray-700'
+        return 'bg-muted text-muted-foreground border border-border'
     }
   }
 
@@ -159,13 +159,13 @@ export default function PedidosPorServirWidget({
   const getOrderTypeIcon = (type: string) => {
     switch (type) {
       case 'MESA':
-        return <Utensils className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
+        return <Utensils className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
       case 'DELIVERY':
-        return <Truck className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
+        return <Truck className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
       case 'PARA_LLEVAR':
-        return <Package className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />
+        return <Package className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500 flex-shrink-0" />
       default:
-        return <Package className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 flex-shrink-0" />
+        return <Package className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
     }
   }
 
@@ -185,15 +185,15 @@ export default function PedidosPorServirWidget({
   }
 
   return (
-    <div className={`bg-white/70 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-gray-200/50 overflow-hidden ${className}`}>
+    <div className={`bg-card/40 backdrop-blur-md rounded-xl sm:rounded-2xl border border-border/50 overflow-hidden shadow-sm ${className}`}>
       {showHeader && (
-        <div className="p-4 sm:p-6 border-b border-gray-200/50">
+        <div className="p-4 sm:p-6 border-b border-border/50">
           <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
+            <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
               {title}
             </h2>
-            <span className="px-2 sm:px-3 py-1 bg-orange-100 rounded-full text-xs sm:text-sm font-medium text-orange-600">
+            <span className="px-2 sm:px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full text-xs sm:text-sm font-bold text-orange-500">
               {orders.length}
             </span>
           </div>
@@ -234,36 +234,40 @@ export default function PedidosPorServirWidget({
                 {orders.map((order) => (
                   <div 
                     key={order.id}
-                    className="group p-3 sm:p-4 bg-white/50 hover:bg-white/80 border border-gray-200/50 rounded-lg sm:rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.01]"
+                    className="group p-3 sm:p-4 bg-muted/30 hover:bg-muted/50 border border-border/40 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01]"
                     onClick={() => handleOrderClick(order.id)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          {getOrderTypeIcon(order.type)}
-                          <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <div className="p-1.5 bg-background/50 dark:bg-black/40 rounded-lg">
+                            {getOrderTypeIcon(order.type)}
+                          </div>
+                          <p className="text-sm font-bold text-foreground truncate">
                             {getOrderTypeName(order)}
                           </p>
                           {order.status === 'READY' && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/20 animate-pulse">
                               ¡Listo!
                             </span>
                           )}
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">
-                          #{order.orderNumber} - {order.user.name}
+                        <p className="text-xs text-muted-foreground mb-2 truncate">
+                          #{order.orderNumber} • {order.user.name}
                         </p>
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                        <div className="flex items-center justify-between">
+                          <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${getStatusColor(order.status)}`}>
                             {getStatusText(order.status)}
                           </span>
-                          <span className="text-sm font-bold text-gray-900">
+                          <span className="text-sm font-black text-foreground">
                             {formatCurrency(order.totalAmount || 0)}
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center justify-center">
-                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                      <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="p-2 bg-primary/10 rounded-full">
+                          <Eye className="h-4 w-4 text-primary" />
+                        </div>
                       </div>
                     </div>
                   </div>

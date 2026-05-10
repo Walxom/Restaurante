@@ -1,12 +1,267 @@
-'use client'
+"use client"
 
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Receipt, FileText, X, Search, CheckCircle, Check } from 'lucide-react'
+import { Receipt, FileText, X, Search, Check, ShieldCheck, Sparkles } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+export default function CompleteOrderModal({
+  isOpen,
+  onClose,
+  onComplete,
+  orderNumber,
+  totalAmount
+}: CompleteOrderModalProps) {
+  const [selectedType, setSelectedType] = useState<'none' | 'boleta' | 'factura' | null>(null)
+  const [customerData, setCustomerData] = useState({ name: '', document: '', ruc: '' })
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [isDniVerified, setIsDniVerified] = useState(false)
+  const [isRucVerified, setIsRucVerified] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [receiptNumber, setReceiptNumber] = useState('')
+
+  const handleVerifyDNI = async () => {
+    if (customerData.document.length !== 8) return
+    setIsVerifying(true)
+    try {
+      const res = await fetch('/api/customers/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: 'dni', numero: customerData.document })
+      })
+      const result = await res.json()
+      if (res.ok && result.data) {
+        setCustomerData(prev => ({ ...prev, name: result.data.nombreCompleto }))
+        setIsDniVerified(true)
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
+  const handleVerifyRUC = async () => {
+    if (customerData.ruc.length !== 11) return
+    setIsVerifying(true)
+    try {
+      const res = await fetch('/api/customers/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: 'ruc', numero: customerData.ruc })
+      })
+      const result = await res.json()
+      if (res.ok && result.data) {
+        setCustomerData(prev => ({ ...prev, name: result.data.razonSocial }))
+        setIsRucVerified(true)
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
+  const handleComplete = async () => {
+    if (!selectedType) return
+    setIsProcessing(true)
+    try {
+      const receiptNum = await onComplete(selectedType, {
+        name: customerData.name,
+        document: customerData.document,
+        ruc: selectedType === 'factura' ? customerData.ruc : undefined
+      })
+      setReceiptNumber(receiptNum || '')
+      setShowSuccess(true)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleClose = () => {
+    setSelectedType(null)
+    setCustomerData({ name: '', document: '', ruc: '' })
+    setIsDniVerified(false)
+    setIsRucVerified(false)
+    setShowSuccess(false)
+    onClose()
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-md bg-card/40 backdrop-blur-2xl border-border/50 rounded-[2.5rem] p-0 overflow-hidden shadow-2xl">
+        <DialogHeader className="p-8 pb-4">
+          <DialogTitle className="text-xl font-black text-foreground uppercase tracking-tighter flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500">
+              <Receipt className="w-5 h-5" />
+            </div>
+            Finalizar Venta
+          </DialogTitle>
+        </DialogHeader>
+
+        {showSuccess ? (
+          <div className="p-8 pt-4 space-y-8 animate-in fade-in zoom-in duration-300">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-20 h-20 bg-emerald-500/10 rounded-[2rem] flex items-center justify-center text-emerald-500 relative">
+                <Check className="w-10 h-10" />
+                <Sparkles className="w-6 h-6 absolute -top-1 -right-1 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-foreground uppercase tracking-tighter">Venta Exitosa</h3>
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest opacity-60">Operación confirmada</p>
+              </div>
+            </div>
+
+            <div className="bg-foreground/5 rounded-3xl p-6 border border-border/50 space-y-4">
+              <div className="flex justify-between items-center border-b border-border/50 pb-4">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Orden</span>
+                <span className="font-bold text-foreground">#{orderNumber}</span>
+              </div>
+              {receiptNumber && (
+                <div className="flex justify-between items-center border-b border-border/50 pb-4">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Comprobante</span>
+                  <span className="font-mono font-bold text-emerald-500">{receiptNumber}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Pagado</span>
+                <span className="text-xl font-black text-foreground">S/ {(typeof totalAmount === 'string' ? parseFloat(totalAmount) : totalAmount).toFixed(2)}</span>
+              </div>
+            </div>
+
+            <Button 
+              onClick={handleClose}
+              className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-emerald-600/20"
+            >
+              Cerrar y Continuar
+            </Button>
+          </div>
+        ) : (
+          <div className="p-8 pt-4 space-y-8">
+            {/* Total Display */}
+            <div className="bg-foreground/5 rounded-3xl p-6 border border-border/50 flex justify-between items-center">
+              <div>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total a Cobrar</p>
+                <h4 className="text-3xl font-black text-foreground tracking-tighter">S/ {(typeof totalAmount === 'string' ? parseFloat(totalAmount) : totalAmount).toFixed(2)}</h4>
+              </div>
+              <div className="px-4 py-2 bg-emerald-500/10 rounded-xl">
+                <span className="text-xs font-black text-emerald-500 uppercase tracking-widest">Efectivo</span>
+              </div>
+            </div>
+
+            {/* Selection Grid */}
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">Tipo de Comprobante</Label>
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { id: 'none', label: 'Sin Comprobante', icon: X, color: 'slate' },
+                  { id: 'boleta', label: 'Boleta de Venta', icon: Receipt, color: 'emerald' },
+                  { id: 'factura', label: 'Factura Electrónica', icon: FileText, color: 'blue' }
+                ].map((type) => (
+                  <button
+                    key={type.id}
+                    onClick={() => setSelectedType(type.id as any)}
+                    className={cn(
+                      "flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 text-left",
+                      selectedType === type.id 
+                        ? `bg-${type.color}-500/10 border-${type.color}-500/50 shadow-lg shadow-${type.color}-500/5`
+                        : "bg-foreground/5 border-border/50 hover:border-foreground/20"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                      selectedType === type.id ? `text-${type.color}-500` : "text-muted-foreground"
+                    )}>
+                      <type.icon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className={cn("text-sm font-black uppercase tracking-tight", selectedType === type.id ? "text-foreground" : "text-muted-foreground")}>
+                        {type.label}
+                      </p>
+                    </div>
+                    {selectedType === type.id && <Check className="w-4 h-4 text-foreground" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Customer Form */}
+            {selectedType && selectedType !== 'none' && (
+              <div className="space-y-5 animate-in slide-in-from-top duration-300">
+                <div className="h-px bg-border/50" />
+                <div className="space-y-4">
+                  <div className="grid gap-2">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-2">
+                      {selectedType === 'boleta' ? 'DNI del Cliente' : 'RUC de la Empresa'}
+                    </Label>
+                    <div className="relative group">
+                      <Input
+                        value={selectedType === 'boleta' ? customerData.document : customerData.ruc}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '')
+                          setCustomerData(prev => ({ 
+                            ...prev, 
+                            [selectedType === 'boleta' ? 'document' : 'ruc']: val 
+                          }))
+                          setIsDniVerified(false)
+                          setIsRucVerified(false)
+                        }}
+                        placeholder={selectedType === 'boleta' ? "8 dígitos" : "11 dígitos"}
+                        className="h-14 rounded-2xl bg-foreground/5 border-border/50 pl-12 focus:ring-blue-500/20 font-bold"
+                      />
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-blue-500 transition-colors" />
+                      <Button
+                        onClick={selectedType === 'boleta' ? handleVerifyDNI : handleVerifyRUC}
+                        disabled={isVerifying || (selectedType === 'boleta' ? customerData.document.length !== 8 : customerData.ruc.length !== 11)}
+                        className="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 font-black uppercase tracking-widest text-[9px]"
+                      >
+                        {isVerifying ? "..." : "Validar"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {(isDniVerified || isRucVerified) && (
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3 animate-in zoom-in duration-300">
+                      <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" />
+                      <div>
+                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Identidad Verificada</p>
+                        <p className="text-sm font-bold text-foreground leading-tight">{customerData.name}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Footer Actions */}
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="ghost"
+                onClick={handleClose}
+                className="flex-1 h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-rose-500/10 hover:text-rose-500"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleComplete}
+                disabled={!selectedType || (selectedType !== 'none' && !isDniVerified && !isRucVerified) || isProcessing}
+                className="flex-[2] h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-blue-600/20"
+              >
+                {isProcessing ? "Procesando..." : "Confirmar Pago"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 interface CompleteOrderModalProps {
   isOpen: boolean
@@ -20,456 +275,3 @@ interface CompleteOrderModalProps {
   totalAmount: number
 }
 
-export default function CompleteOrderModal({
-  isOpen,
-  onClose,
-  onComplete,
-  orderNumber,
-  totalAmount
-}: CompleteOrderModalProps) {
-  const [selectedType, setSelectedType] = useState<'none' | 'boleta' | 'factura' | null>(null)
-  const [customerData, setCustomerData] = useState({
-    name: '',
-    document: '',
-    ruc: ''
-  })
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [isVerifyingRuc, setIsVerifyingRuc] = useState(false)
-  const [isDniVerified, setIsDniVerified] = useState(false)
-  const [isRucVerified, setIsRucVerified] = useState(false)
-  const [showSuccess, setShowSuccess] = useState(false)
-  const [receiptNumber, setReceiptNumber] = useState('')
-
-  // ✅ Verificar DNI usando nuestra API interna
-  const handleVerifyDNI = async () => {
-    if (!customerData.document.trim() || customerData.document.length !== 8) {
-      alert('Por favor ingrese un DNI válido de 8 dígitos')
-      return
-    }
-
-    setIsVerifying(true)
-    try {
-      const response = await fetch('/api/customers/validate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tipo: 'dni',
-          numero: customerData.document
-        })
-      })
-      
-      const result = await response.json()
-
-      if (!response.ok || result.error) {
-        alert(result.error || 'Error al verificar el DNI')
-        return
-      }
-
-      setCustomerData(prev => ({
-        ...prev,
-        name: result.data.nombreCompleto
-      }))
-      setIsDniVerified(true)
-    } catch (error) {
-      console.error(error)
-      alert('Error de conexión al verificar el DNI. Intente nuevamente.')
-      setIsDniVerified(false)
-    } finally {
-      setIsVerifying(false)
-    }
-  }
-
-  // ✅ Verificar RUC usando nuestra API interna
-  const handleVerifyRUC = async () => {
-    if (!customerData.ruc.trim() || customerData.ruc.length !== 11) {
-      alert('Por favor ingrese un RUC válido de 11 dígitos')
-      return
-    }
-
-    setIsVerifyingRuc(true)
-    try {
-      const response = await fetch('/api/customers/validate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tipo: 'ruc',
-          numero: customerData.ruc
-        })
-      })
-      
-      const result = await response.json()
-
-      if (!response.ok || result.error) {
-        alert(result.error || 'Error al verificar el RUC')
-        return
-      }
-
-      setCustomerData(prev => ({
-        ...prev,
-        name: result.data.razonSocial
-      }))
-      setIsRucVerified(true)
-    } catch (error) {
-      console.error(error)
-      alert('Error de conexión al verificar el RUC. Intente nuevamente.')
-      setIsRucVerified(false)
-    } finally {
-      setIsVerifyingRuc(false)
-    }
-  }
-
-  const handleComplete = async () => {
-    if (!selectedType) return
-    
-    // Validaciones antes de procesar
-    if (selectedType === 'boleta') {
-      if (!customerData.document.trim()) {
-        console.log('Validación fallida: DNI requerido')
-        return
-      }
-      if (!customerData.name.trim()) {
-        console.log('Validación fallida: DNI no verificado')
-        return
-      }
-    }
-
-    if (selectedType === 'factura') {
-      if (!customerData.ruc.trim()) {
-        console.log('Validación fallida: RUC requerido')
-        return
-      }
-      if (!customerData.name.trim()) {
-        console.log('Validación fallida: RUC no verificado')
-        return
-      }
-    }
-
-    setIsProcessing(true)
-
-    try {
-      if (selectedType === 'none') {
-        await onComplete('none')
-        // Para pedidos sin comprobante, mostrar éxito simple
-        setShowSuccess(true)
-        setReceiptNumber('')
-      } else {
-        // onComplete ahora retorna el número de comprobante
-        const receiptNum = await onComplete(selectedType, {
-          name: customerData.name,
-          document: customerData.document,
-          ruc: selectedType === 'factura' ? customerData.ruc : undefined
-        })
-
-        // Usar el número de comprobante real retornado por la API
-        setReceiptNumber(receiptNum || '')
-        setShowSuccess(true)
-        
-        console.log('Mostrando pantalla de éxito con número:', receiptNum)
-      }
-    } catch (error) {
-      console.error('Error al completar pedido:', error)
-      // En caso de error, no mostrar la pantalla de éxito
-      setIsProcessing(false)
-    }
-  }
-
-  const resetForm = () => {
-    setSelectedType(null)
-    setCustomerData({ name: '', document: '', ruc: '' })
-    setIsDniVerified(false)
-    setIsRucVerified(false)
-    setShowSuccess(false)
-    setReceiptNumber('')
-  }
-
-  const handleClose = () => {
-    resetForm()
-    onClose()
-  }
-
-  return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-sm sm:max-w-md mx-auto max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
-            <Receipt className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="hidden sm:inline">Completar Pedido #{orderNumber}</span>
-            <span className="sm:hidden">Pedido #{orderNumber}</span>
-          </DialogTitle>
-        </DialogHeader>
-
-        {showSuccess ? (
-          /* Pantalla de éxito */
-          <div className="text-center py-4 sm:py-8 space-y-4 sm:space-y-6">
-            {/* Animación del check */}
-            <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20">
-              <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
-              <div className="relative bg-green-500 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
-                <Check className="h-8 w-8 sm:h-10 sm:w-10 text-white animate-bounce" />
-              </div>
-            </div>
-
-            {/* Mensaje de éxito */}
-            <div className="space-y-2">
-              <h3 className="text-lg sm:text-xl font-bold text-green-600">
-                ¡Pedido completado exitosamente!
-              </h3>
-              {receiptNumber && (
-                <div className="space-y-1">
-                  <p className="text-sm sm:text-base text-gray-600">Boleta generada:</p>
-                  <p className="text-sm sm:text-lg font-mono font-bold text-green-700 bg-green-50 px-3 sm:px-4 py-2 rounded-lg border border-green-200 break-all">
-                    {receiptNumber}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Información adicional */}
-            <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200">
-              <div className="flex items-center justify-between text-xs sm:text-sm">
-                <span className="text-green-700">Pedido #{orderNumber}</span>
-                <span className="font-bold text-green-800">S/ {Number(totalAmount).toFixed(2)}</span>
-              </div>
-            </div>
-
-            {/* Botón para cerrar manualmente */}
-            <Button 
-              onClick={() => {
-                setShowSuccess(false)
-                handleClose()
-              }}
-              className="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm sm:text-base"
-            >
-              Cerrar
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4 sm:space-y-6">
-            {/* Resumen del pedido */}
-            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex justify-between items-center">
-                <span className="text-sm sm:text-base font-medium">Total a cobrar:</span>
-                <span className="text-lg sm:text-xl font-bold text-green-600">
-                  S/ {Number(totalAmount).toFixed(2)}
-                </span>
-              </div>
-            </div>
-
-          {/* Selección de tipo de comprobante */}
-          <div>
-            <Label className="text-sm sm:text-base font-medium mb-3 block">
-              ¿El cliente desea comprobante?
-            </Label>
-            
-            <div className="grid gap-2 sm:gap-3">
-              {/* Sin comprobante */}
-              <Card 
-                className={`cursor-pointer transition-all hover:shadow-md ${selectedType === 'none' ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
-                onClick={() => setSelectedType('none')}
-              >
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-500" />
-                    <div>
-                      <div className="text-sm sm:text-base font-medium">Sin comprobante</div>
-                      <div className="text-xs sm:text-sm text-gray-600">Solo completar el pedido</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Boleta */}
-              <Card 
-                className={`cursor-pointer transition-all hover:shadow-md ${selectedType === 'boleta' ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
-                onClick={() => setSelectedType('boleta')}
-              >
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Receipt className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
-                    <div>
-                      <div className="text-sm sm:text-base font-medium">Boleta</div>
-                      <div className="text-xs sm:text-sm text-gray-600">Para consumidor final (requiere DNI)</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Factura */}
-              <Card 
-                className={`cursor-pointer transition-all hover:shadow-md ${selectedType === 'factura' ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
-                onClick={() => setSelectedType('factura')}
-              >
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
-                    <div>
-                      <div className="text-sm sm:text-base font-medium">Factura</div>
-                      <div className="text-xs sm:text-sm text-gray-600">Para empresas (requiere RUC)</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Datos del cliente */}
-          {selectedType && selectedType !== 'none' && (
-            <div className="space-y-3 sm:space-y-4 border-t pt-3 sm:pt-4">
-              <Label className="text-sm sm:text-base font-medium">Datos del cliente</Label>
-              
-              <div className="space-y-3">
-                {selectedType === 'boleta' && (
-                  <>
-                    <div>
-                      <Label htmlFor="customerDocument" className="text-xs sm:text-sm">DNI *</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="customerDocument"
-                          value={customerData.document}
-                          onChange={(e) => {
-                            setCustomerData(prev => ({ ...prev, document: e.target.value }))
-                            setIsDniVerified(false) // Reset verification when DNI changes
-                          }}
-                          placeholder="12345678"
-                          maxLength={8}
-                          className={`mt-1 flex-1 text-sm ${isDniVerified ? 'border-green-500 bg-green-50' : ''}`}
-                        />
-                        <Button 
-                          onClick={handleVerifyDNI} 
-                          disabled={isVerifying || customerData.document.length !== 8}
-                          className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm px-2 sm:px-3 rounded-xl"
-                        >
-                          {isVerifying ? (
-                            <span className="hidden sm:inline">Verificando...</span>
-                          ) : (
-                            <>
-                              <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-1" /> 
-                              <span className="hidden sm:inline">Verificar</span>
-                              <span className="sm:hidden">Ver</span>
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="customerName" className="text-xs sm:text-sm">Nombre completo *</Label>
-                      <div className="relative">
-                        <Input
-                          id="customerName"
-                          value={customerData.name}
-                          disabled
-                          placeholder="Nombre se autocompletará al verificar DNI"
-                          className={`mt-1 text-sm ${isDniVerified ? 'bg-green-50 border-green-500 text-green-800 font-medium' : 'bg-gray-100'}`}
-                        />
-                        {isDniVerified && (
-                          <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {selectedType === 'factura' && (
-                  <>
-                    <div>
-                      <Label htmlFor="customerRuc" className="text-xs sm:text-sm">RUC *</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="customerRuc"
-                          value={customerData.ruc}
-                          onChange={(e) => {
-                            setCustomerData(prev => ({ ...prev, ruc: e.target.value }))
-                            setIsRucVerified(false) // Reset verification when RUC changes
-                          }}
-                          placeholder="20123456789"
-                          maxLength={11}
-                          className={`mt-1 flex-1 text-sm ${isRucVerified ? 'border-green-500 bg-green-50' : ''}`}
-                        />
-                        <Button 
-                          onClick={handleVerifyRUC} 
-                          disabled={isVerifyingRuc || customerData.ruc.length !== 11}
-                          className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm px-2 sm:px-3 rounded-xl"
-                        >
-                          {isVerifyingRuc ? (
-                            <span className="hidden sm:inline">Verificando...</span>
-                          ) : (
-                            <>
-                              <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-1" /> 
-                              <span className="hidden sm:inline">Verificar</span>
-                              <span className="sm:hidden">Ver</span>
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="customerName" className="text-xs sm:text-sm">Razón Social *</Label>
-                      <div className="relative">
-                        <Input
-                          id="customerName"
-                          value={customerData.name}
-                          disabled
-                          placeholder="Razón social se autocompletará al verificar RUC"
-                          className={`mt-1 text-sm ${isRucVerified ? 'bg-green-50 border-green-500 text-green-800 font-medium' : 'bg-gray-100'}`}
-                        />
-                        {isRucVerified && (
-                          <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="customerDocument" className="text-xs sm:text-sm">DNI del representante (opcional)</Label>
-                      <Input
-                        id="customerDocument"
-                        value={customerData.document}
-                        onChange={(e) => setCustomerData(prev => ({ ...prev, document: e.target.value }))}
-                        placeholder="12345678"
-                        maxLength={8}
-                        className="mt-1 text-sm"
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-            {/* Botones */}
-            <div className="flex gap-2 sm:gap-3 pt-3 sm:pt-4">
-              <Button
-                variant="outline"
-                onClick={handleClose}
-                className="flex-1 rounded-xl text-xs sm:text-sm"
-                disabled={isProcessing}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleComplete}
-                disabled={!selectedType || isProcessing}
-                className="flex-1 bg-green-600 hover:bg-green-700 rounded-xl text-xs sm:text-sm"
-              >
-                {isProcessing ? (
-                  <span className="hidden sm:inline">Procesando...</span>
-                ) : (
-                  <>
-                    <span className="hidden sm:inline">Completar Pedido</span>
-                    <span className="sm:hidden">Completar</span>
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  )
-}
