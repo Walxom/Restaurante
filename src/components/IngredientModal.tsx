@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { X, Package, Ruler, TrendingUp, DollarSign, ChevronRight, Info, Save, Layers, Scale } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { 
   UNIT_CATEGORIES, 
   getUnitsByCategory, 
@@ -66,14 +67,12 @@ export default function IngredientModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Cargar categorías al abrir el modal
   useEffect(() => {
     if (isOpen) {
       fetchCategories()
     }
   }, [isOpen])
 
-  // Cargar datos del ingrediente si estamos editando
   useEffect(() => {
     if (ingredient) {
       setFormData({
@@ -87,7 +86,6 @@ export default function IngredientModal({
         categoryId: ingredient.categoryId || ""
       })
       
-      // Usar la categoría guardada o determinar basada en la unidad actual
       const savedCategory = ingredient.unitCategory
       if (savedCategory) {
         setSelectedUnitCategory(savedCategory)
@@ -99,14 +97,8 @@ export default function IngredientModal({
       }
     } else {
       setFormData({
-        name: "",
-        unit: "",
-        unitCategory: "",
-        currentStock: "",
-        minStock: "",
-        maxStock: "",
-        cost: "",
-        categoryId: ""
+        name: "", unit: "", unitCategory: "", currentStock: "",
+        minStock: "", maxStock: "", cost: "", categoryId: ""
       })
       setSelectedUnitCategory("")
     }
@@ -120,51 +112,24 @@ export default function IngredientModal({
         const data = await response.json()
         setCategories(data)
       }
-    } catch (error) {
-      console.error('Error al cargar categorías:', error)
-    }
+    } catch (error) {}
   }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
-
-    if (!formData.name.trim()) {
-      newErrors.name = "El nombre es requerido"
-    }
-
-    if (!formData.unit.trim()) {
-      newErrors.unit = "La unidad es requerida"
-    }
-
-    if (!formData.currentStock || isNaN(Number(formData.currentStock)) || Number(formData.currentStock) < 0) {
-      newErrors.currentStock = "El stock actual debe ser un número positivo"
-    }
-
-    if (!formData.minStock || isNaN(Number(formData.minStock)) || Number(formData.minStock) < 0) {
-      newErrors.minStock = "El stock mínimo debe ser un número positivo"
-    }
-
-    if (formData.maxStock && (isNaN(Number(formData.maxStock)) || Number(formData.maxStock) < Number(formData.minStock))) {
-      newErrors.maxStock = "El stock máximo debe ser mayor al stock mínimo"
-    }
-
-    if (formData.cost && (isNaN(Number(formData.cost)) || Number(formData.cost) < 0)) {
-      newErrors.cost = "El costo debe ser un número positivo"
-    }
-
+    if (!formData.name.trim()) newErrors.name = "Requerido"
+    if (!formData.unit.trim()) newErrors.unit = "Requerido"
+    if (!formData.currentStock || isNaN(Number(formData.currentStock))) newErrors.currentStock = "Inválido"
+    if (!formData.minStock || isNaN(Number(formData.minStock))) newErrors.minStock = "Inválido"
+    
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!validateForm()) {
-      return
-    }
-
+    if (!validateForm()) return
     setIsSubmitting(true)
-
     try {
       const payload = {
         name: formData.name.trim(),
@@ -176,28 +141,22 @@ export default function IngredientModal({
         cost: formData.cost ? Number(formData.cost) : null,
         categoryId: formData.categoryId || null
       }
-
       const url = ingredient ? `/api/ingredients/${ingredient.id}` : "/api/ingredients"
       const method = ingredient ? "PATCH" : "POST"
-
       const response = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       })
-
       if (response.ok) {
         onSuccess()
         onClose()
       } else {
         const error = await response.json()
-        setErrors({ submit: error.error || "Error al guardar el ingrediente" })
+        setErrors({ submit: error.error || "Error al guardar" })
       }
     } catch (error) {
-      console.error("Error al guardar ingrediente:", error)
-      setErrors({ submit: "Error al conectar con el servidor" })
+      setErrors({ submit: "Error de conexión" })
     } finally {
       setIsSubmitting(false)
     }
@@ -205,302 +164,234 @@ export default function IngredientModal({
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    
-    // Sugerir categoría de unidad automáticamente cuando se cambia el nombre
     if (field === "name" && value.trim() && !selectedUnitCategory) {
       const suggestedCategory = suggestUnitCategory(value)
-      setSelectedUnitCategory(suggestedCategory)
-      
-      // Si hay una sugerencia, seleccionar la primera unidad de esa categoría
-      const categoryUnits = getUnitsByCategory(suggestedCategory)
-      if (categoryUnits.length > 0) {
-        setFormData(prev => ({ 
-          ...prev, 
-          unit: categoryUnits[0].value,
-          unitCategory: suggestedCategory
-        }))
-      }
+      if (suggestedCategory) handleUnitCategoryChange(suggestedCategory)
     }
-    
-    // Limpiar error del campo al escribir
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }))
-    }
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: "" }))
   }
 
   const handleUnitCategoryChange = (categoryId: string) => {
     setSelectedUnitCategory(categoryId)
-    
-    // Seleccionar la primera unidad de la categoría
     const categoryUnits = getUnitsByCategory(categoryId)
     if (categoryUnits.length > 0) {
-      setFormData(prev => ({ 
-        ...prev, 
-        unit: categoryUnits[0].value,
-        unitCategory: categoryId
-      }))
-    }
-    
-    // Limpiar error de unidad
-    if (errors.unit) {
-      setErrors(prev => ({ ...prev, unit: "" }))
+      setFormData(prev => ({ ...prev, unit: categoryUnits[0].value, unitCategory: categoryId }))
     }
   }
 
   if (!isOpen) return null
 
+  const SectionTitle = ({ icon: Icon, title, subtitle }: { icon: any, title: string, subtitle: string }) => (
+    <div className="flex items-center gap-3 mb-6">
+      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-sm text-primary shrink-0">
+        <Icon className="w-5 h-5" />
+      </div>
+      <div>
+        <h4 className="text-[10px] font-black text-foreground uppercase tracking-[0.2em] leading-none mb-1">{title}</h4>
+        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 leading-none">{subtitle}</p>
+      </div>
+    </div>
+  )
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-      <Card className="w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto mx-2 sm:mx-0">
-        <CardContent className="p-4 sm:p-6">
-          <h3 className="text-lg font-semibold mb-4">
-            {ingredient ? "Editar Ingrediente" : "Nuevo Ingrediente"}
-          </h3>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Nombre */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre *
-              </label>
-              <Input
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="Ej: Papas, Pollo, Coca Cola"
-                className={errors.name ? "border-red-500" : ""}
-              />
-              {errors.name && (
-                <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-              )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+      <div className="absolute inset-0 bg-background/60 backdrop-blur-xl animate-in fade-in duration-500" onClick={onClose} />
+      
+      <div className="relative w-full max-w-2xl bg-card/40 backdrop-blur-2xl border border-border/50 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-500 flex flex-col max-h-[90vh]">
+        
+        {/* HEADER */}
+        <div className="p-8 border-b border-border/50 flex items-center justify-between bg-foreground/[0.02]">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-lg shadow-primary/5 text-primary">
+              {ingredient ? <Save className="w-6 h-6" /> : <Package className="w-6 h-6" />}
             </div>
-
-            {/* Categoría */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Categoría (Opcional)
-              </label>
-              <Select 
-                value={formData.categoryId ? formData.categoryId : "no-category"} 
-                onValueChange={(value) => handleInputChange("categoryId", value === "no-category" ? "" : value)}
-              >
-                <SelectTrigger className={errors.categoryId ? "border-red-500" : ""}>
-                  <SelectValue placeholder="Seleccionar categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no-category">Sin categoría</SelectItem>
-                  {categories.map(category => (
-                    <SelectItem key={category.id} value={category.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: category.color }}
-                        />
-                        {category.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.categoryId && (
-                <p className="text-red-500 text-xs mt-1">{errors.categoryId}</p>
-              )}
-              <p className="text-xs text-gray-500 mt-1">
-                Ayuda a organizar y filtrar ingredientes
+              <h2 className="text-sm font-black text-foreground uppercase tracking-widest leading-none mb-1">
+                {ingredient ? "Ficha Técnica" : "Nuevo Registro"}
+              </h2>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                {ingredient ? `Editando: ${ingredient.name}` : "Configuración de insumo base"}
               </p>
             </div>
+          </div>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-10 w-10 rounded-xl hover:bg-foreground/5 text-muted-foreground">
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
 
-            {/* Tipo de Unidad */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo de Medición *
-              </label>
-              <Select value={selectedUnitCategory} onValueChange={handleUnitCategoryChange}>
-                <SelectTrigger className={errors.unit ? "border-red-500" : ""}>
-                  <SelectValue placeholder="Seleccionar tipo de medición" />
-                </SelectTrigger>
-                <SelectContent>
-                  {UNIT_CATEGORIES.map(category => (
-                    <SelectItem key={category.id} value={category.id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{category.name}</span>
-                        <span className="text-xs text-gray-500">{category.description}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              {/* Mostrar sugerencias de ingredientes para la categoría seleccionada */}
-              {selectedUnitCategory && (
-                <div className="mt-2">
-                  <p className="text-xs text-gray-600 mb-1">Ejemplos para esta categoría:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {INGREDIENT_TYPE_SUGGESTIONS[selectedUnitCategory as keyof typeof INGREDIENT_TYPE_SUGGESTIONS]
-                      ?.slice(0, 6)
-                      .map(suggestion => (
-                        <Badge key={suggestion} variant="secondary" className="text-xs">
-                          {suggestion}
-                        </Badge>
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className="p-8 space-y-12">
+            
+            {/* SECCIÓN 1: IDENTIFICACIÓN */}
+            <section>
+              <SectionTitle icon={Layers} title="Identificación" subtitle="Información principal del recurso" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Nombre del Insumo</label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    placeholder="EJ: COCA COLA 500ML"
+                    className={cn(
+                      "h-12 bg-foreground/[0.03] border-border/50 rounded-2xl px-5 text-[11px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 transition-all",
+                      errors.name && "border-rose-500/50 bg-rose-500/5"
+                    )}
+                  />
+                  {errors.name && <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest ml-1">Requerido</p>}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Categoría Operativa</label>
+                  <Select 
+                    value={formData.categoryId || "no-category"} 
+                    onValueChange={(v) => handleInputChange("categoryId", v === "no-category" ? "" : v)}
+                  >
+                    <SelectTrigger className="h-12 bg-foreground/[0.03] border-border/50 rounded-2xl px-5 text-[11px] font-black uppercase tracking-widest">
+                      <SelectValue placeholder="SIN CATEGORÍA" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover/80 backdrop-blur-xl border-border/50 rounded-2xl">
+                      <SelectItem value="no-category" className="text-[10px] font-black uppercase tracking-widest">Sin categoría</SelectItem>
+                      {categories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id} className="text-[10px] font-black uppercase tracking-widest">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                            {cat.name}
+                          </div>
+                        </SelectItem>
                       ))}
-                  </div>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </section>
+
+            {/* SECCIÓN 2: UNIDAD DE MEDIDA */}
+            <section>
+              <SectionTitle icon={Scale} title="Medición" subtitle="Configuración de métricas y envases" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Sistema de Medida</label>
+                  <Select value={selectedUnitCategory} onValueChange={handleUnitCategoryChange}>
+                    <SelectTrigger className="h-12 bg-foreground/[0.03] border-border/50 rounded-2xl px-5 text-[11px] font-black uppercase tracking-widest">
+                      <SelectValue placeholder="SELECCIONAR TIPO" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover/80 backdrop-blur-xl border-border/50 rounded-2xl">
+                      {UNIT_CATEGORIES.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id} className="text-[10px] font-black uppercase tracking-widest">
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Unidad Base</label>
+                  <Select 
+                    value={formData.unit} 
+                    onValueChange={(v) => handleInputChange("unit", v)}
+                    disabled={!selectedUnitCategory}
+                  >
+                    <SelectTrigger className="h-12 bg-foreground/[0.03] border-border/50 rounded-2xl px-5 text-[11px] font-black uppercase tracking-widest disabled:opacity-30">
+                      <SelectValue placeholder="SELECCIONAR UNIDAD" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover/80 backdrop-blur-xl border-border/50 rounded-2xl">
+                      {selectedUnitCategory && getUnitsByCategory(selectedUnitCategory).map(u => (
+                        <SelectItem key={u.value} value={u.value} className="text-[10px] font-black uppercase tracking-widest">
+                          {u.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {selectedUnitCategory && (
+                <div className="mt-4 flex flex-wrap gap-1.5 ml-1">
+                  {INGREDIENT_TYPE_SUGGESTIONS[selectedUnitCategory as keyof typeof INGREDIENT_TYPE_SUGGESTIONS]
+                    ?.slice(0, 5).map(s => (
+                      <span key={s} className="px-2 py-0.5 rounded-md bg-primary/5 border border-primary/10 text-[8px] font-black uppercase tracking-tighter text-primary/60">
+                        {s}
+                      </span>
+                    ))}
                 </div>
               )}
-            </div>
+            </section>
 
-            {/* Unidad Específica */}
-            {selectedUnitCategory && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Unidad Específica *
-                </label>
-                <Select 
-                  value={formData.unit} 
-                  onValueChange={(value) => handleInputChange("unit", value)}
-                >
-                  <SelectTrigger className={errors.unit ? "border-red-500" : ""}>
-                    <SelectValue placeholder="Seleccionar unidad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getUnitsByCategory(selectedUnitCategory).map(unit => (
-                      <SelectItem key={unit.value} value={unit.value}>
-                        {unit.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.unit && (
-                  <p className="text-red-500 text-xs mt-1">{errors.unit}</p>
-                )}
+            {/* SECCIÓN 3: CONTROL DE EXISTENCIAS */}
+            <section>
+              <SectionTitle icon={TrendingUp} title="Logística" subtitle="Niveles de stock y alertas" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Stock Actual</label>
+                  <Input
+                    type="number" step="0.1"
+                    value={formData.currentStock}
+                    onChange={(e) => handleInputChange("currentStock", e.target.value)}
+                    className="h-12 bg-foreground/[0.03] border-border/50 rounded-2xl px-5 text-[11px] font-black tracking-widest focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-rose-500 uppercase tracking-widest ml-1 flex items-center gap-1">
+                    Mínimo <Info className="w-2.5 h-2.5 opacity-50" />
+                  </label>
+                  <Input
+                    type="number" step="0.1"
+                    value={formData.minStock}
+                    onChange={(e) => handleInputChange("minStock", e.target.value)}
+                    className="h-12 bg-rose-500/[0.03] border-rose-500/20 rounded-2xl px-5 text-[11px] font-black tracking-widest focus:ring-2 focus:ring-rose-500/20 transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Máximo Opt.</label>
+                  <Input
+                    type="number" step="0.1"
+                    value={formData.maxStock}
+                    onChange={(e) => handleInputChange("maxStock", e.target.value)}
+                    className="h-12 bg-foreground/[0.03] border-border/50 rounded-2xl px-5 text-[11px] font-black tracking-widest focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                </div>
               </div>
-            )}
+            </section>
 
-            {/* Stock Actual */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Stock Actual *
-              </label>
-              <Input
-                type="number"
-                min="0"
-                step="0.1"
-                value={formData.currentStock}
-                onChange={(e) => handleInputChange("currentStock", e.target.value)}
-                placeholder="0"
-                className={errors.currentStock ? "border-red-500" : ""}
-              />
-              {errors.currentStock && (
-                <p className="text-red-500 text-xs mt-1">{errors.currentStock}</p>
-              )}
-            </div>
-
-            {/* Stock Mínimo */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Stock Mínimo *
-              </label>
-              <Input
-                type="number"
-                min="0"
-                step="0.1"
-                value={formData.minStock}
-                onChange={(e) => handleInputChange("minStock", e.target.value)}
-                placeholder="0"
-                className={errors.minStock ? "border-red-500" : ""}
-              />
-              {errors.minStock && (
-                <p className="text-red-500 text-xs mt-1">{errors.minStock}</p>
-              )}
-              <p className="text-xs text-gray-500 mt-1">
-                Se mostrarán alertas cuando el stock esté por debajo de este valor
-              </p>
-            </div>
-
-            {/* Stock Máximo */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Stock Máximo (Opcional)
-              </label>
-              <Input
-                type="number"
-                min="0"
-                step="0.1"
-                value={formData.maxStock}
-                onChange={(e) => handleInputChange("maxStock", e.target.value)}
-                placeholder="0"
-                className={errors.maxStock ? "border-red-500" : ""}
-              />
-              {errors.maxStock && (
-                <p className="text-red-500 text-xs mt-1">{errors.maxStock}</p>
-              )}
-              <p className="text-xs text-gray-500 mt-1">
-                Referencia para compras y gestión de almacén
-              </p>
-            </div>
-
-            {/* Costo */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Costo por Unidad (Opcional)
-              </label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.cost}
-                onChange={(e) => handleInputChange("cost", e.target.value)}
-                placeholder="0.00"
-                className={errors.cost ? "border-red-500" : ""}
-              />
-              {errors.cost && (
-                <p className="text-red-500 text-xs mt-1">{errors.cost}</p>
-              )}
-              <p className="text-xs text-gray-500 mt-1">
-                Para calcular valor total del inventario
-              </p>
-            </div>
-
-
-
-            {/* Error general */}
-            {errors.submit && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-600 text-sm">{errors.submit}</p>
+            {/* SECCIÓN 4: COSTOS */}
+            <section>
+              <SectionTitle icon={DollarSign} title="Finanzas" subtitle="Valoración y costos de adquisición" />
+              <div className="max-w-xs space-y-2">
+                <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Costo Unitario (S/)</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
+                  <Input
+                    type="number" step="0.01"
+                    value={formData.cost}
+                    onChange={(e) => handleInputChange("cost", e.target.value)}
+                    className="h-12 bg-foreground/[0.03] border-border/50 rounded-2xl pl-10 pr-5 text-[11px] font-black tracking-widest focus:ring-2 focus:ring-primary/20 transition-all"
+                    placeholder="0.00"
+                  />
+                </div>
               </div>
-            )}
+            </section>
 
-            {/* Botones */}
-            <div className="flex flex-col sm:flex-row gap-2 pt-4">
-              <Button
-                type="button"
-                onClick={onClose}
-                variant="outline"
-                className="flex-1 order-2 sm:order-1"
-                disabled={isSubmitting}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 bg-green-600 hover:bg-green-700 order-1 sm:order-2"
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    <span className="hidden sm:inline">Guardando...</span>
-                    <span className="sm:hidden">...</span>
-                  </div>
-                ) : (
-                  <>
-                    <span className="hidden sm:inline">{ingredient ? "Actualizar" : "Crear Ingrediente"}</span>
-                    <span className="sm:hidden">{ingredient ? "Actualizar" : "Crear"}</span>
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+        </form>
+
+        {/* FOOTER */}
+        <div className="p-8 border-t border-border/50 bg-foreground/[0.02] flex gap-4">
+          <Button
+            type="button"
+            onClick={onClose}
+            variant="ghost"
+            className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-foreground/5 transition-all"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="flex-[2] h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-foreground text-background hover:opacity-90 shadow-xl shadow-black/10 transition-all active:scale-95"
+          >
+            {isSubmitting ? "Guardando Cambios..." : (ingredient ? "Actualizar Insumo" : "Crear Ingrediente")}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }
