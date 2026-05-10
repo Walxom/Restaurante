@@ -14,6 +14,7 @@ import OrderDetailsModal from "@/components/OrderDetailsModal"
 import InvoicesStats from "@/components/dashboard/InvoicesStats"
 import InvoicesFilters from "@/components/dashboard/InvoicesFilters"
 import InvoicesTable from "@/components/dashboard/InvoicesTable"
+import { AlertCircle, ArrowRight, ShieldAlert } from "lucide-react"
 
 import { useInvoices } from "@/hooks/useInvoices"
 
@@ -33,6 +34,8 @@ export default function FacturacionPage() {
     handleSearch,
     clearFilters
   } = useInvoices()
+
+  const { pendingCount } = filters
 
   const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<any>(null)
@@ -152,14 +155,6 @@ export default function FacturacionPage() {
     } catch (error) { console.error(error) }
   }
 
-  if (loading && invoices.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="font-black uppercase tracking-widest text-xs opacity-50">Cargando comprobantes...</p>
-      </div>
-    )
-  }
-
   return (
     <RoleGuard allowedRoles={["JEFE"]}>
       <div className="min-h-screen bg-background transition-colors duration-500">
@@ -198,6 +193,33 @@ export default function FacturacionPage() {
               <p className="text-red-600">{error}</p>
             </CardContent>
           </Card>
+        )}
+
+        {/* Alerta de Pedidos sin Boleta */}
+        {pendingCount > 0 && (
+          <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 flex items-center justify-between animate-in slide-in-from-top duration-500">
+            <div className="flex items-center gap-4">
+              <div className="bg-orange-500/20 p-2 rounded-xl animate-pulse">
+                <ShieldAlert className="w-5 h-5 text-orange-500" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-orange-500 uppercase tracking-widest">Atención: Facturación Pendiente</h4>
+                <p className="text-xs text-orange-500/70 font-medium">Tienes <span className="font-black underline">{pendingCount}</span> pedidos terminados que aún no tienen un comprobante de pago.</p>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                filters.setWithoutReceiptFilter(true)
+                handleSearch()
+              }}
+              className="border-orange-500/30 bg-orange-500/5 hover:bg-orange-500/10 text-orange-500 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2 transition-all"
+            >
+              Gestionar Ahora
+              <ArrowRight className="w-3 h-3" />
+            </Button>
+          </div>
         )}
 
         <InvoicesStats stats={stats} formatCurrency={formatCurrency} />

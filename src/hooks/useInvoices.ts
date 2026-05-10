@@ -53,6 +53,7 @@ export function useInvoices() {
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const [withoutReceiptFilter, setWithoutReceiptFilter] = useState(false)
+  const [pendingCount, setPendingCount] = useState(0)
 
   // Paginación
   const [currentPage, setCurrentPage] = useState(1)
@@ -93,7 +94,9 @@ export function useInvoices() {
           }
         }))
         setInvoices(ordersAsInvoices)
-        setTotalPages(data.pagination?.pages || 1)
+        // La API de pedidos actual retorna un array directo, no tiene metadatos de paginación.
+        // Asumimos 1 página si el limit es alto o calculamos basándonos en los datos si fuera necesario.
+        setTotalPages(1) 
       } else {
         const params = new URLSearchParams({
           page: currentPage.toString(),
@@ -139,6 +142,16 @@ export function useInvoices() {
     if (session?.user?.role === "JEFE") {
       fetchInvoices()
       fetchStats()
+      
+      // Obtener todos los pedidos completados sin factura para el conteo real
+      fetch(`/api/orders?status=COMPLETED&withoutInvoice=true&showAll=true`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setPendingCount(data.length)
+          }
+        })
+        .catch(err => console.error("Error loading pending count:", err))
     }
   }, [session, fetchInvoices, fetchStats])
 
@@ -171,6 +184,7 @@ export function useInvoices() {
       startDate, setStartDate,
       endDate, setEndDate,
       withoutReceiptFilter, setWithoutReceiptFilter,
+      pendingCount
     },
     pagination: {
       currentPage, setCurrentPage,

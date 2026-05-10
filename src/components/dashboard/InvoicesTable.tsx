@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { FileText, Package, Eye } from "lucide-react"
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime"
+import { cn } from "@/lib/utils"
 
 interface InvoicesTableProps {
   invoices: Invoice[]
