@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient, OrderItemStatus } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
+import { OrderItemStatus } from '@/types'
 import { emitOrderUpdate } from '@/lib/socket-events'
+import { updateOrderSchema } from '@/lib/validations/order'
 
 const prisma = new PrismaClient()
 
@@ -93,13 +95,13 @@ export async function GET(
         { status: 403 }
       )
     }
-    
+
     // Verificar que el pedido fue creado por JEFE o MESERO
     const orderCreator = await prisma.user.findUnique({
       where: { id: order.userId },
       select: { role: true }
     })
-    
+
     if (!orderCreator || !['JEFE', 'MESERO'].includes(orderCreator.role)) {
       return NextResponse.json(
         { error: 'Este pedido no puede ser visualizado' },
@@ -129,19 +131,20 @@ export async function PATCH(
     }
 
     const { id } = await context.params
-    let body
-    try {
-      body = await request.json()
-    } catch (jsonError) {
-      console.error('Error parsing JSON:', jsonError)
+    const body = await request.json()
+
+    // Validar con Zod
+    const validation = updateOrderSchema.safeParse(body)
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Formato de datos inválido' },
+        { error: 'Datos de actualización inválidos', details: validation.error.issues },
         { status: 400 }
       )
     }
-    const { notes, customerName, customerDni, items } = body
-    
-    console.log("API PATCH recibido:", { id, notes, customerName, customerDni, items })
+
+    const { notes, customerName, customerDni, items } = validation.data
+
+    console.log("API PATCH validado:", { id, notes, customerName, customerDni, itemsCount: items?.length })
 
     // Obtener el pedido actual con items originales para detectar cambios
     const existingOrder = await prisma.order.findUnique({
@@ -171,13 +174,13 @@ export async function PATCH(
         { status: 403 }
       )
     }
-    
+
     // Verificar que el pedido fue creado por JEFE o MESERO
     const orderCreator = await prisma.user.findUnique({
       where: { id: existingOrder.userId },
       select: { role: true }
     })
-    
+
     if (!orderCreator || !['JEFE', 'MESERO'].includes(orderCreator.role)) {
       return NextResponse.json(
         { error: 'Este pedido no puede ser modificado' },
@@ -223,7 +226,7 @@ export async function PATCH(
       // Separar items nuevos de existentes para validación
       const newItems = items.filter((item: { id?: string }) => !item.id || item.id.toString().startsWith('item_'))
       const existingItems = items.filter((item: { id?: string }) => item.id && !item.id.toString().startsWith('item_'))
-      
+
       // Solo validar disponibilidad de productos para items NUEVOS
       const newProductIds = newItems
         .filter((item: { productId?: string }) => item.productId)
@@ -231,7 +234,7 @@ export async function PATCH(
       const existingProductIds = existingItems
         .filter((item: { productId?: string }) => item.productId)
         .map((item: { productId: string }) => item.productId)
-      
+
       // Obtener productos para items nuevos (deben estar disponibles)
       const newProducts = newProductIds.length > 0 ? await prisma.product.findMany({
         where: {
@@ -267,7 +270,7 @@ export async function PATCH(
         if (!product) {
           throw new Error(`Producto ${item.productId} no encontrado`)
         }
-        
+
         const subtotal = Number(product.price) * item.quantity
         newTotalAmount += subtotal
       })
@@ -280,11 +283,13 @@ export async function PATCH(
       // Si hay nuevos items, manejar actualizaciones y creaciones
       if (items && Array.isArray(items) && products.length > 0) {
         console.log("Items recibidos para actualizar:", items)
-        
+
         // Separar items existentes de nuevos
-        const existingItems = items.filter((item: { id?: string }) => item.id && !item.id.toString().startsWith('item_'))
-        const newItems = items.filter((item: { id?: string }) => !item.id || item.id.toString().startsWith('item_'))
-        
+        const existingItems = items.filter((item): item is { id: string; productId: string; quantity: number; notes?: string } => 
+          !!item.id && !item.id.toString().startsWith('item_')
+        )
+        const newItems = items.filter(item => !item.id || item.id.toString().startsWith('item_'))
+
         console.log("Items existentes:", existingItems)
         console.log("Items nuevos:", newItems)
 
@@ -293,16 +298,16 @@ export async function PATCH(
           where: { orderId: id },
           select: { id: true, status: true }
         })
-        
+
         // Obtener IDs de items que se van a mantener
-        const keepItemIds = existingItems.map((item: { id: string }) => item.id)
-        
+        const keepItemIds = existingItems.map(item => item.id)
+
         // Solo eliminar items que NO están en la lista Y que NO están servidos
         // Los items servidos NUNCA se eliminan
         const itemsToDelete = currentOrderItems
           .filter(item => !keepItemIds.includes(item.id) && item.status !== 'SERVED')
           .map(item => item.id)
-          
+
         if (itemsToDelete.length > 0) {
           console.log("Eliminando items (solo PENDING):", itemsToDelete)
           await tx.orderItem.deleteMany({
@@ -319,14 +324,14 @@ export async function PATCH(
             console.warn(`Producto no encontrado para item ${(item as { id: string }).id}`)
             continue
           }
-          
+
           const subtotal = Number((product as { price: unknown })!.price) * (item as { quantity: number }).quantity
 
           // Verificar que el item existe antes de actualizar
           const existingItem = await tx.orderItem.findUnique({
             where: { id: (item as { id: string }).id }
           })
-          
+
           if (existingItem) {
             await tx.orderItem.update({
               where: { id: (item as { id: string }).id },
@@ -445,10 +450,10 @@ async function printOrderChanges(
     // Separar items nuevos de existentes
     const newItemsOnly = newItems.filter((item: { id?: string }) => !item.id || item.id.toString().startsWith('item_'))
     const existingItemsOnly = newItems.filter((item: { id?: string }) => item.id && !item.id.toString().startsWith('item_'))
-    
+
     // Obtener IDs de items que se van a mantener
     const keepItemIds = existingItemsOnly.map((item: { id?: string }) => item.id)
-    
+
     // Detectar items eliminados (que estaban en original pero no en la nueva lista)
     const removedItems = originalItems
       .filter(originalItem => !keepItemIds.includes(originalItem.id))
@@ -508,8 +513,8 @@ async function printOrderChanges(
         const printData = {
           orderId: order.id,
           orderNumber: order.orderNumber,
-          tableNumber: order.type === 'MESA' && order.table 
-            ? order.table.number.toString() 
+          tableNumber: order.type === 'MESA' && order.table
+            ? order.table.number.toString()
             : order.type,
           waiterName: order.user?.name || 'Sistema',
           addedItems: addedItems.map(item => {
@@ -528,13 +533,13 @@ async function printOrderChanges(
         try {
           const { PrinterConfigService } = await import('@/lib/printer-config')
           const kitchenPrinter = await PrinterConfigService.getKitchenPrinter()
-          
+
           if (kitchenPrinter) {
             // Generar contenido del ticket
             const ticketContent = generateChangesTicket(printData)
             console.log('Enviando cambios a impresora de cocina:', kitchenPrinter.name)
             console.log('Contenido del ticket:', ticketContent)
-            
+
             // Aquí se podría integrar con el driver de impresión real
             // Por ahora solo logueamos el contenido
           } else {
@@ -567,7 +572,7 @@ function generateChangesTicket(data: {
   timestamp: Date
 }): string {
   const lines: string[] = []
-  
+
   // Header
   lines.push('================================')
   lines.push('      CAMBIOS EN PEDIDO')
@@ -579,7 +584,7 @@ function generateChangesTicket(data: {
   lines.push(`Hora: ${data.timestamp.toLocaleTimeString('es-PE')}`)
   lines.push('')
   lines.push('================================')
-  
+
   // Items agregados
   if (data.addedItems.length > 0) {
     lines.push('')
@@ -592,7 +597,7 @@ function generateChangesTicket(data: {
       }
     })
   }
-  
+
   // Items eliminados
   if (data.removedItems.length > 0) {
     lines.push('')
@@ -602,7 +607,7 @@ function generateChangesTicket(data: {
       lines.push(`- ${item.quantity}x ${item.productName}`)
     })
   }
-  
+
   lines.push('')
   lines.push('================================')
   lines.push('     REVISAR CAMBIOS')
@@ -610,7 +615,7 @@ function generateChangesTicket(data: {
   lines.push('')
   lines.push('')
   lines.push('')
-  
+
   return lines.join('\n')
 }
 
@@ -648,13 +653,13 @@ export async function DELETE(
         { status: 403 }
       )
     }
-    
+
     // Verificar que el pedido fue creado por JEFE o MESERO
     const orderCreator = await prisma.user.findUnique({
       where: { id: order.userId },
       select: { role: true }
     })
-    
+
     if (!orderCreator || !['JEFE', 'MESERO'].includes(orderCreator.role)) {
       return NextResponse.json(
         { error: 'Este pedido no puede ser cancelado' },
@@ -675,7 +680,7 @@ export async function DELETE(
       // Marcar pedido como cancelado
       const updated = await tx.order.update({
         where: { id },
-        data: { 
+        data: {
           status: 'CANCELLED',
           updatedAt: new Date()
         },

@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertStats } from "@/hooks/useInventoryAlerts"
+import { AlertStats } from "@/types"
 import { Package, AlertTriangle, FileX, CheckCircle } from "lucide-react"
 
 interface InventoryStatsProps {

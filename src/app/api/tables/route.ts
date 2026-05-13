@@ -32,6 +32,8 @@ export async function GET() {
   }
 }
 
+import { createTableSchema } from "@/lib/validations/table"
+
 // POST - Crear nueva mesa
 export async function POST(request: NextRequest) {
   try {
@@ -46,18 +48,21 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     
-    // Validar datos requeridos
-    if (!body.number || !body.capacity) {
+    // Validar con Zod
+    const validation = createTableSchema.safeParse(body)
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "Número y capacidad son requeridos" },
+        { error: "Datos de mesa inválidos", details: validation.error.issues },
         { status: 400 }
       )
     }
 
+    const { number, capacity, status } = validation.data
+
     // Verificar que el número de mesa no exista (solo entre mesas activas)
     const existingTable = await prisma.table.findFirst({
       where: { 
-        number: parseInt(body.number),
+        number: number,
         isActive: true
       }
     })
@@ -72,9 +77,9 @@ export async function POST(request: NextRequest) {
     // Crear la mesa
     const table = await prisma.table.create({
       data: {
-        number: parseInt(body.number),
-        capacity: parseInt(body.capacity),
-        status: "DISPONIBLE",
+        number,
+        capacity,
+        status,
         isActive: true,
       }
     })

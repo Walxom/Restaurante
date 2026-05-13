@@ -1,8 +1,7 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
 import { Search, Filter, ChevronDown, RotateCcw } from "lucide-react"
-import { IngredientCategory } from "@/hooks/useInventoryCategories"
+import { IngredientCategory } from "@/types"
 
 interface InventoryFiltersProps {
   searchTerm: string
@@ -23,7 +22,7 @@ export function InventoryFilters({
   setCategoryFilter,
   categories
 }: InventoryFiltersProps) {
-  
+
   const stockOptions = [
     { id: 'all', label: 'Todos los niveles' },
     { id: 'low', label: 'Stock Bajo' },

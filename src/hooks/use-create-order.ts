@@ -1,6 +1,7 @@
 import { useState } from "react"
-import { CartItem, CustomerData, OrderType, CreatedOrder, Table } from "@/types/orders"
+import { CartItem, CustomerData, OrderType, CreatedOrder, Table } from "@/types"
 import { useThermalPrinter } from "@/components/PrintKitchenButton"
+import { createOrderSchema } from "@/lib/validations/order"
 
 interface UseCreateOrderProps {
   cartItems: CartItem[]
@@ -16,47 +17,38 @@ export function useCreateOrder() {
   const [showOrderModal, setShowOrderModal] = useState(false)
   const [createdOrder, setCreatedOrder] = useState<CreatedOrder | null>(null)
   const [printerError, setPrinterError] = useState<string | null>(null)
+  const [validationErrors, setValidationErrors] = useState<any[]>([])
   const { printOrder } = useThermalPrinter()
 
-  const isValidOrder = (props: UseCreateOrderProps) => {
-    const { orderType, customerData, selectedTable, cartItems } = props
-
-    if ((orderType === 'PARA_LLEVAR' || orderType === 'DELIVERY') && !customerData.name.trim()) {
-      alert("Para pedidos para llevar y delivery, el nombre del cliente es obligatorio")
-      return false
-    }
-    
-    if (orderType === 'MESA' && !selectedTable) {
-      alert("Por favor, seleccione una mesa")
-      return false
-    }
-    
-    if (orderType === 'DELIVERY') {
-      if (!customerData.phone.trim()) {
-        alert("Para pedidos de delivery, el teléfono es obligatorio")
-        return false
-      }
-      if (!customerData.address.trim()) {
-        alert("Para pedidos de delivery, la dirección es obligatoria")
-        return false
-      }
-    }
-    
-    if (cartItems.length === 0) {
-      alert("Por favor, agregue al menos un producto al pedido")
-      return false
-    }
-    
-    return true
-  }
-
   const createOrder = async (props: UseCreateOrderProps) => {
-    if (!isValidOrder(props)) {
+    const { orderType, customerData, selectedTable, cartItems, notes, session } = props
+    
+    // Preparar datos para validación
+    const orderData = {
+      tableId: orderType === 'MESA' ? selectedTable?.id : undefined,
+      type: orderType,
+      customerName: customerData.name?.trim() || undefined,
+      customerPhone: customerData.phone?.trim() || undefined,
+      customerAddress: customerData.address?.trim() || undefined,
+      customerAddressReference: customerData.addressReference?.trim() || undefined,
+      notes: notes || undefined,
+      items: cartItems.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        notes: item.notes || undefined
+      }))
+    }
+
+    // Validar con Zod
+    const validation = createOrderSchema.safeParse(orderData)
+    if (!validation.success) {
+      setValidationErrors(validation.error.issues)
+      const firstError = validation.error.issues[0]
+      alert(firstError.message)
       return
     }
 
-    const { orderType, customerData, selectedTable, cartItems, notes, session } = props
-    
+    setValidationErrors([])
     setIsCreatingOrder(true)
     setPrinterError(null)
 

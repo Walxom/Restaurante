@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Table, Category, Product } from "@/types/orders"
+import { Table, Category, Product } from "@/types"
 
 export function useOrderData() {
   const [tables, setTables] = useState<Table[]>([])

@@ -4,21 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { X, Layers, ArrowRight, Info, AlertTriangle, CheckCircle, FileX, Plus, Minus, Hash, Package } from "lucide-react"
-
-interface Ingredient {
-  id: string
-  name: string
-  unit: string
-  currentStock: number
-  minStock: number
-  maxStock?: number
-  status: string
-  statusText: string
-  category?: {
-    name: string
-    color: string
-  }
-}
+import { Ingredient } from "@/types"
 
 interface BulkStockAdjustModalProps {
   isOpen: boolean
@@ -121,9 +107,9 @@ export default function BulkStockAdjustModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       <div className="absolute inset-0 bg-background/60 backdrop-blur-xl animate-in fade-in duration-500" onClick={onClose} />
-      
+
       <div className="relative w-full max-w-2xl bg-card/40 backdrop-blur-2xl border border-border/50 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-500 flex flex-col max-h-[90vh]">
-        
+
         {/* HEADER */}
         <div className="p-8 border-b border-border/50 flex items-center justify-between bg-foreground/[0.02]">
           <div className="flex items-center gap-4">
@@ -154,11 +140,10 @@ export default function BulkStockAdjustModal({
                   key={opt.id}
                   type="button"
                   onClick={() => setAction(opt.id as any)}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all duration-300 ${
-                    action === opt.id 
-                      ? `bg-foreground/[0.05] border-foreground/20 shadow-lg` 
+                  className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all duration-300 ${action === opt.id
+                      ? `bg-foreground/[0.05] border-foreground/20 shadow-lg`
                       : 'bg-transparent border-border/50 hover:border-foreground/20 grayscale opacity-40 hover:opacity-100 hover:grayscale-0'
-                  }`}
+                    }`}
                 >
                   <opt.icon className={`w-4 h-4 ${action === opt.id ? opt.color : 'text-foreground'}`} />
                   <span className="text-[9px] font-black uppercase tracking-widest">{opt.label}</span>
@@ -195,7 +180,7 @@ export default function BulkStockAdjustModal({
                 const qty = quantity && !isNaN(Number(quantity)) ? Number(quantity) : 0
                 const newStock = calculateNewStock(ing, qty)
                 const status = getStatusInfo(newStock, ing.minStock)
-                
+
                 return (
                   <div key={ing.id} className="p-3 rounded-2xl bg-foreground/[0.02] border border-border/30 flex flex-col gap-2 transition-all hover:bg-foreground/[0.04]">
                     <div className="flex items-center justify-between">

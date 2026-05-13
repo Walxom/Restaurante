@@ -9,11 +9,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { 
-  Printer, 
-  FileText, 
-  Receipt, 
-  Server, 
+import {
+  Printer,
+  FileText,
+  Receipt,
+  Server,
   Settings,
   ChevronDown,
   Users,
@@ -23,42 +23,7 @@ import { Badge } from "@/components/ui/badge"
 import toast from "react-hot-toast"
 import { FiscalReceiptPreview } from "@/components/FiscalReceiptPreview"
 import { KitchenTicketPreview } from "@/components/KitchenTicketPreview"
-
-interface Order {
-  id: string
-  orderNumber: string
-  status: string
-  totalAmount: number
-  createdAt: string
-  startDate?: string
-  endDate?: string
-  notes?: string
-  customerName?: string
-  customerDni?: string
-  customerPhone?: string
-  table?: {
-    number: number
-  }
-  orderItems: Array<{
-    id: string
-    quantity: number
-    unitPrice: number
-    subtotal: number
-    notes?: string
-    status: string
-    product: {
-      name: string
-    }
-  }>
-  user: {
-    name: string
-  }
-  invoice?: {
-    id: string
-    type: 'BOLETA' | 'FACTURA'
-    number: string
-  }
-}
+import { Order } from "@/types"
 
 interface QueueStatus {
   length: number
@@ -128,7 +93,7 @@ export default function ThermalPrintButton({ order, size = "sm", variant = "outl
           return <Server className="h-3 w-3 text-gray-400" />
       }
     }
-    
+
     return <Server className="h-3 w-3 text-gray-400" />
   }
 
@@ -152,8 +117,8 @@ export default function ThermalPrintButton({ order, size = "sm", variant = "outl
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
-            variant={variant} 
+          <Button
+            variant={variant}
             size="sm"
             className="h-7 px-2 text-xs relative"
           >
@@ -181,13 +146,13 @@ export default function ThermalPrintButton({ order, size = "sm", variant = "outl
               </div>
             )}
           </div>
-          
+
           <DropdownMenuItem asChild>
             <FiscalReceiptPreview
               orderId={order.id}
               documentType={order.invoice?.type || 'BOLETA'}
-              customerName={order.customerName}
-              customerRuc={order.customerDni}
+              customerName={order.customerName || undefined}
+              customerRuc={order.customerDni || undefined}
               trigger={
                 <div className="flex items-center cursor-pointer">
                   <Receipt className="h-4 w-4 mr-2" />
@@ -211,8 +176,8 @@ export default function ThermalPrintButton({ order, size = "sm", variant = "outl
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant={variant} 
+        <Button
+          variant={variant}
           size={size}
           className="relative"
         >
@@ -231,14 +196,14 @@ export default function ThermalPrintButton({ order, size = "sm", variant = "outl
             </span>
             <ChevronDown className="h-4 w-4 ml-2" />
           </>
-          
+
           {/* Indicador de estado */}
           <div className="absolute -top-1 -right-1">
             {getStatusIcon()}
           </div>
         </Button>
       </DropdownMenuTrigger>
-      
+
       <DropdownMenuContent align="end" className="w-64">
         <div className="px-3 py-2 border-b">
           <div className="flex items-center justify-between mb-1">
@@ -265,14 +230,14 @@ export default function ThermalPrintButton({ order, size = "sm", variant = "outl
             )}
           </div>
         </div>
-        
+
         {/* Vista previa de Boleta/Factura Fiscal */}
         <DropdownMenuItem asChild>
           <FiscalReceiptPreview
             orderId={order.id}
             documentType={order.invoice?.type || 'BOLETA'}
-            customerName={order.customerName}
-            customerRuc={order.customerDni}
+            customerName={order.customerName || undefined}
+            customerRuc={order.customerDni || undefined}
             trigger={
               <div className="flex items-center w-full py-3 cursor-pointer">
                 <Receipt className="h-5 w-5 mr-3 text-blue-500" />
@@ -315,9 +280,9 @@ export default function ThermalPrintButton({ order, size = "sm", variant = "outl
             }}
           />
         </DropdownMenuItem>
-        
+
         <DropdownMenuSeparator />
-        
+
         <DropdownMenuItem onClick={fetchQueueStatus} className="py-2">
           <Settings className="h-4 w-4 mr-2" />
           <span className="text-sm">Actualizar Estado</span>

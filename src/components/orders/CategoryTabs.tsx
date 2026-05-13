@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils"
-import { Category } from "@/types/orders"
+import { Category } from "@/types"
 
 interface CategoryTabsProps {
   categories: Category[]
@@ -16,8 +16,8 @@ export function CategoryTabs({ categories, selectedCategory, setSelectedCategory
           onClick={() => setSelectedCategory(category.id)}
           className={cn(
             "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300",
-            selectedCategory === category.id 
-              ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20" 
+            selectedCategory === category.id
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
               : "bg-background/50 text-muted-foreground border border-border/50 hover:bg-accent"
           )}
         >

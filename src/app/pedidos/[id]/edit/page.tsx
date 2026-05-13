@@ -7,58 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, ShoppingCart, Clock, User, MapPin, Plus, Minus, Trash2, Search } from "lucide-react"
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
-
-interface Order {
-  id: string
-  orderNumber: string
-  status: string
-  totalAmount: number
-  notes?: string
-  type: string
-  table?: {
-    id: string
-    number: number
-  }
-  orderItems: Array<{
-    id: string
-    quantity: number
-    unitPrice: number
-    subtotal: number
-    notes?: string
-    status: 'PENDING' | 'SERVED'
-    product: {
-      id: string
-      name: string
-      price: number
-    }
-  }>
-}
-
-interface Product {
-  id: string
-  name: string
-  price: number
-  category: {
-    id: string
-    name: string
-  }
-  isAvailable: boolean
-}
-
-interface OrderItem {
-  id: string // ID único para cada item del carrito
-  productId: string
-  quantity: number
-  unitPrice: number
-  notes?: string
-  status?: 'PENDING' | 'SERVED' // Para items existentes
-  isNew?: boolean // Para distinguir items nuevos
-  product: {
-    id: string
-    name: string
-    price: number
-  }
-}
+import { Order, Product, OrderItem } from "@/types"
 
 export default function EditOrderPage() {
   const { data: session } = useSession()
@@ -130,7 +79,7 @@ export default function EditOrderPage() {
       if (response.ok) {
         const orderData = await response.json()
         setOrderNotFound(false)
-        
+
         // Verificar permisos: JEFE y MESERO pueden editar pedidos creados por cualquiera de los dos roles
         if (session?.user?.role !== 'JEFE' && session?.user?.role !== 'MESERO') {
           showModal({
@@ -142,7 +91,7 @@ export default function EditOrderPage() {
           })
           return
         }
-        
+
         // Verificar que el pedido fue creado por JEFE o MESERO
         const orderCreator = await fetch(`/api/users/${orderData.userId}`)
         if (orderCreator.ok) {
@@ -173,41 +122,45 @@ export default function EditOrderPage() {
 
         setOrder(orderData)
         setOrderNotes(orderData.notes || "")
-        
+
         // Separar items servidos de items editables
         const served: OrderItem[] = []
         const editable: OrderItem[] = []
-        
-        orderData.orderItems.forEach((item: { 
-          id: string; 
-          productId: string; 
-          quantity: number; 
-          unitPrice: number; 
-          notes?: string; 
+
+        orderData.orderItems.forEach((item: {
+          id: string;
+          productId: string;
+          quantity: number;
+          unitPrice: number;
+          notes?: string;
           status: 'PENDING' | 'SERVED';
-          product: { name: string; price: number; description?: string; category: { name: string } } 
+          product: { name: string; price: number; description?: string; categoryId?: string; category: { name: string } }
         }) => {
           const orderItem: OrderItem = {
             id: item.id,
             productId: item.productId,
             quantity: item.quantity,
             unitPrice: Number(item.unitPrice),
+            subtotal: item.quantity * Number(item.unitPrice),
             notes: item.notes || "",
             status: item.status,
             product: {
               id: item.productId,
               name: item.product.name,
-              price: Number(item.product.price)
+              price: Number(item.product.price),
+              isAvailable: true,
+              isActive: true,
+              categoryId: item.product.categoryId || "",
             }
           }
-          
+
           if (item.status === 'SERVED') {
             served.push(orderItem)
           } else {
             editable.push(orderItem)
           }
         })
-        
+
         setServedItems(served)
         setOrderItems(editable)
       } else {
@@ -254,31 +207,30 @@ export default function EditOrderPage() {
   const addProduct = (product: Product) => {
     // Verificar si el producto ya existe en los items editables (no servidos)
     const existingItemIndex = orderItems.findIndex(item => item.productId === product.id)
-    
+
     if (existingItemIndex !== -1) {
       // Si existe en items editables, incrementar la cantidad
-      setOrderItems(prevItems => 
-        prevItems.map((item, index) => 
-          index === existingItemIndex 
+      setOrderItems(prevItems =>
+        prevItems.map((item, index) =>
+          index === existingItemIndex
             ? { ...item, quantity: item.quantity + 1 }
             : item
         )
       )
     } else {
       // Si no existe, agregar nuevo item (marcado como nuevo)
-      setOrderItems(prevItems => [...prevItems, {
+      const newItem: OrderItem = {
         id: generateItemId(),
         productId: product.id,
         quantity: 1,
         unitPrice: Number(product.price),
+        subtotal: Number(product.price),
         notes: "",
-        isNew: true, // Marcar como nuevo item
-        product: {
-          id: product.id,
-          name: product.name,
-          price: Number(product.price)
-        }
-      }])
+        status: 'PENDING',
+        isNew: true,
+        product: product
+      }
+      setOrderItems(prevItems => [...prevItems, newItem])
     }
   }
 
@@ -288,19 +240,19 @@ export default function EditOrderPage() {
       return
     }
 
-    setOrderItems(items => 
-      items.map(item => 
-        item.id === itemId 
-          ? { ...item, quantity: newQuantity }
+    setOrderItems(items =>
+      items.map(item =>
+        item.id === itemId
+          ? { ...item, quantity: newQuantity, subtotal: newQuantity * item.unitPrice }
           : item
       )
     )
   }
 
   const updateItemNotes = (itemId: string, notes: string) => {
-    setOrderItems(items => 
-      items.map(item => 
-        item.id === itemId 
+    setOrderItems(items =>
+      items.map(item =>
+        item.id === itemId
           ? { ...item, notes }
           : item
       )
@@ -312,13 +264,13 @@ export default function EditOrderPage() {
   }
 
   const calculateTotal = () => {
-    return orderItems.reduce((total, item) => 
+    return orderItems.reduce((total, item) =>
       total + (item.quantity * item.unitPrice), 0
     )
   }
 
   const calculateServedTotal = () => {
-    return servedItems.reduce((total, item) => 
+    return servedItems.reduce((total, item) =>
       total + (item.quantity * item.unitPrice), 0
     )
   }
@@ -347,7 +299,7 @@ export default function EditOrderPage() {
     if (hasSignificantChanges && ['CONFIRMED', 'SERVED'].includes(order?.status || '')) {
       let confirmMessage = ''
       let title = ''
-      
+
       if (order?.status === 'CONFIRMED') {
         title = 'Modificar Pedido Confirmado'
         confirmMessage = `Este pedido ya está confirmado. ¿Estás seguro de que quieres modificarlo?\n\nLos cambios pueden afectar la preparación en cocina.`
@@ -355,7 +307,7 @@ export default function EditOrderPage() {
         title = 'Agregar Items a Pedido Servido'
         confirmMessage = `Este pedido ya está servido. ¿Estás seguro de que quieres agregar más items?\n\nEsto puede requerir preparación adicional en cocina.`
       }
-      
+
       showModal({
         type: 'confirm',
         title,
@@ -397,9 +349,9 @@ export default function EditOrderPage() {
         notes: orderNotes.trim() || null,
         items: allItems
       }
-      
+
       console.log("Payload enviado:", payload)
-      
+
       const response = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
         headers: {
@@ -434,9 +386,9 @@ export default function EditOrderPage() {
   }
 
   const cancelOrder = async () => {
-    const confirmMessage = `¿Estás seguro de que quieres cancelar este pedido?\n\nPedido: #${order?.orderNumber}\n${order?.type === 'MESA' && order?.table ? `Mesa: ${order.table.number}` : 
-  order?.type === 'DELIVERY' ? '🚚 Delivery' : 
-  '🥡 Para llevar'}\nTotal: S/ ${order?.totalAmount ? Number(order.totalAmount).toFixed(2) : '0.00'}\n\nEsta acción no se puede deshacer.`
+    const confirmMessage = `¿Estás seguro de que quieres cancelar este pedido?\n\nPedido: #${order?.orderNumber}\n${order?.type === 'MESA' && order?.table ? `Mesa: ${order.table.number}` :
+      order?.type === 'DELIVERY' ? '🚚 Delivery' :
+        '🥡 Para llevar'}\nTotal: S/ ${order?.totalAmount ? Number(order.totalAmount).toFixed(2) : '0.00'}\n\nEsta acción no se puede deshacer.`
 
     showModal({
       type: 'confirm',
@@ -500,8 +452,8 @@ export default function EditOrderPage() {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="bg-white/80 backdrop-blur-sm rounded-lg p-8 shadow-lg text-center">
-           <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-           <div className="text-xl font-medium text-red-600 mb-2">Pedido no encontrado</div>
+          <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <div className="text-xl font-medium text-red-600 mb-2">Pedido no encontrado</div>
           <div className="text-gray-600 mb-6">El pedido que buscas no existe o ha sido eliminado</div>
           <Button onClick={() => router.push("/pedidos")} className="bg-blue-600 hover:bg-blue-700">
             Volver a Pedidos
@@ -512,16 +464,16 @@ export default function EditOrderPage() {
   }
 
   // Obtener categorías únicas
-  const categories = Array.from(new Set(products.map(product => product.category.name)))
+  const categories = Array.from(new Set(products.map(product => product.category?.name).filter(Boolean))) as string[]
 
   // Filtrar productos según la categoría seleccionada
-  const filteredProducts = selectedCategory === 'all' 
-    ? products 
-    : products.filter(product => product.category.name === selectedCategory)
+  const filteredProducts = selectedCategory === 'all'
+    ? products
+    : products.filter(product => product.category?.name === selectedCategory)
 
   // Agrupar productos filtrados por categoría
   const productsByCategory = filteredProducts.reduce((acc, product) => {
-    const categoryName = product.category.name
+    const categoryName = product.category?.name || "Sin Categoría"
     if (!acc[categoryName]) {
       acc[categoryName] = []
     }
@@ -547,8 +499,8 @@ export default function EditOrderPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4">
-              <Button 
-                onClick={() => router.push(`/pedidos/${orderId}/detalles`)} 
+              <Button
+                onClick={() => router.push(`/pedidos/${orderId}/detalles`)}
                 variant="ghost"
                 size="sm"
                 className="text-gray-600 hover:text-gray-900"
@@ -559,27 +511,26 @@ export default function EditOrderPage() {
               <div className="h-6 w-px bg-gray-300 hidden sm:block"></div>
               <div>
                 <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-                  {order.status === 'PENDING' ? 'Editar' : 
-                   order.status === 'CONFIRMED' ? 'Modificar' : 
-                   'Agregar Items a'} Pedido #{order.orderNumber}
+                  {order.status === 'PENDING' ? 'Editar' :
+                    order.status === 'CONFIRMED' ? 'Modificar' :
+                      'Agregar Items a'} Pedido #{order.orderNumber}
                 </h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                    order.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
-                    order.status === 'PREPARING' ? 'bg-orange-100 text-orange-800' :
-                    order.status === 'READY' ? 'bg-green-100 text-green-800' :
-                    order.status === 'SERVED' ? 'bg-gray-100 text-gray-800' :
-                    order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                      order.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'PREPARING' ? 'bg-orange-100 text-orange-800' :
+                          order.status === 'READY' ? 'bg-green-100 text-green-800' :
+                            order.status === 'SERVED' ? 'bg-gray-100 text-gray-800' :
+                              order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                    }`}>
                     {order.status === 'PENDING' ? 'Pendiente' :
-                     order.status === 'CONFIRMED' ? 'Confirmado' :
-                     order.status === 'PREPARING' ? 'Preparando' :
-                     order.status === 'READY' ? 'Listo' :
-                     order.status === 'SERVED' ? 'Servido' :
-                     order.status === 'CANCELLED' ? 'Cancelado' :
-                     order.status}
+                      order.status === 'CONFIRMED' ? 'Confirmado' :
+                        order.status === 'PREPARING' ? 'Preparando' :
+                          order.status === 'READY' ? 'Listo' :
+                            order.status === 'SERVED' ? 'Servido' :
+                              order.status === 'CANCELLED' ? 'Cancelado' :
+                                order.status}
                   </span>
                   <span className="text-sm text-gray-600">
                     {order.type === 'MESA' && order.table ? (
@@ -645,7 +596,7 @@ export default function EditOrderPage() {
                   No hay productos disponibles
                 </h3>
                 <p className="text-gray-600">
-                  {selectedCategory === 'all' 
+                  {selectedCategory === 'all'
                     ? 'No hay productos disponibles en este momento.'
                     : `No hay productos disponibles en la categoría "${selectedCategory}".`
                   }
@@ -667,29 +618,29 @@ export default function EditOrderPage() {
                     <h2 className="text-lg font-semibold text-gray-900">{category}</h2>
                     <p className="text-sm text-gray-600">Selecciona productos para agregar al pedido</p>
                   </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {categoryProducts.map((product) => (
-                    <div 
-                      key={product.id}
-                      className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors duration-200 group"
-                      onClick={() => addProduct(product)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">{product.name}</h4>
-                          <p className="text-green-600 font-semibold mt-1">
-                            S/ {Number(product.price).toFixed(2)}
-                          </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {categoryProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors duration-200 group"
+                        onClick={() => addProduct(product)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">{product.name}</h4>
+                            <p className="text-green-600 font-semibold mt-1">
+                              S/ {Number(product.price).toFixed(2)}
+                            </p>
+                          </div>
+                          <Button size="sm" className="ml-3 bg-blue-600 hover:bg-blue-700 text-white">
+                            <Plus className="w-3 h-3 mr-1" />
+                            <span className="hidden sm:inline">Agregar</span>
+                          </Button>
                         </div>
-                        <Button size="sm" className="ml-3 bg-blue-600 hover:bg-blue-700 text-white">
-                          <Plus className="w-3 h-3 mr-1" />
-                          <span className="hidden sm:inline">Agregar</span>
-                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
               ))
             )}
           </div>
@@ -715,7 +666,7 @@ export default function EditOrderPage() {
                           SERVIDO
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm text-green-700">Cantidad: {item.quantity}</span>
                       </div>
@@ -734,7 +685,7 @@ export default function EditOrderPage() {
                     </div>
                   ))}
                 </div>
-                
+
                 <div className="border-t border-gray-200 pt-4 mt-4">
                   <div className="flex justify-between items-center text-sm font-medium">
                     <span className="text-gray-700">Subtotal Servido:</span>
@@ -777,8 +728,8 @@ export default function EditOrderPage() {
                                 </span>
                               )}
                             </div>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="ghost"
                               onClick={() => removeItem(item.id)}
                               className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded-lg"
@@ -786,10 +737,10 @@ export default function EditOrderPage() {
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
-                          
+
                           <div className="flex items-center gap-3 mb-3">
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => updateItemQuantity(item.id, item.quantity - 1)}
                               className="w-8 h-8 p-0 rounded-lg border-gray-300 hover:bg-gray-100"
@@ -797,8 +748,8 @@ export default function EditOrderPage() {
                               <Minus className="w-3 h-3" />
                             </Button>
                             <span className="text-sm font-medium w-8 text-center bg-white px-2 py-1 rounded-lg border border-gray-200">{item.quantity}</span>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
                               className="w-8 h-8 p-0 rounded-lg border-gray-300 hover:bg-gray-100"
@@ -865,7 +816,7 @@ export default function EditOrderPage() {
 
                 {/* Acciones */}
                 <div className="space-y-3 pt-6 border-t border-gray-200">
-                  <Button 
+                  <Button
                     onClick={saveOrder}
                     disabled={isSaving}
                     className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-xl shadow-sm transition-all duration-200 hover:shadow-md"
@@ -879,10 +830,10 @@ export default function EditOrderPage() {
                       "Guardar Cambios"
                     )}
                   </Button>
-                  
+
                   {/* Solo mostrar cancelar si el pedido puede ser cancelado */}
                   {!['COMPLETED', 'SERVED', 'CANCELLED'].includes(order?.status || '') && (
-                    <Button 
+                    <Button
                       onClick={cancelOrder}
                       variant="destructive"
                       className="w-full font-medium py-3 rounded-xl shadow-sm transition-all duration-200 hover:shadow-md bg-red-600 hover:bg-red-700"
@@ -890,7 +841,7 @@ export default function EditOrderPage() {
                       Cancelar Pedido
                     </Button>
                   )}
-                  
+
                   {/* Mostrar mensaje informativo si no se puede cancelar */}
                   {['COMPLETED', 'SERVED'].includes(order?.status || '') && (
                     <div className="text-sm text-gray-600 text-center p-4 bg-amber-50 border border-amber-200 rounded-xl">

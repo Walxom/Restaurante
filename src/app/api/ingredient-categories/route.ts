@@ -2,14 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { z } from 'zod'
-
-// Schema de validación para crear/actualizar categorías
-const categorySchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido').max(50, 'El nombre es muy largo'),
-  description: z.string().optional(),
-  color: z.string().regex(/^#[0-9A-F]{6}$/i, 'Color debe ser un hex válido').optional(),
-})
+import { ingredientCategorySchema } from '@/lib/validations/ingredient'
 
 // GET - Obtener todas las categorías
 export async function GET(request: NextRequest) {
@@ -63,7 +56,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const validatedData = categorySchema.parse(body)
+    const validation = ingredientCategorySchema.safeParse(body)
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', details: validation.error.issues },
+        { status: 400 }
+      )
+    }
+
+    const validatedData = validation.data
 
     // Verificar que el nombre no exista
     const existingCategory = await prisma.ingredientCategory.findUnique({
@@ -92,13 +94,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(category, { status: 201 })
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Datos inválidos', details: error.issues },
-        { status: 400 }
-      )
-    }
-
     console.error('Error creando categoría:', error)
     return NextResponse.json(
       { error: 'Error interno del servidor' },

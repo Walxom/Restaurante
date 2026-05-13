@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { CartItem, Product } from "@/types/orders"
+import { CartItem, Product } from "@/types"
 
 export function useCart() {
   const [cartItems, setCartItems] = useState<CartItem[]>([])

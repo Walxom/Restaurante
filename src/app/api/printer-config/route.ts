@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { PrinterType, PrinterConnectionType, PrinterStatus } from '@prisma/client'
+import { PrinterType, PrinterConnectionType, PrinterStatus } from '@/types'
 
 // Configuraciones por defecto
 const DEFAULT_CONFIGS = {
@@ -158,9 +158,9 @@ export async function GET() {
     } = {}
     printers.forEach(printer => {
       if (printer.type === 'FISCAL') {
-        configs.fiscal = formatPrinterForAPI(printer)
+        configs.fiscal = formatPrinterForAPI(printer as any)
       } else if (printer.type === 'KITCHEN') {
-        configs.kitchen = formatPrinterForAPI(printer)
+        configs.kitchen = formatPrinterForAPI(printer as any)
       }
     })
 
@@ -287,7 +287,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Configuración actualizada exitosamente',
-      config: formatPrinterForAPI(updatedPrinter)
+      config: formatPrinterForAPI(updatedPrinter as any)
     })
   } catch (error) {
     console.error('Error actualizando configuración de impresora:', error)

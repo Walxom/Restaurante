@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/input"
-import { CustomerData, OrderType } from "@/types/orders"
+import { OrderType, CustomerData } from "@/types"
 
 interface CustomerFormProps {
   orderType: OrderType

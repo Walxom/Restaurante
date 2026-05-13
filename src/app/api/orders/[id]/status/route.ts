@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
-import { convertToBaseUnit } from '@/lib/unitConversions'
+import { convertToBaseUnit } from '@/lib/units'
 import { emitOrderStatusChange } from '@/lib/socket-events'
+import { updateOrderStatusSchema } from '@/lib/validations/order'
 
 const prisma = new PrismaClient()
 
@@ -42,7 +43,7 @@ async function deductStockForItem(itemId: string, tx: any) {
   for (const recipeIngredient of recipe.ingredients) {
     // Calcular la cantidad necesaria basada en las porciones de la receta
     const recipeQuantityNeeded = (recipeIngredient.quantity * quantity) / recipe.servings
-    
+
     // Convertir la cantidad de la unidad de la receta a la unidad base del ingrediente
     const baseQuantityNeeded = convertToBaseUnit(
       recipeQuantityNeeded,
@@ -134,7 +135,7 @@ async function deductStockForOrder(orderId: string, tx: any) {
       for (const recipeIngredient of recipe.ingredients) {
         // Calcular la cantidad necesaria basada en las porciones de la receta
         const recipeQuantityNeeded = (recipeIngredient.quantity * quantity) / recipe.servings
-        
+
         // Convertir la cantidad de la unidad de la receta a la unidad base del ingrediente
         const baseQuantityNeeded = convertToBaseUnit(
           recipeQuantityNeeded,
@@ -202,7 +203,7 @@ async function deductStockForOrder(orderId: string, tx: any) {
       where: { id: deduction.ingredientId },
       select: { name: true, unit: true }
     })
-    
+
     console.log(
       `Stock deducido - ${ingredient?.name || 'Ingrediente desconocido'}: ` +
       `${deduction.totalDeduction} ${ingredient?.unit || 'unidad'} ` +
@@ -225,26 +226,18 @@ export async function PATCH(
     }
 
     const { id } = await context.params
-    let body
-    try {
-      body = await request.json()
-    } catch (jsonError) {
-      console.error('Error parsing JSON:', jsonError)
-      return NextResponse.json(
-        { error: 'Formato de datos inválido' },
-        { status: 400 }
-      )
-    }
-    const { status } = body
+    const body = await request.json()
 
-    // Validar el estado
-    const validStatuses = ['PENDING', 'CONFIRMED', 'SERVED', 'COMPLETED', 'CANCELLED']
-    if (!status || !validStatuses.includes(status)) {
+    // Validar con Zod
+    const validation = updateOrderStatusSchema.safeParse(body)
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Estado de pedido inválido' },
+        { error: 'Estado de pedido inválido', details: validation.error.issues },
         { status: 400 }
       )
     }
+
+    const { status } = validation.data
 
     // Obtener el pedido actual
     const order = await prisma.order.findUnique({
@@ -268,14 +261,14 @@ export async function PATCH(
         where: { id: order.userId },
         select: { role: true }
       })
-      
+
       if (!orderCreator || !['JEFE', 'MESERO'].includes(orderCreator.role)) {
         return NextResponse.json(
           { error: 'Este pedido no puede ser modificado' },
           { status: 403 }
         )
       }
-      
+
       // Meseros solo pueden cambiar a ciertos estados
       const meseroAllowedStatuses = ['PENDING', 'CONFIRMED', 'SERVED', 'COMPLETED', 'CANCELLED']
       if (!meseroAllowedStatuses.includes(status)) {
@@ -417,7 +410,7 @@ export async function PATCH(
           const currentTable = await tx.table.findUnique({
             where: { id: order.tableId }
           })
-          
+
           if (currentTable?.status === 'ESPERANDO') {
             // Verificar si todos los pedidos de la mesa están servidos
             const allOrdersInTable = await tx.order.findMany({
@@ -428,13 +421,13 @@ export async function PATCH(
                 }
               }
             })
-            
-            const allOrdersServed = allOrdersInTable.every(orderInTable => 
-              orderInTable.id === id ? 
-                status === 'SERVED' : 
+
+            const allOrdersServed = allOrdersInTable.every(orderInTable =>
+              orderInTable.id === id ?
+                status === 'SERVED' :
                 orderInTable.status === 'SERVED'
             )
-            
+
             if (allOrdersServed) {
               await tx.table.update({
                 where: { id: order.tableId },

@@ -7,54 +7,9 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Minus, Save, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { Decimal } from '@prisma/client/runtime/library'
-
-interface Product {
-  id: string
-  name: string
-  price: number
-  categoryId: string
-  category: {
-    id: string
-    name: string
-  }
-  isAvailable: boolean
-}
-
-interface OrderItem {
-  id: string
-  quantity: number
-  unitPrice: number
-  subtotal: number
-  notes?: string
-  status: string
-  product: Product
-}
-
-interface Order {
-  id: string
-  orderNumber: string
-  status: string
-  totalAmount: number
-  createdAt: string
-  startDate?: string
-  endDate?: string
-  notes?: string
-  type: string
-  table?: {
-    id: string
-    number: number
-  }
-  orderItems: OrderItem[]
-  user: {
-    id: string
-    name: string
-    role: string
-  }
-}
+import { Product, OrderItem, Order } from "@/types"
 
 interface EditOrderModalProps {
   isOpen: boolean
@@ -68,7 +23,7 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [orderNotes, setOrderNotes] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')  
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]) // Estructura unificada como en mesero
 
   // Función para generar ID único para nuevos items
@@ -85,7 +40,7 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
     if (!order) return
 
     setOrderNotes(order.notes || '')
-    
+
     // Separar items servidos de los editables y convertir valores numéricos
     const served = order.orderItems
       .filter(item => item.status === 'SERVED')
@@ -99,7 +54,7 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
           price: Number(item.product.price)
         }
       }))
-    
+
     const editable = order.orderItems
       .filter(item => item.status === 'PENDING')
       .map(item => ({
@@ -112,7 +67,7 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
           price: Number(item.product.price)
         }
       }))
-    
+
     // Inicializar orderItems con todos los items existentes
     setOrderItems([...editable, ...served])
   }
@@ -122,7 +77,7 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
       setIsLoading(true)
       const response = await fetch('/api/products')
       if (!response.ok) throw new Error('Error al cargar productos')
-      
+
       const data = await response.json()
       const productsWithNumericPrices = data
         .filter((p: Product) => p.isAvailable)
@@ -146,22 +101,22 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
     }
 
     // Actualizar en orderItems
-    const updatedItems = orderItems.map(item => 
-      item.id === itemId 
+    const updatedItems = orderItems.map(item =>
+      item.id === itemId
         ? { ...item, quantity: newQuantity, subtotal: newQuantity * item.unitPrice }
         : item
     )
     setOrderItems(updatedItems)
-    
+
     // Los items editables se manejan automáticamente a través de orderItems
   }
 
   const updateItemNotes = (itemId: string, notes: string) => {
-    const updatedItems = orderItems.map(item => 
+    const updatedItems = orderItems.map(item =>
       item.id === itemId ? { ...item, notes } : item
     )
     setOrderItems(updatedItems)
-    
+
     // Los items editables se manejan automáticamente a través de orderItems
   }
 
@@ -173,7 +128,7 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
   const addProduct = (product: Product) => {
     // Verificar si el producto ya existe en orderItems
     const existingItemIndex = orderItems.findIndex(item => item.product.id === product.id && item.status !== 'SERVED')
-    
+
     if (existingItemIndex !== -1) {
       // Si existe, incrementar cantidad
       const updatedItems = [...orderItems]
@@ -188,14 +143,15 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
       // Si no existe, crear nuevo item
       const newItem: OrderItem = {
         id: generateTempId(),
+        productId: product.id,
         quantity: 1,
-        unitPrice: product.price,
-        subtotal: product.price,
+        unitPrice: Number(product.price),
+        subtotal: Number(product.price),
         notes: '',
         status: 'PENDING',
         product: product
       }
-      
+
       const updatedItems = [...orderItems, newItem]
       setOrderItems(updatedItems)
     }
@@ -217,7 +173,7 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
 
   // Agrupar productos por categoría
   const productsByCategory = products.reduce((acc, product) => {
-    const categoryName = product.category.name
+    const categoryName = product.category?.name || "Sin Categoría"
     if (!acc[categoryName]) {
       acc[categoryName] = []
     }
@@ -229,9 +185,9 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
   const categories = Object.keys(productsByCategory)
 
   // Filtrar productos según la categoría seleccionada
-  const filteredProducts = selectedCategory === 'all' 
-    ? products 
-    : products.filter(product => product.category.name === selectedCategory)
+  const filteredProducts = selectedCategory === 'all'
+    ? products
+    : products.filter(product => product.category?.name === selectedCategory)
 
   const handleSave = async () => {
     if (!order) return
@@ -326,7 +282,7 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
                     <div className="max-h-60 sm:max-h-80 overflow-y-auto">
                       <div className="grid grid-cols-1 gap-2 sm:gap-3">
                         {filteredProducts.map((product) => (
-                          <div 
+                          <div
                             key={product.id}
                             className="p-2 sm:p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                             onClick={() => addProduct(product)}
@@ -334,7 +290,7 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
                             <div className="flex justify-between items-start gap-2">
                               <div className="flex-1 min-w-0">
                                 <h4 className="font-medium text-xs sm:text-sm truncate">{product.name}</h4>
-                                <p className="text-xs text-gray-500 mb-1 truncate">{product.category.name}</p>
+                                <p className="text-xs text-gray-500 mb-1 truncate">{product.category?.name || "Sin Categoría"}</p>
                                 <p className="text-green-600 font-bold text-xs sm:text-sm">
                                   S/ {Number(product.price).toFixed(2)}
                                 </p>
@@ -361,168 +317,167 @@ export default function EditOrderModal({ isOpen, onClose, order, onOrderUpdated 
 
           {/* Panel de Items del Pedido */}
           <div className="space-y-3 sm:space-y-4">
-          {/* Items Servidos */}
-          {orderItems.filter(item => item.status === 'SERVED').length > 0 && (
+            {/* Items Servidos */}
+            {orderItems.filter(item => item.status === 'SERVED').length > 0 && (
+              <div>
+                <Card>
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="text-green-600 text-base sm:text-lg">Items Servidos</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 sm:space-y-3">
+                      {orderItems.filter(item => item.status === 'SERVED').map((item) => (
+                        <div key={item.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-2 sm:p-3 bg-green-50 rounded-lg gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm sm:text-base truncate">{item.product.name}</h4>
+                            <p className="text-xs sm:text-sm text-gray-600">Cantidad: {item.quantity}</p>
+                            {item.notes && (
+                              <p className="text-xs sm:text-sm text-gray-500 italic break-words">{item.notes}</p>
+                            )}
+                          </div>
+                          <div className="flex justify-between sm:block sm:text-right shrink-0">
+                            <p className="font-medium text-sm sm:text-base">S/ {Number(item.subtotal || 0).toFixed(2)}</p>
+                            <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
+                              Servido
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Items Editables */}
             <div>
               <Card>
                 <CardHeader className="pb-3 sm:pb-6">
-                  <CardTitle className="text-green-600 text-base sm:text-lg">Items Servidos</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">
+                    <span className="hidden sm:inline">Items del Pedido (Editables)</span>
+                    <span className="sm:hidden">Items Editables</span>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 sm:space-y-3">
-                    {orderItems.filter(item => item.status === 'SERVED').map((item) => (
-                      <div key={item.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-2 sm:p-3 bg-green-50 rounded-lg gap-2">
+                  <div className="space-y-3 sm:space-y-4">
+                    {orderItems.filter(item => item.status !== 'SERVED').map((item) => (
+                      <div key={item.id} className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 border rounded-lg ${item.id.startsWith('temp-') ? 'border-2 border-dashed border-blue-300 bg-blue-50' : ''
+                        }`}>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium text-sm sm:text-base truncate">{item.product.name}</h4>
-                          <p className="text-xs sm:text-sm text-gray-600">Cantidad: {item.quantity}</p>
-                          {item.notes && (
-                            <p className="text-xs sm:text-sm text-gray-500 italic break-words">{item.notes}</p>
+                          <p className="text-xs sm:text-sm text-gray-600">S/ {Number(item.unitPrice).toFixed(2)} c/u</p>
+                          {item.id.startsWith('temp-') && (
+                            <Badge variant="secondary" className="text-xs mt-1">Nuevo</Badge>
                           )}
                         </div>
-                        <div className="flex justify-between sm:block sm:text-right shrink-0">
-                          <p className="font-medium text-sm sm:text-base">S/ {Number(item.subtotal || 0).toFixed(2)}</p>
-                          <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
-                            Servido
-                          </Badge>
+                        <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4">
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateItemQuantity(item.id, item.quantity - 1)}
+                              className="rounded-xl h-8 w-8 p-0"
+                            >
+                              <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                            <Input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) => updateItemQuantity(item.id, Number(e.target.value) || 1)}
+                              className="w-12 sm:w-16 text-center text-sm"
+                              min="1"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
+                              className="rounded-xl h-8 w-8 p-0"
+                            >
+                              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <p className="font-medium text-sm sm:text-base">S/ {Number(item.subtotal || 0).toFixed(2)}</p>
+                            </div>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => removeItem(item.id)}
+                              className="rounded-xl h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="w-full sm:w-32">
+                          <Input
+                            placeholder="Notas..."
+                            value={item.notes || ''}
+                            onChange={(e) => updateItemNotes(item.id, e.target.value)}
+                            className="text-sm"
+                          />
                         </div>
                       </div>
                     ))}
+
+                    {/* Mensaje si no hay items editables */}
+                    {orderItems.filter(item => item.status !== 'SERVED').length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>No hay items editables en este pedido.</p>
+                        <p className="text-sm mt-1">Agrega productos desde la sección de la izquierda.</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Notas del Pedido */}
+              <Card className="mt-4 sm:mt-6">
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="text-base sm:text-lg">Notas del Pedido</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    placeholder="Agregar notas especiales para el pedido..."
+                    value={orderNotes}
+                    onChange={(e) => setOrderNotes(e.target.value)}
+                    rows={3}
+                    className="text-sm resize-none"
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Resumen y Acciones */}
+              <Card className="mt-4 sm:mt-6">
+                <CardContent className="pt-4 sm:pt-6">
+                  <div className="flex justify-between items-center mb-3 sm:mb-4">
+                    <span className="text-base sm:text-lg font-semibold">Total:</span>
+                    <span className="text-lg sm:text-xl font-bold text-green-600">
+                      S/ {Number(calculateTotal()).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={onClose}
+                      className="flex-1 rounded-xl text-sm sm:text-base py-2 sm:py-3"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="flex-1 rounded-xl text-sm sm:text-base py-2 sm:py-3"
+                    >
+                      <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">{isSaving ? 'Guardando...' : 'Guardar Cambios'}</span>
+                      <span className="sm:hidden">{isSaving ? 'Guardando...' : 'Guardar'}</span>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
             </div>
-          )}
-
-          {/* Items Editables */}
-          <div>
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">
-                  <span className="hidden sm:inline">Items del Pedido (Editables)</span>
-                  <span className="sm:hidden">Items Editables</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 sm:space-y-4">
-                  {orderItems.filter(item => item.status !== 'SERVED').map((item) => (
-                    <div key={item.id} className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 border rounded-lg ${
-                      item.id.startsWith('temp-') ? 'border-2 border-dashed border-blue-300 bg-blue-50' : ''
-                    }`}>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm sm:text-base truncate">{item.product.name}</h4>
-                        <p className="text-xs sm:text-sm text-gray-600">S/ {Number(item.unitPrice).toFixed(2)} c/u</p>
-                        {item.id.startsWith('temp-') && (
-                          <Badge variant="secondary" className="text-xs mt-1">Nuevo</Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4">
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateItemQuantity(item.id, item.quantity - 1)}
-                            className="rounded-xl h-8 w-8 p-0"
-                          >
-                            <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                          <Input
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => updateItemQuantity(item.id, Number(e.target.value) || 1)}
-                            className="w-12 sm:w-16 text-center text-sm"
-                            min="1"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
-                            className="rounded-xl h-8 w-8 p-0"
-                          >
-                            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        </div>
-                        <div className="flex items-center gap-2">
-                           <div className="text-right">
-                             <p className="font-medium text-sm sm:text-base">S/ {Number(item.subtotal || 0).toFixed(2)}</p>
-                           </div>
-                           <Button
-                             variant="destructive"
-                             size="sm"
-                             onClick={() => removeItem(item.id)}
-                             className="rounded-xl h-8 w-8 p-0"
-                           >
-                             <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                           </Button>
-                         </div>
-                       </div>
-                       <div className="w-full sm:w-32">
-                         <Input
-                           placeholder="Notas..."
-                           value={item.notes || ''}
-                           onChange={(e) => updateItemNotes(item.id, e.target.value)}
-                           className="text-sm"
-                         />
-                       </div>
-                     </div>
-                  ))}
-
-                  {/* Mensaje si no hay items editables */}
-                  {orderItems.filter(item => item.status !== 'SERVED').length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>No hay items editables en este pedido.</p>
-                      <p className="text-sm mt-1">Agrega productos desde la sección de la izquierda.</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Notas del Pedido */}
-            <Card className="mt-4 sm:mt-6">
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">Notas del Pedido</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder="Agregar notas especiales para el pedido..."
-                  value={orderNotes}
-                  onChange={(e) => setOrderNotes(e.target.value)}
-                  rows={3}
-                  className="text-sm resize-none"
-                />
-              </CardContent>
-            </Card>
-
-            {/* Resumen y Acciones */}
-            <Card className="mt-4 sm:mt-6">
-              <CardContent className="pt-4 sm:pt-6">
-                <div className="flex justify-between items-center mb-3 sm:mb-4">
-                  <span className="text-base sm:text-lg font-semibold">Total:</span>
-                  <span className="text-lg sm:text-xl font-bold text-green-600">
-                    S/ {Number(calculateTotal()).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={onClose}
-                    className="flex-1 rounded-xl text-sm sm:text-base py-2 sm:py-3"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="flex-1 rounded-xl text-sm sm:text-base py-2 sm:py-3"
-                  >
-                    <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                    <span className="hidden sm:inline">{isSaving ? 'Guardando...' : 'Guardar Cambios'}</span>
-                    <span className="sm:hidden">{isSaving ? 'Guardando...' : 'Guardar'}</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
           </div>
         </div>
       </DialogContent>

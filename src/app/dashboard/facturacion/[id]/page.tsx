@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import ThermalPrintButton from "@/components/ThermalPrintButton"
+import { Order } from "@/types"
+import { createMockOrder, createMockOrderItem } from "@/lib/type-converters"
 
 interface Invoice {
   id: string
@@ -280,48 +282,66 @@ export default function FacturaDetailsPage({
               {/* Componente de impresión térmica - Solo si hay un pedido relacionado */}
               {invoice.order && (() => {
                 // Crear un objeto orden mock para el ThermalPrintButton usando el pedido real
-                const mockOrder = {
-                  id: invoice.order.id, // ✅ Usar el ID real del pedido
+                const mockOrder = createMockOrder({
+                  id: invoice.order.id,
                   orderNumber: invoice.order.orderNumber,
-                  status: 'COMPLETED' as const,
-                  totalAmount: invoice.total,
+                  status: 'COMPLETED',
+                  totalAmount: Number(invoice.total),
                   createdAt: invoice.issuedAt,
                   notes: `${invoice.type} - ${invoice.number}`,
-                  customerName: invoice.customerName,
-                  customerDni: invoice.customerRuc,
-                  customerPhone: '',
-                  table: invoice.order.table ? { number: invoice.order.table.number } : undefined,
-                  orderItems: invoice.order.orderItems ? invoice.order.orderItems.map((item) => ({
+                  customerName: invoice.customerName || null,
+                  customerDni: invoice.customerRuc || null,
+                  table: invoice.order.table ? { 
+                    id: '', 
+                    number: invoice.order.table.number,
+                    status: 'OCUPADA',
+                    capacity: 0
+                  } : null,
+                  orderItems: invoice.order.orderItems ? invoice.order.orderItems.map((item) => createMockOrderItem({
                     id: item.id,
                     quantity: item.quantity,
-                    unitPrice: item.unitPrice,
-                    subtotal: item.subtotal,
-                    notes: item.notes || '',
-                    status: item.status as 'SERVED',
+                    unitPrice: Number(item.unitPrice),
+                    subtotal: Number(item.subtotal),
+                    notes: item.notes || null,
+                    status: item.status as any,
                     product: {
-                      name: item.product.name
-                    }
-                  })) : invoice.items.map((item, index) => ({
-                    // Fallback si no hay orderItems
+                      id: '',
+                      name: item.product.name,
+                      price: Number(item.product.price),
+                      categoryId: '',
+                      isAvailable: true,
+                      isActive: true,
+                      category: { id: '', name: '' }
+                    },
+                    createdAt: invoice.issuedAt
+                  })) : invoice.items.map((item, index) => createMockOrderItem({
                     id: `item-${index}`,
                     quantity: item.quantity,
-                    unitPrice: item.unitPrice,
-                    subtotal: item.total,
-                    notes: '',
-                    status: 'SERVED' as const,
+                    unitPrice: Number(item.unitPrice),
+                    subtotal: Number(item.total),
+                    notes: null,
+                    status: 'SERVED',
                     product: {
-                      name: item.description
-                    }
+                      id: '',
+                      name: item.description,
+                      price: Number(item.unitPrice),
+                      categoryId: '',
+                      isAvailable: true,
+                      isActive: true,
+                      category: { id: '', name: '' }
+                    },
+                    createdAt: invoice.issuedAt
                   })),
                   user: {
+                    id: '',
                     name: invoice.user.name
                   },
                   invoice: {
                     id: invoice.id,
-                    type: invoice.type,
+                    type: invoice.type as any,
                     number: invoice.number
                   }
-                }
+                })
 
                 return (
                   <ThermalPrintButton 

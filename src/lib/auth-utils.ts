@@ -9,11 +9,15 @@ export async function getSession() {
   return await getServerSession(authOptions)
 }
 
+export type AuthResult = 
+  | { isValid: true; session: any }
+  | { isValid: false; response: NextResponse }
+
 /**
  * Verifica si el usuario tiene uno de los roles permitidos
  * @returns Un objeto con la sesión si es válido, o una respuesta de error si no lo es
  */
-export async function validateRole(allowedRoles: string[]) {
+export async function validateRole(allowedRoles: string[]): Promise<AuthResult> {
   const session = await getSession()
   
   if (!session) {
@@ -30,5 +34,5 @@ export async function validateRole(allowedRoles: string[]) {
     }
   }
   
-  return { isValid: true, session, response: null }
+  return { isValid: true, session }
 }

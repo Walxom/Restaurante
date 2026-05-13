@@ -3,69 +3,42 @@
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import useMenuData from "@/hooks/useMenuData"
 import { toast } from "react-hot-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Plus, Search, Edit, Trash2, RotateCcw, Package, Grid3X3, List, Table, ArrowLeft } from "lucide-react"
+import { Plus, Search, Edit, Trash2, RotateCcw, Package, Grid3X3, List, Table } from "lucide-react"
 import CategoryModal from "@/components/CategoryModal"
 import ProductModal from "@/components/ProductModal"
 import ConfirmDialog from "@/components/ConfirmDialog"
+import ProductTable from "@/components/menu/ProductTable"
+import CategoryTable from "@/components/menu/CategoryTable"
 import { RoleGuard } from "@/components/auth/role-guard"
-
-interface Category {
-  id: string
-  name: string
-  description: string | null
-  isActive: boolean
-  productCount: number
-}
-
-interface Product {
-  id: string
-  name: string
-  description: string | null
-  price: number | string // Can be Decimal from Prisma
-  isAvailable: boolean
-  isActive: boolean
-  categoryId: string
-  category: {
-    id: string
-    name: string
-  }
-  recipe?: {
-    id: string
-    instructions: string | null
-    prepTime: number | null
-    servings: number
-    ingredients: Array<{
-      id: string
-      ingredientId: string
-      quantity: number
-      unit: string
-      ingredient: {
-        id: string
-        name: string
-        unit: string
-        currentStock: number
-      }
-    }>
-  }
-}
+import { AdminPageHeader } from "@/components/layout/PageHeader"
+import { Product, Category } from "@/types"
 
 export default function MenuPage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [products, setProducts] = useState<Product[]>([])
-  const [deletedProducts, setDeletedProducts] = useState<Product[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const {
+    categories,
+    products,
+    deletedProducts,
+    isLoading,
+    refresh,
+    deleteCategory,
+    toggleCategory,
+    deleteProduct,
+    recoverProduct,
+  } = useMenuData()
+
   const [activeTab, setActiveTab] = useState<"categories" | "products" | "deleted" | "preview">("products")
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [showOnlyWithRecipe, setShowOnlyWithRecipe] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   const [showCategoryModal, setShowCategoryModal] = useState(false)
   const [showProductModal, setShowProductModal] = useState(false)
@@ -83,55 +56,8 @@ export default function MenuPage() {
     isLoading: boolean
   }>({ type: 'delete-product', item: null, isLoading: false })
 
-  // Cargar datos
-  useEffect(() => {
-    fetchCategories()
-    fetchProducts()
-    fetchDeletedProducts()
-  }, [])
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch("/api/categories?showAll=true")
-      if (response.ok) {
-        const data = await response.json()
-        setCategories(data)
-      }
-    } catch (error) {
-      console.error("Error al cargar categorías:", error)
-    }
-  }
-
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch("/api/products")
-      if (response.ok) {
-        const data = await response.json()
-        setProducts(data)
-      }
-    } catch (error) {
-      console.error("Error al cargar productos:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const fetchDeletedProducts = async () => {
-    try {
-      const response = await fetch('/api/products/deleted')
-      if (response.ok) {
-        const data = await response.json()
-        setDeletedProducts(data)
-      }
-    } catch (error) {
-      console.error('Error al cargar productos eliminados:', error)
-    }
-  }
-
-  const handleModalSave = () => {
-    fetchCategories()
-    fetchProducts()
-    fetchDeletedProducts()
+  const handleModalSave = async () => {
+    await refresh()
   }
 
   const openCategoryModal = (category?: Category) => {
@@ -154,14 +80,13 @@ export default function MenuPage() {
     if (!category) return
     setConfirmAction(prev => ({ ...prev, isLoading: true }))
     try {
-      const response = await fetch(`/api/categories/${category.id}`, { method: "DELETE" })
-      const data = await response.json()
-      if (response.ok) {
-        handleModalSave()
+      const ok = await deleteCategory(category.id)
+      if (ok) {
+        await handleModalSave()
         toast.success("Categoría eliminada")
         setShowDeleteConfirm(false)
       } else {
-        toast.error(data.error || "Error al eliminar")
+        toast.error("Error al eliminar")
       }
     } catch (error) {
       toast.error("Error de conexión")
@@ -180,13 +105,9 @@ export default function MenuPage() {
     if (!category) return
     setConfirmAction(prev => ({ ...prev, isLoading: true }))
     try {
-      const response = await fetch(`/api/categories/${category.id}/toggle`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !category.isActive })
-      })
-      if (response.ok) {
-        handleModalSave()
+      const ok = await toggleCategory(category.id, !category.isActive)
+      if (ok) {
+        await handleModalSave()
         toast.success("Estado actualizado")
         setShowToggleConfirm(false)
       } else {
@@ -209,9 +130,9 @@ export default function MenuPage() {
     if (!product) return
     setConfirmAction(prev => ({ ...prev, isLoading: true }))
     try {
-      const response = await fetch(`/api/products/${product.id}`, { method: "DELETE" })
-      if (response.ok) {
-        handleModalSave()
+      const ok = await deleteProduct(product.id)
+      if (ok) {
+        await handleModalSave()
         toast.success("Producto eliminado")
         setShowDeleteConfirm(false)
       } else {
@@ -233,13 +154,9 @@ export default function MenuPage() {
     if (!productToRecover) return
     setIsRecovering(true)
     try {
-      const response = await fetch(`/api/products/deleted`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: productToRecover.id })
-      })
-      if (response.ok) {
-        handleModalSave()
+      const ok = await recoverProduct(productToRecover.id)
+      if (ok) {
+        await handleModalSave()
         toast.success("Producto recuperado")
         setShowRecoverConfirm(false)
       } else {
@@ -271,30 +188,19 @@ export default function MenuPage() {
         <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
         
         <div className="relative z-10 flex flex-col">
-          <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-16">
-                <div className="flex items-center gap-4">
-                  <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")} className="rounded-xl">
-                    <ArrowLeft className="w-5 h-5" />
-                  </Button>
-                  <div>
-                    <h1 className="text-sm font-black text-foreground uppercase tracking-widest leading-none mb-1">Gestión de Menú</h1>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Administra categorías y productos</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => activeTab === "categories" ? openCategoryModal() : openProductModal()}
-                    className="h-10 px-4 bg-foreground text-background hover:opacity-90 rounded-xl font-black uppercase tracking-widest text-[10px]"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    {activeTab === "categories" ? "Categoría" : "Producto"}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </header>
+          <AdminPageHeader 
+            title="Gestión de Menú"
+            subtitle="Administra categorías y productos"
+            backTo="/dashboard"
+          >
+            <Button 
+              onClick={() => activeTab === "categories" ? openCategoryModal() : openProductModal()}
+              className="h-10 px-4 bg-foreground text-background hover:opacity-90 rounded-xl font-black uppercase tracking-widest text-[10px]"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {activeTab === "categories" ? "Categoría" : "Producto"}
+            </Button>
+          </AdminPageHeader>
 
           <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
             {/* Tabs y Contenido (Simplificado para brevedad, asumiendo que el resto del JSX se mantiene igual de funcional) */}
@@ -322,15 +228,52 @@ export default function MenuPage() {
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                 {/* Aquí iría el resto del JSX de las tablas que ya funcionaba perfectamente */}
                 {activeTab === "products" && (
-                   <div className="bg-card/40 backdrop-blur-xl border border-border/50 rounded-[2rem] overflow-hidden">
-                     {/* Tabla de productos... */}
-                     <p className="p-8 text-center text-[10px] font-bold text-muted-foreground uppercase">Vista de productos activa</p>
+                   <div className="bg-card/40 backdrop-blur-xl border border-border/50 rounded-2xl overflow-hidden">
+                     <ProductTable products={filteredProducts} onEdit={openProductModal} onDelete={handleDeleteProduct} />
                    </div>
                 )}
+                {activeTab === "products" && totalPages > 1 && (
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      <label className="mr-2">Mostrar</label>
+                      <select
+                        value={itemsPerPage}
+                        onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1) }}
+                        className="bg-card/20 border border-border px-2 py-1 rounded"
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                      </select>
+                      <span className="ml-3">de {allFilteredProducts.length} productos</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="ghost" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                        Anterior
+                      </Button>
+                      {Array.from({ length: totalPages }).map((_, i) => {
+                        const page = i + 1
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-3 py-1 rounded ${currentPage === page ? 'bg-foreground text-background' : 'bg-card/10 text-muted-foreground'}`}
+                          >
+                            {page}
+                          </button>
+                        )
+                      })}
+                      <Button size="sm" variant="ghost" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                        Siguiente
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 {activeTab === "categories" && (
-                   <div className="bg-card/40 backdrop-blur-xl border border-border/50 rounded-[2rem] overflow-hidden">
-                     {/* Tabla de categorías... */}
-                     <p className="p-8 text-center text-[10px] font-bold text-muted-foreground uppercase">Vista de categorías activa</p>
+                   <div className="bg-card/40 backdrop-blur-xl border border-border/50 rounded-2xl overflow-hidden">
+                     <CategoryTable categories={categories} onEdit={openCategoryModal} onDelete={handleDeleteCategory} />
                    </div>
                 )}
               </div>
@@ -339,9 +282,9 @@ export default function MenuPage() {
         </div>
 
         {/* Modales */}
-        <CategoryModal isOpen={showCategoryModal} onClose={() => setShowCategoryModal(false)} category={editingCategory} onSuccess={handleModalSave} />
-        <ProductModal isOpen={showProductModal} onClose={() => setShowProductModal(false)} product={editingProduct} categories={categories} onSuccess={handleModalSave} />
-        <ConfirmDialog isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} onConfirm={confirmAction.type === 'delete-product' ? confirmDeleteProduct : confirmDeleteCategory} title="¿Confirmar eliminación?" message="Esta acción no se puede deshacer." isLoading={confirmAction.isLoading} />
+        <CategoryModal isOpen={showCategoryModal} onClose={() => setShowCategoryModal(false)} category={editingCategory} onSave={handleModalSave} />
+        <ProductModal isOpen={showProductModal} onClose={() => setShowProductModal(false)} product={editingProduct} categories={categories} onSave={handleModalSave} />
+        <ConfirmDialog isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} onConfirm={confirmAction.type === 'delete-product' ? confirmDeleteProduct : confirmDeleteCategory} title="¿Confirmar eliminación?" description="Esta acción no se puede deshacer." confirmText="Eliminar" variant="destructive" isLoading={confirmAction.isLoading} />
       </div>
     </RoleGuard>
   )

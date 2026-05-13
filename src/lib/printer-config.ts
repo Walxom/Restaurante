@@ -4,12 +4,13 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import { PrinterType, PrinterConnectionType, PrinterStatus } from '@/types';
 
 export interface PrinterConfig {
   id: string;
   name: string;
-  type: 'KITCHEN' | 'RECEIPT' | 'FISCAL';
-  connectionType: 'NETWORK' | 'USB' | 'BLUETOOTH' | 'SERIAL';
+  type: PrinterType;
+  connectionType: PrinterConnectionType;
   ipAddress?: string;
   port?: number;
   usbPath?: string;
@@ -22,7 +23,7 @@ export interface PrinterConfig {
   reconnectDelay: number;
   charset: string;
   codepage: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'ERROR' | 'MAINTENANCE';
+  status: PrinterStatus;
   isDefault: boolean;
   description?: string;
   location?: string;
@@ -35,7 +36,7 @@ export class PrinterConfigService {
   /**
    * Obtener configuración de impresora por tipo
    */
-  static async getPrinterByType(type: 'KITCHEN' | 'RECEIPT' | 'FISCAL'): Promise<PrinterConfig | null> {
+  static async getPrinterByType(type: PrinterType): Promise<PrinterConfig | null> {
     const printer = await prisma.printer.findFirst({
       where: {
         type,
@@ -108,7 +109,7 @@ export class PrinterConfigService {
   /**
    * Cambiar estado de impresora
    */
-  static async updatePrinterStatus(id: string, status: 'ACTIVE' | 'INACTIVE' | 'ERROR' | 'MAINTENANCE', updatedBy: string): Promise<PrinterConfig | null> {
+  static async updatePrinterStatus(id: string, status: PrinterStatus, updatedBy: string): Promise<PrinterConfig | null> {
     const printer = await prisma.printer.update({
       where: { id },
       data: {
@@ -242,8 +243,8 @@ export class PrinterConfigService {
     return {
       id: printer.id,
       name: printer.name,
-      type: printer.type as 'KITCHEN' | 'RECEIPT' | 'FISCAL',
-      connectionType: printer.connectionType as 'NETWORK' | 'USB' | 'BLUETOOTH' | 'SERIAL',
+      type: printer.type as PrinterType,
+      connectionType: printer.connectionType as PrinterConnectionType,
       ipAddress: printer.ipAddress || undefined,
       port: printer.port || undefined,
       usbPath: printer.usbPath || undefined,
@@ -256,7 +257,7 @@ export class PrinterConfigService {
       reconnectDelay: printer.reconnectDelay,
       charset: printer.charset,
       codepage: printer.codepage,
-      status: printer.status as 'ACTIVE' | 'INACTIVE' | 'ERROR' | 'MAINTENANCE',
+      status: printer.status as PrinterStatus,
       isDefault: printer.isDefault,
       description: printer.description || undefined,
       location: printer.location || undefined,

@@ -17,9 +17,10 @@ import {
 } from "lucide-react"
 
 // Hooks
-import { useInventory, Ingredient } from "@/hooks/useInventory"
-import { useInventoryCategories, IngredientCategory } from "@/hooks/useInventoryCategories"
+import { useInventory } from "@/hooks/useInventory"
+import { useInventoryCategories } from "@/hooks/useInventoryCategories"
 import { useInventoryAlerts } from "@/hooks/useInventoryAlerts"
+import { Ingredient, IngredientCategory } from "@/types"
 
 // Components
 import { InventoryStats } from "./components/inventory-stats"
@@ -183,7 +184,6 @@ export default function InventoryPage() {
             {/* Estadísticas de Inventario */}
             <InventoryStats 
               stats={alertStats} 
-              loading={isLoading} 
             />
 
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full space-y-6">

@@ -10,7 +10,7 @@ interface SystemSettingsCardProps {
   config: any
   taxPercentage: string
   onTaxChange: (value: string) => void
-  onChange: (field: string, value: string) => void
+  onChange: (field: any, value: any) => void
   timezones: any[]
 }
 

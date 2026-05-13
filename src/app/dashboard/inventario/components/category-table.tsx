@@ -1,6 +1,6 @@
 "use client"
 
-import { IngredientCategory } from "@/hooks/useInventoryCategories"
+import { IngredientCategory } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Edit, Trash2, FolderOpen, Layers } from "lucide-react"
 
@@ -41,9 +41,9 @@ export function CategoryTable({
             <div className="flex items-center gap-4">
               <div 
                 className="h-14 w-14 rounded-2xl flex items-center justify-center border border-white/10 shadow-lg"
-                style={{ backgroundColor: `${cat.color}20`, borderColor: `${cat.color}40` }}
+                style={{ backgroundColor: `${cat.color || '#3b82f6'}20`, borderColor: `${cat.color || '#3b82f6'}40` }}
               >
-                <Layers className="w-7 h-7" style={{ color: cat.color }} />
+                <Layers className="w-7 h-7" style={{ color: cat.color || '#3b82f6' }} />
               </div>
               <div className="flex flex-col">
                 <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{cat.name}</h3>

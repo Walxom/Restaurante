@@ -6,7 +6,7 @@ import { ConfigField } from "./form-utils"
 
 interface RestaurantInfoCardProps {
   config: any
-  onChange: (field: string, value: string) => void
+  onChange: (field: any, value: any) => void
   formatPhone: (value: string) => string
 }
 

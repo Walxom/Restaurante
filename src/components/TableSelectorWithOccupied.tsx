@@ -3,13 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Users } from "lucide-react"
 import { useRouter } from "next/navigation"
-
-interface Table {
-  id: string
-  number: number
-  capacity: number
-  status: string
-}
+import { Table } from "@/types"
 
 interface TableSelectorWithOccupiedProps {
   tables: Table[]
@@ -20,11 +14,11 @@ interface TableSelectorWithOccupiedProps {
 
 import { cn } from "@/lib/utils"
 
-export default function TableSelectorWithOccupied({ 
-  tables, 
-  selectedTable, 
+export default function TableSelectorWithOccupied({
+  tables,
+  selectedTable,
   onSelectTable,
-  showOccupied = false 
+  showOccupied = false
 }: TableSelectorWithOccupiedProps) {
   const router = useRouter()
 
@@ -36,10 +30,10 @@ export default function TableSelectorWithOccupied({
       const response = await fetch(`/api/orders?tableId=${table.id}`)
       if (response.ok) {
         const allOrders = await response.json()
-        const activeOrders = allOrders.filter((order: any) => 
+        const activeOrders = allOrders.filter((order: any) =>
           !['CANCELLED', 'COMPLETED'].includes(order.status)
         )
-        
+
         if (activeOrders.length > 0) {
           router.push(`/pedidos/${activeOrders[0].id}/detalles`)
         } else {
@@ -100,8 +94,8 @@ export default function TableSelectorWithOccupied({
                   onClick={() => onSelectTable(table)}
                   className={cn(
                     "relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 active:scale-95 group",
-                    isSelected 
-                      ? "bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/30 ring-4 ring-blue-500/10" 
+                    isSelected
+                      ? "bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/30 ring-4 ring-blue-500/10"
                       : "bg-background/40 border-border/50 hover:border-border/80 hover:bg-background/60"
                   )}
                 >
@@ -154,12 +148,12 @@ export default function TableSelectorWithOccupied({
                     {getStatusText(table.status)}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 text-xs text-muted-foreground font-bold mb-5">
                   <Users className="w-4 h-4" />
                   {table.capacity} Personas
                 </div>
-                
+
                 <button
                   onClick={() => handleAdditionalOrder(table)}
                   className="w-full bg-foreground/5 hover:bg-foreground/10 text-foreground py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 border border-border/50"
@@ -182,4 +176,4 @@ export default function TableSelectorWithOccupied({
       )}
     </div>
   )
-}
+}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { PrismaClient } from "@prisma/client"
+import { createProductSchema } from "@/lib/validations/product"
 
 const prisma = new PrismaClient()
 
@@ -9,7 +10,7 @@ const prisma = new PrismaClient()
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return NextResponse.json(
         { error: "No autorizado" },
@@ -26,26 +27,26 @@ export async function GET(request: NextRequest) {
 
     // Construir filtros
     const where: Record<string, unknown> = {}
-    
+
     // Por defecto solo productos activos, pero si se especifica includeInactive, mostrar todos
     if (!includeInactive) {
       where.isActive = true
     }
-    
+
     if (categoryId) {
       where.categoryId = categoryId
     }
-    
+
     if (isAvailable !== null) {
       where.isAvailable = isAvailable === 'true'
     }
-    
+
     if (search) {
-        where.OR = [
-          { name: { contains: search } },
-          { description: { contains: search } }
-        ]
-      }
+      where.OR = [
+        { name: { contains: search } },
+        { description: { contains: search } }
+      ]
+    }
 
     const products = await prisma.product.findMany({
       where,
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session || session.user.role !== "JEFE") {
       return NextResponse.json(
         { error: "Solo los jefes pueden crear productos" },
@@ -94,34 +95,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    
-    // Validaciones
-    if (!body.name || body.name.trim() === "") {
+
+    // Validar con Zod
+    const validation = createProductSchema.safeParse(body)
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "El nombre del producto es requerido" },
+        { error: "Datos de producto inválidos", details: validation.error.issues },
         { status: 400 }
       )
     }
 
-    if (!body.price || body.price <= 0) {
-      return NextResponse.json(
-        { error: "El precio debe ser mayor a 0" },
-        { status: 400 }
-      )
-    }
-
-    if (!body.categoryId) {
-      return NextResponse.json(
-        { error: "La categoría es requerida" },
-        { status: 400 }
-      )
-    }
+    const { name, description, price, categoryId, isAvailable, recipe: recipeData } = validation.data
 
     // Verificar que la categoría existe
     const category = await prisma.category.findFirst({
-      where: { 
-        id: body.categoryId,
-        isActive: true 
+      where: {
+        id: categoryId,
+        isActive: true
       }
     })
 
@@ -134,10 +124,10 @@ export async function POST(request: NextRequest) {
 
     // Verificar que el nombre no esté ya en uso en la misma categoría (solo productos activos)
     const existingActiveProduct = await prisma.product.findFirst({
-      where: { 
-        name: body.name.trim(),
-        categoryId: body.categoryId,
-        isActive: true 
+      where: {
+        name: name.trim(),
+        categoryId: categoryId,
+        isActive: true
       }
     })
 
@@ -150,10 +140,10 @@ export async function POST(request: NextRequest) {
 
     // Buscar producto eliminado (inactivo) con el mismo nombre para reactivarlo
     const inactiveProduct = await prisma.product.findFirst({
-      where: { 
-        name: body.name.trim(),
-        categoryId: body.categoryId,
-        isActive: false 
+      where: {
+        name: name.trim(),
+        categoryId: categoryId,
+        isActive: false
       }
     })
 
@@ -165,9 +155,9 @@ export async function POST(request: NextRequest) {
         const updatedProduct = await tx.product.update({
           where: { id: inactiveProduct.id },
           data: {
-            description: body.description?.trim() || null,
-            price: parseFloat(body.price),
-            isAvailable: body.isAvailable !== undefined ? body.isAvailable : true,
+            description: description?.trim() || null,
+            price: price,
+            isAvailable: isAvailable,
             isActive: true,
             updatedAt: new Date()
           },
@@ -190,7 +180,7 @@ export async function POST(request: NextRequest) {
         })
 
         // Manejar receta si se proporciona
-        if (body.recipe) {
+        if (recipeData) {
           // Eliminar receta existente si existe
           await tx.recipe.deleteMany({
             where: { productId: updatedProduct.id }
@@ -200,11 +190,11 @@ export async function POST(request: NextRequest) {
           await tx.recipe.create({
             data: {
               productId: updatedProduct.id,
-              instructions: body.recipe.instructions,
-              prepTime: body.recipe.prepTime,
-              servings: body.recipe.servings,
+              instructions: recipeData.instructions,
+              prepTime: recipeData.prepTime,
+              servings: recipeData.servings,
               ingredients: {
-                create: body.recipe.ingredients.map((ingredient: any) => ({
+                create: recipeData.ingredients?.map((ingredient: any) => ({
                   ingredientId: ingredient.ingredientId,
                   quantity: ingredient.quantity,
                   unit: ingredient.unit,
@@ -218,21 +208,21 @@ export async function POST(request: NextRequest) {
         return updatedProduct
       })
 
-      return NextResponse.json({ 
-        ...product, 
+      return NextResponse.json({
+        ...product,
         wasReactivated: true,
-        message: "Producto reactivado exitosamente" 
+        message: "Producto reactivado exitosamente"
       })
     } else {
       // Crear nuevo producto usando transacción
       product = await prisma.$transaction(async (tx) => {
         const newProduct = await tx.product.create({
           data: {
-            name: body.name.trim(),
-            description: body.description?.trim() || null,
-            price: parseFloat(body.price),
-            categoryId: body.categoryId,
-            isAvailable: body.isAvailable !== undefined ? body.isAvailable : true,
+            name: name.trim(),
+            description: description?.trim() || null,
+            price: price,
+            categoryId: categoryId,
+            isAvailable: isAvailable,
             isActive: true,
           },
           include: {
@@ -243,15 +233,15 @@ export async function POST(request: NextRequest) {
         })
 
         // Crear receta si se proporciona
-        if (body.recipe && body.recipe.ingredients && body.recipe.ingredients.length > 0) {
+        if (recipeData && recipeData.ingredients && recipeData.ingredients.length > 0) {
           await tx.recipe.create({
             data: {
               productId: newProduct.id,
-              instructions: body.recipe.instructions,
-              prepTime: body.recipe.prepTime,
-              servings: body.recipe.servings,
+              instructions: recipeData.instructions,
+              prepTime: recipeData.prepTime,
+              servings: recipeData.servings,
               ingredients: {
-                create: body.recipe.ingredients.map((ingredient: any) => ({
+                create: recipeData.ingredients.map((ingredient: any) => ({
                   ingredientId: ingredient.ingredientId,
                   quantity: ingredient.quantity,
                   unit: ingredient.unit,

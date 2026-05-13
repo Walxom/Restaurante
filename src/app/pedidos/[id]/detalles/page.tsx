@@ -109,7 +109,7 @@ export default function OrderDetailPage() {
     )
   }
 
-  if (error === "NOT_FOUND" || (!order && !isLoading)) {
+  if (error === "NOT_FOUND" || !order) {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen bg-background">
         <div className="text-center space-y-6">

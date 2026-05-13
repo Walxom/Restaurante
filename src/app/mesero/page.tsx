@@ -9,17 +9,17 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import PedidosPorServirWidget from "@/components/dashboard/PedidosPorServirWidget"
 import PedidosServidosWidget from "@/components/dashboard/PedidosServidosWidget"
 import { useCompanyName } from "@/hooks/useSystemConfig"
+import { DashboardPageHeader } from "@/components/layout/DashboardPageHeader"
 import { 
   Users, 
   Plus, 
   Clock, 
   DollarSign, 
-  Eye, 
-  LogOut,
-  ChefHat,
+  Eye,
   Package,
   Truck,
-  AlertCircle
+  AlertCircle,
+  LogOut
 } from "lucide-react"
 
 interface Order {
@@ -217,46 +217,12 @@ export default function MeseroPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header minimalista */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                <ChefHat className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900">
-                  {companyName}
-                </h1>
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-gray-500">
-                    {session?.user?.name}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${
-                      ordersConnected && tablesConnected 
-                        ? 'bg-green-500' 
-                        : 'bg-red-500'
-                    }`}></div>
-                    <span className="text-xs text-gray-400">
-                      {ordersConnected && tablesConnected ? 'En línea' : 'Desconectado'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <Button 
-              onClick={handleSignOut} 
-              variant="ghost" 
-              size="sm"
-              className="text-gray-600 hover:text-gray-900"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Salir
-            </Button>
-          </div>
-        </div>
-      </header>
+      <DashboardPageHeader
+        companyName={companyName}
+        userName={session?.user?.name}
+        isOnline={ordersConnected && tablesConnected}
+        onSignOut={() => setShowLogoutModal(true)}
+      />
 
       <main className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Estadísticas compactas */}

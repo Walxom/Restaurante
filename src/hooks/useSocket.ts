@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
+import { Order, OrderStatus } from '@/types'
 
 interface UseSocketOptions {
   autoConnect?: boolean
@@ -39,7 +40,7 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     newSocket.on('connect', () => {
       console.log('✅ Conectado a Socket.IO:', newSocket.id)
       setIsConnected(true)
-      
+
       // Unirse automáticamente a la sala si se especifica
       if (room) {
         newSocket.emit('join_room', room)
@@ -117,14 +118,14 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
 
 // Hook específico para pedidos
 export function useOrdersSocket(callbacks?: {
-  onNewOrder?: (order: any) => void
-  onOrderUpdated?: (order: any) => void
-  onOrderStatusChanged?: (data: { orderId: string, status: string }) => void
+  onNewOrder?: (order: Order) => void
+  onOrderUpdated?: (order: Order) => void
+  onOrderStatusChanged?: (data: { orderId: string, status: OrderStatus }) => void
   onOrderItemUpdate?: (data: { orderId: string, itemId: string, action: string, itemData: any }) => void
 }) {
-  const { socket, isConnected, ...rest } = useSocket({ 
-    autoConnect: true, 
-    room: 'orders' 
+  const { socket, isConnected, ...rest } = useSocket({
+    autoConnect: true,
+    room: 'orders'
   })
 
   useEffect(() => {
@@ -135,7 +136,7 @@ export function useOrdersSocket(callbacks?: {
         hasOrderStatusChanged: !!callbacks.onOrderStatusChanged,
         hasOrderItemUpdate: !!callbacks.onOrderItemUpdate
       })
-      
+
       // Registrar eventos cuando el socket esté disponible
       if (callbacks.onNewOrder) {
         socket.on('new_order', callbacks.onNewOrder)
@@ -169,21 +170,21 @@ export function useOrdersSocket(callbacks?: {
     }
   }, [socket])
 
-  const onNewOrder = (callback: (order: any) => void) => {
+  const onNewOrder = (callback: (order: Order) => void) => {
     if (socket) {
       socket.on('new_order', callback)
       return () => socket.off('new_order', callback)
     }
   }
 
-  const onOrderUpdate = (callback: (order: any) => void) => {
+  const onOrderUpdate = (callback: (order: Order) => void) => {
     if (socket) {
       socket.on('order_updated', callback)
       return () => socket.off('order_updated', callback)
     }
   }
 
-  const onOrderStatusChange = (callback: (data: { orderId: string, status: string }) => void) => {
+  const onOrderStatusChange = (callback: (data: { orderId: string, status: OrderStatus }) => void) => {
     if (socket) {
       socket.on('order_status_changed', callback)
       return () => socket.off('order_status_changed', callback)

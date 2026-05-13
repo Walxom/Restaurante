@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { signIn, getSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { z } from "zod"
+import { loginSchema } from "@/lib/validations/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -11,12 +11,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { usePublicCompanyInfo } from "@/hooks/useSystemConfig"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, User, AlertTriangle } from "lucide-react"
-
-// Esquema de validación (ISO 25010: Mantenibilidad y Fiabilidad)
-const loginSchema = z.object({
-  username: z.string().min(1, "El usuario es obligatorio"),
-  password: z.string().min(1, "La contraseña es obligatoria"),
-})
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -54,7 +48,7 @@ export default function LoginPage() {
     const validation = loginSchema.safeParse({ username, password })
     if (!validation.success) {
       // Acceso defensivo a los errores para evitar TypeErrors (ISO 25010: Robustez)
-      const firstError = validation.error.errors?.[0] || validation.error.issues?.[0]
+      const firstError = validation.error.issues[0]
       setError(firstError?.message || "Por favor, verifica los campos")
       triggerShake()
       setIsLoading(false)

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient, TableStatus } from '@prisma/client'
-import { convertToBaseUnit } from '@/lib/unitConversions'
+import { PrismaClient } from '@prisma/client'
+import { TableStatus } from '@/types'
+import { convertToBaseUnit } from '@/lib/units'
 import { emitOrderItemUpdate, emitTableStatusChange } from '@/lib/socket-events'
 
 const prisma = new PrismaClient()

@@ -3,39 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-
-export interface Ingredient {
-  id: string
-  name: string
-  unit: string
-  unitCategory?: string
-  currentStock: number
-  minStock: number
-  maxStock?: number
-  cost?: number
-  categoryId?: string
-  category?: {
-    id: string
-    name: string
-    color: string
-  }
-  isActive: boolean
-  status: string
-  statusColor: string
-  statusText: string
-  stockPercentage: number
-  createdAt: string
-  updatedAt: string
-}
-
-export interface PaginationData {
-  currentPage: number
-  totalPages: number
-  totalItems: number
-  itemsPerPage: number
-  hasNextPage: boolean
-  hasPrevPage: boolean
-}
+import { Ingredient, PaginationData } from "@/types"
 
 export function useInventory() {
   const { data: session } = useSession()

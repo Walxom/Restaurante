@@ -5,39 +5,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { X, Package, Ruler, TrendingUp, DollarSign, ChevronRight, Info, Save, Layers, Scale } from "lucide-react"
+import { X, Package, Ruler, TrendingUp, DollarSign, ChevronRight, Info, Save, Layers, Scale, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { 
   UNIT_CATEGORIES, 
   getUnitsByCategory, 
   suggestUnitCategory,
   INGREDIENT_TYPE_SUGGESTIONS 
-} from "@/lib/ingredientUnits"
-
-interface Ingredient {
-  id: string
-  name: string
-  unit: string
-  unitCategory?: string
-  currentStock: number
-  minStock: number
-  maxStock?: number
-  cost?: number
-  categoryId?: string
-  category?: {
-    id: string
-    name: string
-    color: string
-  }
-  isActive: boolean
-}
-
-interface IngredientCategory {
-  id: string
-  name: string
-  description?: string
-  color?: string
-}
+} from "@/lib/units"
+import { Ingredient, IngredientCategory } from "@/types"
 
 interface IngredientModalProps {
   isOpen: boolean
@@ -162,7 +138,7 @@ export default function IngredientModal({
     
     if (!validateForm()) {
       // Auto-focus en el primer error encontrado
-      const newErrors = validateForm.getLatestErrors?.() || {}
+      const newErrors = (validateForm as any).getLatestErrors?.() || {}
       if (newErrors.name) nameRef.current?.focus()
       else if (newErrors.currentStock) currentStockRef.current?.focus()
       else if (newErrors.minStock) minStockRef.current?.focus()
@@ -295,7 +271,7 @@ export default function IngredientModal({
                       {categories.map(cat => (
                         <SelectItem key={cat.id} value={cat.id} className="text-[10px] font-black uppercase tracking-widest">
                           <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color || undefined }} />
                             {cat.name}
                           </div>
                         </SelectItem>

@@ -139,6 +139,8 @@ export async function GET(request: NextRequest) {
   }
 }
 
+import { createOrderSchema } from '@/lib/validations/order'
+
 // POST /api/orders - Crear nuevo pedido
 export async function POST(request: NextRequest) {
   try {
@@ -147,60 +149,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    let body
-    try {
-      body = await request.json()
-    } catch (jsonError) {
-      console.error('Error parsing JSON:', jsonError)
+    const body = await request.json()
+    
+    // Validar con Zod
+    const validation = createOrderSchema.safeParse(body)
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Formato de datos inválido' },
-        { status: 400 }
-      )
-    }
-    const { tableId, type = 'MESA', customerName, customerDni, customerPhone, customerAddress, customerAddressReference, notes, items, isAdditionalOrder = false } = body
-
-    // Validaciones básicas
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json(
-        { error: 'El pedido debe tener al menos un item' },
+        { error: 'Datos de pedido inválidos', details: validation.error.issues },
         { status: 400 }
       )
     }
 
-    if (type === 'MESA' && !tableId) {
-      return NextResponse.json(
-        { error: 'Los pedidos de mesa requieren una mesa asignada' },
-        { status: 400 }
-      )
-    }
-
-    if (type === 'PARA_LLEVAR' && !customerName) {
-      return NextResponse.json(
-        { error: 'Los pedidos para llevar requieren nombre del cliente' },
-        { status: 400 }
-      )
-    }
-
-    if (type === 'DELIVERY') {
-      if (!customerName) {
-        return NextResponse.json(
-          { error: 'Los pedidos de delivery requieren nombre del cliente' },
-          { status: 400 }
-        )
-      }
-      if (!customerPhone) {
-        return NextResponse.json(
-          { error: 'Los pedidos de delivery requieren teléfono del cliente' },
-          { status: 400 }
-        )
-      }
-      if (!customerAddress) {
-        return NextResponse.json(
-          { error: 'Los pedidos de delivery requieren dirección completa' },
-          { status: 400 }
-        )
-      }
-    }
+    const { 
+      tableId, 
+      type, 
+      customerName, 
+      customerDni, 
+      customerPhone, 
+      customerAddress, 
+      customerAddressReference, 
+      notes, 
+      items, 
+      isAdditionalOrder 
+    } = validation.data
 
     // Verificar que la mesa esté disponible o permitir pedidos adicionales en mesas ocupadas
     if (tableId) {

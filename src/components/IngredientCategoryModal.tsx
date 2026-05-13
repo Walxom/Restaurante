@@ -13,16 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-
-interface IngredientCategory {
-  id: string
-  name: string
-  description?: string
-  color?: string
-  _count: {
-    ingredients: number
-  }
-}
+import { IngredientCategory } from "@/types"
 
 interface IngredientCategoryModalProps {
   isOpen: boolean
@@ -44,11 +35,11 @@ const defaultColors = [
   "#6B7280", // Gray
 ]
 
-export default function IngredientCategoryModal({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
-  category 
+export default function IngredientCategoryModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  category
 }: IngredientCategoryModalProps) {
   const [formData, setFormData] = useState({
     name: "",
@@ -97,7 +88,7 @@ export default function IngredientCategoryModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
@@ -105,10 +96,10 @@ export default function IngredientCategoryModal({
     setIsLoading(true)
 
     try {
-      const url = category 
+      const url = category
         ? `/api/ingredient-categories/${category.id}`
         : '/api/ingredient-categories'
-      
+
       const method = category ? 'PATCH' : 'POST'
 
       const response = await fetch(url, {
@@ -153,7 +144,7 @@ export default function IngredientCategoryModal({
             {category ? "Editar Categoría" : "Nueva Categoría de Ingredientes"}
           </DialogTitle>
           <DialogDescription>
-            {category 
+            {category
               ? "Modifica los datos de la categoría de ingredientes"
               : "Crea una nueva categoría para organizar tus ingredientes"
             }
@@ -197,11 +188,10 @@ export default function IngredientCategoryModal({
                 <button
                   key={color}
                   type="button"
-                  className={`w-8 h-8 rounded-full border-2 ${
-                    formData.color === color 
-                      ? 'border-gray-800 scale-110' 
+                  className={`w-8 h-8 rounded-full border-2 ${formData.color === color
+                      ? 'border-gray-800 scale-110'
                       : 'border-gray-300 hover:border-gray-500'
-                  } transition-all`}
+                    } transition-all`}
                   style={{ backgroundColor: color }}
                   onClick={() => handleInputChange('color', color)}
                 />

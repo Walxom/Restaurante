@@ -4,28 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-
-interface Product {
-  id: string
-  name: string
-  description: string | null
-  price: number | string
-  isAvailable: boolean
-  isActive: boolean
-  categoryId: string
-  category: {
-    id: string
-    name: string
-  }
-}
-
-interface CartItem {
-  productId: string
-  name: string
-  price: number
-  quantity: number
-  notes?: string
-}
+import { Product, CartItem } from "@/types"
 
 interface ProductGridProps {
   products: Product[]
@@ -58,7 +37,7 @@ export default function ProductGrid({ products, onAddToCart, cartItems }: Produc
     const quantity = getQuantity(product.id)
     const productNotes = getNotes(product.id)
     onAddToCart(product, quantity, productNotes || undefined)
-    
+
     setQuantities({ ...quantities, [product.id]: 1 })
     setNotes({ ...notes, [product.id]: "" })
     setExpandedProduct(null)
@@ -85,10 +64,10 @@ export default function ProductGrid({ products, onAddToCart, cartItems }: Produc
       {products.map((product) => {
         const cartQuantity = getCartQuantity(product.id)
         const isExpanded = expandedProduct === product.id
-        
+
         return (
-          <div 
-            key={product.id} 
+          <div
+            key={product.id}
             className={cn(
               "group relative bg-background/40 backdrop-blur-sm border border-border/50 rounded-2xl p-3 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-0.5",
               cartQuantity > 0 ? "ring-2 ring-blue-500/50" : ""
@@ -161,8 +140,8 @@ export default function ProductGrid({ products, onAddToCart, cartItems }: Produc
               onClick={() => handleAddToCart(product)}
               className={cn(
                 "w-full rounded-xl h-9 text-[11px] font-black tracking-wider transition-all duration-300 active:scale-95",
-                cartQuantity > 0 
-                  ? "bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20" 
+                cartQuantity > 0
+                  ? "bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20"
                   : "bg-foreground/10 hover:bg-foreground/20 text-foreground border border-border/50"
               )}
               size="sm"

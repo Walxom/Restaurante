@@ -4,18 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Check, Clock, Undo2, MessageSquare, Tag } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-interface OrderItem {
-  id: string
-  quantity: number
-  unitPrice: number
-  subtotal: number
-  notes?: string
-  status: string
-  product: {
-    name: string
-  }
-}
+import { OrderItem } from "@/types"
 
 interface OrderItemsListProps {
   orderId: string
@@ -24,17 +13,17 @@ interface OrderItemsListProps {
   canMarkAsServed?: boolean
 }
 
-export default function OrderItemsList({ 
-  orderId, 
-  items, 
+export default function OrderItemsList({
+  orderId,
+  items,
   onItemStatusChange,
-  canMarkAsServed = true 
+  canMarkAsServed = true
 }: OrderItemsListProps) {
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set())
 
   const updateItemStatus = async (itemId: string, newStatus: string) => {
     setUpdatingItems(prev => new Set(prev).add(itemId))
-    
+
     try {
       const response = await fetch(`/api/orders/${orderId}/items/${itemId}/status`, {
         method: 'PATCH',
@@ -73,8 +62,8 @@ export default function OrderItemsList({
   return (
     <div className="space-y-4">
       {items.map((item, index) => (
-        <div 
-          key={item.id} 
+        <div
+          key={item.id}
           className={cn(
             "group relative bg-background/40 backdrop-blur-md rounded-3xl border border-border/50 p-5 transition-all duration-300 hover:border-blue-500/30 overflow-hidden animate-in slide-in-from-bottom duration-500",
             item.status === 'SERVED' ? "opacity-80" : "shadow-lg shadow-blue-500/5"
@@ -97,7 +86,7 @@ export default function OrderItemsList({
                 )}>
                   {item.status === 'SERVED' ? <Check className="w-5 h-5" /> : <Clock className="w-5 h-5 animate-pulse" />}
                 </div>
-                
+
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-3">
                     <h4 className="text-lg font-black text-foreground tracking-tight truncate leading-none">
@@ -117,7 +106,7 @@ export default function OrderItemsList({
                   </div>
                 </div>
               </div>
-              
+
               {/* Detalles y Notas */}
               <div className="grid gap-2 ml-12">
                 {item.notes && (
@@ -128,7 +117,7 @@ export default function OrderItemsList({
                     </p>
                   </div>
                 )}
-                
+
                 <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
                   <div className="flex items-center gap-1.5">
                     <Tag className="w-3.5 h-3.5" />
@@ -160,7 +149,7 @@ export default function OrderItemsList({
                   )}
                 </Button>
               )}
-              
+
               {canMarkAsServed && item.status === 'SERVED' && (
                 <Button
                   onClick={() => updateItemStatus(item.id, 'PENDING')}

@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Order } from "@/types"
 
 interface CustomerData {
   name?: string
@@ -6,7 +7,7 @@ interface CustomerData {
   ruc?: string
 }
 
-export function useOrderPayment(order: any, onPaymentSuccess: () => void) {
+export function useOrderPayment(order: Order | null, onPaymentSuccess: () => void) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [completeModalOpen, setCompleteModalOpen] = useState(false)
 

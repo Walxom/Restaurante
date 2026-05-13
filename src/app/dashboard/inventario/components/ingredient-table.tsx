@@ -1,6 +1,6 @@
 "use client"
 
-import { Ingredient } from "@/hooks/useInventory"
+import { Ingredient } from "@/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"

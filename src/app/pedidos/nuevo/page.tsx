@@ -22,7 +22,7 @@ import { CategoryTabs } from "@/components/orders/CategoryTabs"
 import { useCart } from "@/hooks/use-cart"
 import { useOrderData } from "@/hooks/use-order-data"
 import { useCreateOrder } from "@/hooks/use-create-order"
-import { CustomerData, OrderType, Table } from "@/types/orders"
+import { CustomerData, OrderType, Table } from "@/types"
 
 export default function NewOrderPage() {
   const { data: session } = useSession()

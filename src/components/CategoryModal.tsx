@@ -3,14 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
-interface Category {
-  id: string
-  name: string
-  description: string | null
-  isActive: boolean
-  productCount?: number
-}
+import { Category } from "@/types"
 
 interface CategoryModalProps {
   isOpen: boolean
@@ -58,18 +51,18 @@ export default function CategoryModal({ isOpen, onClose, onSave, category }: Cat
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) return
 
     setIsLoading(true)
-    
+
     try {
-      const url = category 
-        ? `/api/categories/${category.id}` 
+      const url = category
+        ? `/api/categories/${category.id}`
         : "/api/categories"
-      
+
       const method = category ? "PATCH" : "POST"
-      
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -99,13 +92,13 @@ export default function CategoryModal({ isOpen, onClose, onSave, category }: Cat
 
   const handleDelete = async () => {
     if (!category) return
-    
+
     if (!confirm("¿Estás seguro de que quieres eliminar esta categoría? Esta acción no se puede deshacer.")) {
       return
     }
 
     setIsLoading(true)
-    
+
     try {
       const response = await fetch(`/api/categories/${category.id}`, {
         method: "DELETE",
@@ -187,9 +180,9 @@ export default function CategoryModal({ isOpen, onClose, onSave, category }: Cat
                   Eliminar
                 </Button>
               )}
-              
+
               <div className="flex-1"></div>
-              
+
               <Button
                 type="button"
                 onClick={onClose}
@@ -198,7 +191,7 @@ export default function CategoryModal({ isOpen, onClose, onSave, category }: Cat
               >
                 Cancelar
               </Button>
-              
+
               <Button
                 type="submit"
                 disabled={isLoading}

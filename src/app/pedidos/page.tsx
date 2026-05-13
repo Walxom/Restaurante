@@ -14,18 +14,7 @@ import { RoleGuard } from "@/components/auth/role-guard"
 import { OrderCard } from "@/components/orders/OrderCard"
 import { OrderFilters } from "@/components/orders/OrderFilters"
 import { OrderPagination } from "@/components/orders/OrderPagination"
-
-interface Order {
-  id: string
-  orderNumber: string
-  status: string
-  totalAmount: number
-  createdAt: string
-  type: string
-  table?: { number: number }
-  orderItems: any[]
-  user: { name: string }
-}
+import { Order } from "@/types"
 
 export default function UnifiedOrdersPage() {
   const { data: session } = useSession()
@@ -34,7 +23,7 @@ export default function UnifiedOrdersPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<"active" | "completed" | "cancelled">("active")
   const [orderCounts, setOrderCounts] = useState({ active: 0, completed: 0, cancelled: 0 })
-  
+
   const [showCompleteModal, setShowCompleteModal] = useState(false)
   const [orderToComplete, setOrderToComplete] = useState<Order | null>(null)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
@@ -66,36 +55,36 @@ export default function UnifiedOrdersPage() {
   const fetchOrderCounts = useCallback(async () => {
     try {
       if (!session?.user?.id) return
-      
+
       const todayStr = new Date().toISOString().split('T')[0]
-      
+
       // Realizamos peticiones paralelas para cada estado para asegurar precisión
       const [activeRes, completedRes, cancelledRes] = await Promise.all([
         fetch(`/api/orders?showAll=true&status=active`),
         fetch(`/api/orders?showAll=true&status=COMPLETED&date=${todayStr}`),
         fetch(`/api/orders?showAll=true&status=CANCELLED&date=${todayStr}`)
       ])
-      
+
       if (activeRes.ok && completedRes.ok && cancelledRes.ok) {
         const [activeData, completedData, cancelledData] = await Promise.all([
           activeRes.json(),
           completedRes.json(),
           cancelledRes.json()
         ])
-        
+
         setOrderCounts({
           active: activeData.length,
           completed: completedData.length,
           cancelled: cancelledData.length
         })
       }
-    } catch (error) { 
-      console.error("Error al sincronizar contadores:", error) 
+    } catch (error) {
+      console.error("Error al sincronizar contadores:", error)
     }
   }, [session])
 
-  useEffect(() => { 
-    fetchOrders() 
+  useEffect(() => {
+    fetchOrders()
   }, [fetchOrders])
 
   useEffect(() => {
@@ -109,14 +98,25 @@ export default function UnifiedOrdersPage() {
     onOrderItemUpdate: fetchOrders
   })
 
-  const processCompleteOrder = async (receiptType: string, customerData: any) => {
-    if (!orderToComplete) return
+  const processCompleteOrder = async (
+    receiptType: 'none' | 'boleta' | 'factura', 
+    customerData?: { name: string; document: string; ruc?: string }
+  ): Promise<string> => {
+    if (!orderToComplete) return ""
     const response = await fetch(`/api/orders/${orderToComplete.id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: 'COMPLETED' })
+      body: JSON.stringify({ 
+        status: 'COMPLETED',
+        receiptType,
+        customerData 
+      })
     })
-    if (response.ok) fetchOrders()
+    if (response.ok) {
+      fetchOrders()
+      return "ok"
+    }
+    return ""
   }
 
   const confirmCancelOrder = async () => {
@@ -151,7 +151,7 @@ export default function UnifiedOrdersPage() {
     <RoleGuard allowedRoles={["MESERO", "JEFE"]}>
       <div className="min-h-screen bg-background transition-colors duration-500">
         <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/20 dark:from-slate-950 dark:via-blue-950/10 dark:to-slate-950 pointer-events-none" />
-        
+
         <div className="relative z-10 flex flex-col">
           <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
             <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -187,11 +187,11 @@ export default function UnifiedOrdersPage() {
                   ))}
                 </div>
                 <div className="flex justify-center pb-8">
-                  <OrderPagination 
-                    currentPage={currentPage} 
-                    totalPages={totalPages} 
-                    onPrevious={() => setCurrentPage(prev => prev - 1)} 
-                    onNext={() => setCurrentPage(prev => prev + 1)} 
+                  <OrderPagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPrevious={() => setCurrentPage(prev => prev - 1)}
+                    onNext={() => setCurrentPage(prev => prev + 1)}
                   />
                 </div>
               </div>

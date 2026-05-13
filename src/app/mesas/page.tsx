@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import TableModal from "@/components/TableModal"
 import StatusChangeModal from "@/components/StatusChangeModal"
+import { AdminPageHeader } from "@/components/layout/PageHeader"
 import { cn } from "@/lib/utils"
-import { Plus, ArrowLeft, Users, Settings, ChefHat } from "lucide-react"
+import { Plus, Users, Settings } from "lucide-react"
 
 interface Table {
   id: string
@@ -129,34 +130,20 @@ export default function MesasPage() {
       <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/20 dark:from-slate-950 dark:via-blue-950/10 dark:to-slate-950 pointer-events-none" />
       <div className="relative z-10 flex flex-col">
       {/* Header minimalista */}
-      <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-           <div className="flex items-center justify-between">
-             <div className="flex items-center gap-2 sm:gap-4">
-               <Button 
-                 onClick={() => router.push("/dashboard")} 
-                 variant="ghost"
-                 size="sm"
-                 className="text-muted-foreground hover:text-foreground hover:bg-accent"
-               >
-                 <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
-                 <span className="hidden sm:inline">Dashboard</span>
-               </Button>
-               <div className="h-6 w-px bg-border/50 hidden sm:block"></div>
-               <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">Gestión de Mesas</h1>
-             </div>
-             <Button 
-               onClick={() => setShowCreateModal(true)}
-               size="sm"
-               className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 rounded-xl"
-             >
-               <Plus className="w-4 h-4 mr-1 sm:mr-2" />
-               <span className="hidden sm:inline">Nueva Mesa</span>
-               <span className="sm:hidden">Nueva</span>
-             </Button>
-           </div>
-         </div>
-       </header>
+      <AdminPageHeader
+        title="Gestión de Mesas"
+        backTo="/dashboard"
+      >
+        <Button 
+          onClick={() => setShowCreateModal(true)}
+          size="sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 rounded-xl"
+        >
+          <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">Nueva Mesa</span>
+          <span className="sm:hidden">Nueva</span>
+        </Button>
+      </AdminPageHeader>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Estadísticas minimalistas */}

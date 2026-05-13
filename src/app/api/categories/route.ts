@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { PrismaClient } from "@prisma/client"
+import { createCategorySchema } from "@/lib/validations/category"
 
 const prisma = new PrismaClient()
 
@@ -9,7 +10,7 @@ const prisma = new PrismaClient()
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return NextResponse.json(
         { error: "No autorizado" },
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     // Para administradores (JEFE), mostrar todas si se solicita
     // Para meseros, solo mostrar activas
-    const whereCondition = (session.user.role === "JEFE" && showAll) 
+    const whereCondition = (session.user.role === "JEFE" && showAll)
       ? {} // Mostrar todas (activas e inactivas)
       : { isActive: true } // Solo activas
 
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session || session.user.role !== "JEFE") {
       return NextResponse.json(
         { error: "Solo los jefes pueden crear categorías" },
@@ -68,20 +69,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    
-    // Validaciones
-    if (!body.name || body.name.trim() === "") {
+
+    // Validar con Zod
+    const validation = createCategorySchema.safeParse(body)
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "El nombre de la categoría es requerido" },
+        { error: "Datos de categoría inválidos", details: validation.error.issues },
         { status: 400 }
       )
     }
 
+    const { name, description } = validation.data
+
     // Verificar que el nombre no esté ya en uso
     const existingCategory = await prisma.category.findFirst({
-      where: { 
-        name: body.name.trim(),
-        isActive: true 
+      where: {
+        name: name.trim(),
+        isActive: true
       }
     })
 
@@ -95,8 +99,8 @@ export async function POST(request: NextRequest) {
     // Crear la categoría
     const category = await prisma.category.create({
       data: {
-        name: body.name.trim(),
-        description: body.description?.trim() || null,
+        name: name.trim(),
+        description: description?.trim() || null,
         isActive: true,
       }
     })

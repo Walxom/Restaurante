@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { X, Receipt, User, Clock, MapPin, ShoppingBag, CreditCard } from "lucide-react"
 import ThermalPrintButton from "@/components/ThermalPrintButton"
 import { useSession } from "next-auth/react"
+import { createMockOrder, createMockOrderItem } from "@/lib/type-converters"
 
 interface SaleDetailsModalProps {
   sale: Sale | null
@@ -153,18 +154,36 @@ export function SaleDetailsModal({ sale, onClose }: SaleDetailsModalProps) {
           <div className="flex items-center gap-3">
             {sale.status === 'COMPLETED' && (
               <ThermalPrintButton 
-                order={{
-                  ...sale,
+                order={createMockOrder({
+                  id: sale.id,
+                  orderNumber: sale.orderNumber,
                   totalAmount: Number(sale.totalAmount) || 0,
-                  orderItems: sale.orderItems.map((item, index) => ({
+                  status: 'COMPLETED',
+                  createdAt: sale.createdAt,
+                  table: sale.table ? { 
+                    id: '', 
+                    number: sale.table.number, 
+                    status: 'OCUPADA', 
+                    capacity: 0 
+                  } : null,
+                  user: { id: '', name: sale.user?.name || '' },
+                  orderItems: sale.orderItems.map((item, index) => createMockOrderItem({
                     id: `item-${index}`,
                     quantity: item.quantity,
                     unitPrice: Number(item.product.price) || 0,
                     subtotal: item.quantity * (Number(item.product.price) || 0),
-                    status: 'COMPLETED',
-                    product: { name: item.product.name }
+                    status: 'SERVED',
+                    product: {
+                      id: '',
+                      name: item.product.name,
+                      price: Number(item.product.price) || 0,
+                      categoryId: '',
+                      isAvailable: true,
+                      isActive: true,
+                      category: { id: '', name: '' }
+                    }
                   }))
-                }}
+                })}
                 currentUser={{
                   id: session?.user?.id || '',
                   name: session?.user?.name || '',
