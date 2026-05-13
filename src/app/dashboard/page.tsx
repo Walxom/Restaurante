@@ -69,7 +69,7 @@ export default function DashboardPage() {
   return (
     <RoleGuard allowedRoles={["JEFE"]}>
       <div className="min-h-screen bg-background transition-colors duration-500">
-        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
+        <div className="fixed inset-0 bg-linear-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
         <div className="relative z-10 flex flex-col">
       {/* Prefetch de rutas principales para mejorar navegación */}
       <div className="hidden">
@@ -85,11 +85,11 @@ export default function DashboardPage() {
       </div>
 
       {/* Header minimalista */}
-      <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50 transition-all duration-300">
+      <header className="bg-card/80 backdrop-blur-md border-b border-border/50 shadow-sm shadow-black/10 sticky top-0 z-50 transition-all duration-300">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-3">
             <div className="flex items-center gap-4">
-              <div className="w-11 h-11 bg-gradient-to-tr from-blue-600/90 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 ring-4 ring-blue-500/5">
+              <div className="w-11 h-11 bg-linear-to-tr from-blue-600/90 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 ring-4 ring-blue-500/5">
                 <ChefHat className="w-6 h-6 text-white drop-shadow-md" />
               </div>
               <div>
