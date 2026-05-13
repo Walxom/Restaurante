@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -67,6 +67,11 @@ export default function IngredientModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  // Refs para auto-focus en errores
+  const nameRef = useRef<HTMLInputElement>(null)
+  const currentStockRef = useRef<HTMLInputElement>(null)
+  const minStockRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     if (isOpen) {
       fetchCategories()
@@ -117,18 +122,54 @@ export default function IngredientModal({
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
+    
     if (!formData.name.trim()) newErrors.name = "Requerido"
     if (!formData.unit.trim()) newErrors.unit = "Requerido"
-    if (!formData.currentStock || isNaN(Number(formData.currentStock))) newErrors.currentStock = "Inválido"
-    if (!formData.minStock || isNaN(Number(formData.minStock))) newErrors.minStock = "Inválido"
+    
+    // Validar Stock Actual (Permitir 0)
+    if (formData.currentStock === "" || isNaN(Number(formData.currentStock))) {
+      newErrors.currentStock = "Inválido"
+    } else if (Number(formData.currentStock) < 0) {
+      newErrors.currentStock = "No puede ser negativo"
+    }
+
+    // Validar Stock Mínimo (Permitir 0)
+    if (formData.minStock === "" || isNaN(Number(formData.minStock))) {
+      newErrors.minStock = "Inválido"
+    } else if (Number(formData.minStock) < 0) {
+      newErrors.minStock = "No puede ser negativo"
+    }
+
+    // Validar campos opcionales si tienen valor
+    if (formData.maxStock !== "" && isNaN(Number(formData.maxStock))) {
+      newErrors.maxStock = "Debe ser un número"
+    }
+    
+    if (formData.cost !== "" && isNaN(Number(formData.cost))) {
+      newErrors.cost = "Debe ser un número"
+    } else if (formData.cost !== "" && Number(formData.cost) < 0) {
+      newErrors.cost = "No puede ser negativo"
+    }
     
     setErrors(newErrors)
+    // Adjuntar los errores a la función para acceso inmediato en handleSubmit
+    ;(validateForm as any).getLatestErrors = () => newErrors
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!validateForm()) return
+  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) e.preventDefault()
+    
+    if (!validateForm()) {
+      // Auto-focus en el primer error encontrado
+      const newErrors = validateForm.getLatestErrors?.() || {}
+      if (newErrors.name) nameRef.current?.focus()
+      else if (newErrors.currentStock) currentStockRef.current?.focus()
+      else if (newErrors.minStock) minStockRef.current?.focus()
+      
+      return
+    }
+    
     setIsSubmitting(true)
     try {
       const payload = {
@@ -229,6 +270,7 @@ export default function IngredientModal({
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Nombre del Insumo</label>
                   <Input
+                    ref={nameRef}
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="EJ: COCA COLA 500ML"
@@ -323,22 +365,35 @@ export default function IngredientModal({
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Stock Actual</label>
                   <Input
+                    ref={currentStockRef}
                     type="number" step="0.1"
                     value={formData.currentStock}
                     onChange={(e) => handleInputChange("currentStock", e.target.value)}
-                    className="h-12 bg-foreground/[0.03] border-border/50 rounded-2xl px-5 text-[11px] font-black tracking-widest focus:ring-2 focus:ring-primary/20 transition-all"
+                    className={cn(
+                      "h-12 bg-foreground/[0.03] border-border/50 rounded-2xl px-5 text-[11px] font-black tracking-widest focus:ring-2 focus:ring-primary/20 transition-all",
+                      errors.currentStock && "border-rose-500/50 bg-rose-500/5"
+                    )}
                   />
+                  {errors.currentStock && <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest ml-1">{errors.currentStock}</p>}
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black text-rose-500 uppercase tracking-widest ml-1 flex items-center gap-1">
+                  <label className={cn(
+                    "text-[9px] font-black uppercase tracking-widest ml-1 flex items-center gap-1",
+                    errors.minStock ? "text-rose-500" : "text-muted-foreground"
+                  )}>
                     Mínimo <Info className="w-2.5 h-2.5 opacity-50" />
                   </label>
                   <Input
+                    ref={minStockRef}
                     type="number" step="0.1"
                     value={formData.minStock}
                     onChange={(e) => handleInputChange("minStock", e.target.value)}
-                    className="h-12 bg-rose-500/[0.03] border-rose-500/20 rounded-2xl px-5 text-[11px] font-black tracking-widest focus:ring-2 focus:ring-rose-500/20 transition-all"
+                    className={cn(
+                      "h-12 bg-rose-500/[0.03] border-rose-500/20 rounded-2xl px-5 text-[11px] font-black tracking-widest focus:ring-2 focus:ring-rose-500/20 transition-all",
+                      errors.minStock && "border-rose-500/50 ring-rose-500/20"
+                    )}
                   />
+                  {errors.minStock && <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest ml-1">{errors.minStock}</p>}
                 </div>
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Máximo Opt.</label>
@@ -346,8 +401,12 @@ export default function IngredientModal({
                     type="number" step="0.1"
                     value={formData.maxStock}
                     onChange={(e) => handleInputChange("maxStock", e.target.value)}
-                    className="h-12 bg-foreground/[0.03] border-border/50 rounded-2xl px-5 text-[11px] font-black tracking-widest focus:ring-2 focus:ring-primary/20 transition-all"
+                    className={cn(
+                      "h-12 bg-foreground/[0.03] border-border/50 rounded-2xl px-5 text-[11px] font-black tracking-widest focus:ring-2 focus:ring-primary/20 transition-all",
+                      errors.maxStock && "border-rose-500/50 bg-rose-500/5"
+                    )}
                   />
+                  {errors.maxStock && <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest ml-1">{errors.maxStock}</p>}
                 </div>
               </div>
             </section>
@@ -363,12 +422,23 @@ export default function IngredientModal({
                     type="number" step="0.01"
                     value={formData.cost}
                     onChange={(e) => handleInputChange("cost", e.target.value)}
-                    className="h-12 bg-foreground/[0.03] border-border/50 rounded-2xl pl-10 pr-5 text-[11px] font-black tracking-widest focus:ring-2 focus:ring-primary/20 transition-all"
+                    className={cn(
+                      "h-12 bg-foreground/[0.03] border-border/50 rounded-2xl pl-10 pr-5 text-[11px] font-black tracking-widest focus:ring-2 focus:ring-primary/20 transition-all",
+                      errors.cost && "border-rose-500/50 bg-rose-500/5"
+                    )}
                     placeholder="0.00"
                   />
                 </div>
+                {errors.cost && <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest ml-1">{errors.cost}</p>}
               </div>
             </section>
+
+            {errors.submit && (
+              <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                <AlertTriangle className="w-4 h-4 text-rose-500" />
+                <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">{errors.submit}</p>
+              </div>
+            )}
 
           </div>
         </form>

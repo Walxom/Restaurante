@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, ReactNode } from "react"
-import { ConfigSkeleton } from "@/app/dashboard/configuracion/components/config-skeleton"
+import { AppLoading } from "@/components/dashboard/AppLoading"
 
 interface RoleGuardProps {
   children: ReactNode
@@ -33,7 +33,7 @@ export function RoleGuard({
   }, [session, status, router, allowedRoles, fallbackPath])
 
   if (status === "loading") {
-    return <ConfigSkeleton />
+    return <AppLoading />
   }
 
   if (!session || !allowedRoles.includes(session.user.role)) {

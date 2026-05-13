@@ -26,6 +26,7 @@ import { InventoryStats } from "./components/inventory-stats"
 import { InventoryFilters } from "./components/inventory-filters"
 import { IngredientTable } from "./components/ingredient-table"
 import { CategoryTable } from "./components/category-table"
+import { RoleGuard } from "@/components/auth/role-guard"
 
 // Modals (Existing)
 import IngredientModal from "@/components/IngredientModal"
@@ -33,10 +34,10 @@ import StockAdjustModal from "@/components/StockAdjustModal"
 import BulkStockAdjustModal from "@/components/BulkStockAdjustModal"
 import IngredientCategoryModal from "@/components/IngredientCategoryModal"
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
+import { toast } from "react-hot-toast"
 
 export default function InventoryPage() {
   const router = useRouter()
-  const { data: session } = useSession()
   
   // Data Logic
   const {
@@ -99,292 +100,260 @@ export default function InventoryPage() {
     setShowDeleteModal(true)
   }
 
-  const confirmDelete = async () => {
-    if (!itemToDelete) return
-    
-    if (itemToDelete.type === 'category') {
-      const result = await deleteCategory(itemToDelete.id)
-      if (result.success) {
-        setShowDeleteModal(false)
-      } else {
-        alert(result.error)
-      }
-    } else {
-      // Ingredient delete logic
-      try {
-        const response = await fetch(`/api/ingredients/${itemToDelete.id}`, { method: 'DELETE' })
-        if (response.ok) {
-          refreshInventory()
-          refreshAlerts()
-          setShowDeleteModal(false)
-        }
-      } catch (error) {
-        console.error(error)
-      }
-    }
-  }
-
   const handleSuccess = () => {
     refreshInventory()
     refreshCategories()
     refreshAlerts()
   }
 
-  if (session?.user.role !== "JEFE") {
-    return null
+  const confirmDelete = async () => {
+    if (!itemToDelete) return
+    
+    try {
+      if (itemToDelete.type === 'ingredient') {
+        const response = await fetch(`/api/ingredients/${itemToDelete.id}`, { method: 'DELETE' })
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || 'Error al eliminar ingrediente')
+        }
+      } else {
+        const response = await fetch(`/api/ingredients/categories/${itemToDelete.id}`, { method: 'DELETE' })
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || 'Error al eliminar categoría')
+        }
+      }
+      
+      handleSuccess()
+      setShowDeleteModal(false)
+      toast.success('Eliminado correctamente')
+    } catch (error) {
+      console.error('Error deleting:', error)
+      toast.error(error instanceof Error ? error.message : 'Error al eliminar')
+    }
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-foreground selection:bg-primary/30">
-      {/* DECORATION */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[25%] -left-[10%] w-[70%] h-[70%] bg-primary/5 rounded-full blur-[120px]" />
-        <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-blue-500/5 rounded-full blur-[100px]" />
-      </div>
-
-      {/* HEADER */}
-      <header className="sticky top-0 z-40 bg-[#050505]/60 backdrop-blur-xl border-b border-white/[0.05]">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Button 
-              onClick={() => router.push("/dashboard")} 
-              variant="ghost"
-              className="group h-12 w-12 rounded-2xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.08] transition-all p-0"
-            >
-              <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-            </Button>
-            <div className="h-10 w-px bg-white/[0.08]" />
-            <div>
-              <h1 className="text-sm font-black text-foreground uppercase tracking-[0.2em] leading-none mb-1">
-                Gestión de Inventario
-              </h1>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
-                Control de Insumos y Categorías
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => {
-                setSelectedIngredient(null)
-                setShowIngredientModal(true)
-              }}
-              className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-primary shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Nuevo Insumo
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="relative max-w-7xl mx-auto px-6 py-10 space-y-10">
+    <RoleGuard allowedRoles={["JEFE"]}>
+      <div className="min-h-screen bg-background transition-colors duration-500">
+        {/* Fondo decorativo coherente */}
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
         
-        {/* KPI STATS */}
-        <InventoryStats stats={alertStats} />
+        <div className="relative z-10 flex flex-col">
+          {/* Header de Inventario */}
+          <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16">
+                <div className="flex items-center gap-4">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => router.push("/dashboard")}
+                    className="h-9 w-9 rounded-xl hover:bg-muted"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
+                  <div>
+                    <h1 className="text-sm font-black text-foreground uppercase tracking-widest leading-none mb-1">
+                      Inventario Maestro
+                    </h1>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                      Gestión de insumos y almacén
+                    </p>
+                  </div>
+                </div>
 
-        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-            <TabsList className="bg-white/[0.03] border border-white/[0.05] p-1.5 rounded-2xl h-auto flex-wrap sm:flex-nowrap">
-              <TabsTrigger value="inventory" className="flex-1 py-3 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
-                <Package className="w-3.5 h-3.5 mr-2" />
-                Existencias
-              </TabsTrigger>
-              <TabsTrigger value="categories" className="flex-1 py-3 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
-                <Layers className="w-3.5 h-3.5 mr-2" />
-                Categorías
-              </TabsTrigger>
-              <TabsTrigger value="deleted" className="flex-1 py-3 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
-                <History className="w-3.5 h-3.5 mr-2" />
-                Papelera
-              </TabsTrigger>
-            </TabsList>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={() => {
+                      setSelectedIngredient(null)
+                      setShowIngredientModal(true)
+                    }}
+                    className="h-10 px-4 bg-foreground text-background hover:opacity-90 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 shadow-lg shadow-black/5"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nuevo Insumo
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </header>
 
-            <div className="flex items-center gap-2">
-              {activeTab === 'inventory' && selectedIngredients.length > 0 && (
-                <Button
-                  onClick={() => setShowBulkModal(true)}
-                  className="h-11 px-6 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 font-black uppercase tracking-widest text-[10px] hover:bg-amber-500/20"
-                >
-                  Ajuste Masivo ({selectedIngredients.length})
-                </Button>
-              )}
-              {activeTab === 'categories' && (
-                <Button
-                  onClick={() => {
-                    setSelectedCategory(null)
+          <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            {/* Estadísticas de Inventario */}
+            <InventoryStats 
+              stats={alertStats} 
+              loading={isLoading} 
+            />
+
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <TabsList className="bg-muted/50 backdrop-blur-sm p-1 rounded-2xl border border-border/50 h-12">
+                  <TabsTrigger value="inventory" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-[10px] font-black uppercase tracking-widest">
+                    <Package className="w-4 h-4 mr-2" />
+                    Existencias
+                  </TabsTrigger>
+                  <TabsTrigger value="categories" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-[10px] font-black uppercase tracking-widest">
+                    <Layers className="w-4 h-4 mr-2" />
+                    Categorías
+                  </TabsTrigger>
+                  <TabsTrigger value="deleted" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-[10px] font-black uppercase tracking-widest">
+                    <History className="w-4 h-4 mr-2" />
+                    Papelera
+                  </TabsTrigger>
+                </TabsList>
+
+                {activeTab === 'inventory' && (
+                  <InventoryFilters 
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    stockFilter={stockFilter}
+                    setStockFilter={setStockFilter}
+                    categoryFilter={categoryFilter}
+                    setCategoryFilter={setCategoryFilter}
+                    categories={categories}
+                  />
+                )}
+
+                {activeTab === 'categories' && (
+                  <Button 
+                    onClick={() => {
+                      setSelectedCategory(null)
+                      setShowCategoryModal(true)
+                    }}
+                    variant="outline"
+                    className="h-10 rounded-xl border-border/50 bg-background/50 backdrop-blur-sm font-black uppercase tracking-widest text-[10px] hover:bg-muted"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nueva Categoría
+                  </Button>
+                )}
+              </div>
+
+              <TabsContent value="inventory" className="m-0 focus-visible:ring-0">
+                <IngredientTable 
+                  ingredients={ingredients}
+                  isLoading={isLoading}
+                  onEdit={handleEditIngredient}
+                  onAdjust={handleAdjustStock}
+                  onDelete={(ing) => handleDeleteItem(ing.id, 'ingredient')}
+                  selectedIngredients={selectedIngredients}
+                  toggleSelectIngredient={toggleSelectIngredient}
+                  toggleSelectAll={toggleSelectAll}
+                />
+              </TabsContent>
+
+              <TabsContent value="categories" className="m-0 focus-visible:ring-0">
+                <CategoryTable 
+                  categories={categories}
+                  isLoading={isCategoriesLoading}
+                  onEdit={(cat) => {
+                    setSelectedCategory(cat)
                     setShowCategoryModal(true)
                   }}
-                  className="h-11 px-6 rounded-xl bg-white/[0.05] border border-white/[0.1] font-black uppercase tracking-widest text-[10px]"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nueva Categoría
-                </Button>
-              )}
-            </div>
-          </div>
+                  onDelete={(cat) => handleDeleteItem(cat.id, 'category')}
+                />
+              </TabsContent>
 
-          <TabsContent value="inventory" className="mt-0 space-y-6 outline-none">
-            <InventoryFilters 
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              stockFilter={stockFilter}
-              setStockFilter={setStockFilter}
-              categoryFilter={categoryFilter}
-              setCategoryFilter={setCategoryFilter}
-              categories={categories}
-            />
-            
-            <IngredientTable 
-              ingredients={ingredients}
-              isLoading={isLoading}
-              selectedIngredients={selectedIngredients}
-              toggleSelectIngredient={toggleSelectIngredient}
-              toggleSelectAll={toggleSelectAll}
-              onEdit={handleEditIngredient}
-              onDelete={(ing) => handleDeleteItem(ing.id, 'ingredient')}
-              onAdjust={handleAdjustStock}
-            />
-
-            {/* PAGINACIÓN */}
-            {pagination && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between bg-white/[0.02] border border-white/[0.05] p-4 rounded-3xl">
-                <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                  Página {currentPage} de {pagination.totalPages}
+              <TabsContent value="deleted" className="m-0 focus-visible:ring-0">
+                <div className="bg-card/40 backdrop-blur-xl border border-border/50 rounded-[2rem] p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
+                  <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center mb-4">
+                    <History className="w-8 h-8 text-muted-foreground/50" />
+                  </div>
+                  <h3 className="text-sm font-black text-foreground uppercase tracking-widest mb-1">Historial de Eliminación</h3>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 max-w-[280px]">
+                    Los elementos eliminados recientemente aparecerán aquí para su restauración técnica.
+                  </p>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => prev - 1)}
-                    disabled={!pagination.hasPrevPage}
-                    className="rounded-xl border-white/[0.05] bg-white/[0.03]"
-                  >
-                    Anterior
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => prev + 1)}
-                    disabled={!pagination.hasNextPage}
-                    className="rounded-xl border-white/[0.05] bg-white/[0.03]"
-                  >
-                    Siguiente
-                  </Button>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="categories" className="mt-0 outline-none">
-            <CategoryTable 
-              categories={categories}
-              isLoading={isCategoriesLoading}
-              onEdit={(cat) => {
-                setSelectedCategory(cat)
-                setShowCategoryModal(true)
-              }}
-              onDelete={(cat) => handleDeleteItem(cat.id, 'category')}
-            />
-          </TabsContent>
-
-          <TabsContent value="deleted" className="mt-0 outline-none">
-            <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 p-12 text-center">
-              <History className="w-12 h-12 text-muted-foreground opacity-20 mx-auto mb-4" />
-              <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Registros Eliminados</h3>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Esta sección se encuentra en mantenimiento...</p>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </main>
-
-      {/* PANEL DE ACCIONES MASIVAS (FLOTANTE) */}
-      {selectedIngredients.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-8 duration-500">
-          <div className="bg-foreground text-background px-8 py-5 rounded-[2rem] shadow-2xl flex items-center gap-8 backdrop-blur-2xl border border-white/10 ring-1 ring-black/5">
-            <div className="flex flex-col">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40 leading-none mb-1">Selección Activa</span>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-black leading-none">{selectedIngredients.length}</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Insumos</span>
-              </div>
-            </div>
-            <div className="h-10 w-px bg-background/20" />
-            <div className="flex items-center gap-3">
-              <Button 
-                onClick={() => setShowBulkModal(true)}
-                className="bg-background text-foreground hover:bg-background/90 rounded-2xl px-6 h-12 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-black/20 transition-all hover:scale-105 active:scale-95"
-              >
-                Ajuste Masivo
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={toggleSelectAll}
-                className="hover:bg-background/10 text-background rounded-2xl h-12 px-6 text-[10px] font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity"
-              >
-                Descartar
-              </Button>
-            </div>
-          </div>
+              </TabsContent>
+            </Tabs>
+          </main>
         </div>
-      )}
 
-      {/* MODALS */}
-      {showIngredientModal && (
+        {/* Panel de Acciones Masivas Flotante */}
+        {selectedIngredients.length > 0 && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-8 duration-500">
+            <div className="bg-foreground text-background px-8 py-4 rounded-[2rem] shadow-2xl flex items-center gap-6 border border-white/10 backdrop-blur-lg">
+              <div className="flex items-center gap-3 pr-6 border-r border-background/20">
+                <div className="h-8 w-8 rounded-full bg-background/20 flex items-center justify-center text-[11px] font-black">
+                  {selectedIngredients.length}
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Seleccionados</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button 
+                  size="sm" 
+                  onClick={() => setShowBulkModal(true)}
+                  className="bg-background text-foreground hover:bg-background/90 rounded-xl h-10 px-6 font-black uppercase tracking-widest text-[10px]"
+                >
+                  Ajuste Masivo
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => toggleSelectAll()}
+                  className="text-background/60 hover:text-background hover:bg-background/10 rounded-xl h-10 px-6 font-black uppercase tracking-widest text-[10px]"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modales */}
         <IngredientModal 
           isOpen={showIngredientModal}
           onClose={() => {
             setShowIngredientModal(false)
             setSelectedIngredient(null)
           }}
-          ingredient={selectedIngredient}
           onSuccess={handleSuccess}
+          ingredient={selectedIngredient}
         />
-      )}
 
-      {showCategoryModal && (
+        <StockAdjustModal 
+          isOpen={showStockModal}
+          onClose={() => {
+            setShowStockModal(false)
+            setSelectedIngredient(null)
+          }}
+          onSuccess={handleSuccess}
+          ingredient={selectedIngredient}
+        />
+
+        {showBulkModal && (
+          <BulkStockAdjustModal 
+            isOpen={showBulkModal}
+            onClose={() => {
+              setShowBulkModal(false)
+              toggleSelectAll()
+            }}
+            ingredients={allIngredients.filter(ing => selectedIngredients.includes(ing.id))}
+            onSuccess={handleSuccess}
+          />
+        )}
+
         <IngredientCategoryModal 
           isOpen={showCategoryModal}
           onClose={() => {
             setShowCategoryModal(false)
             setSelectedCategory(null)
           }}
+          onSuccess={handleSuccess}
           category={selectedCategory}
-          onSuccess={handleSuccess}
         />
-      )}
 
-      {showStockModal && selectedIngredient && (
-        <StockAdjustModal 
-          isOpen={showStockModal}
-          onClose={() => setShowStockModal(false)}
-          ingredient={selectedIngredient}
-          onSuccess={handleSuccess}
+        <ConfirmationModal 
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={confirmDelete}
+          title={`Eliminar ${itemToDelete?.type === 'category' ? 'Categoría' : 'Ingrediente'}`}
+          description="¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer si el elemento está en uso."
+          confirmText="Eliminar Definitivamente"
+          variant="destructive"
         />
-      )}
-
-      {showBulkModal && (
-        <BulkStockAdjustModal 
-          isOpen={showBulkModal}
-          onClose={() => {
-            setShowBulkModal(false)
-            toggleSelectAll() // Clear selection
-          }}
-          ingredients={allIngredients.filter(ing => selectedIngredients.includes(ing.id))}
-          onSuccess={handleSuccess}
-        />
-      )}
-
-      <ConfirmationModal 
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={confirmDelete}
-        title={`Eliminar ${itemToDelete?.type === 'category' ? 'Categoría' : 'Ingrediente'}`}
-        description="¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer si el elemento está en uso."
-        confirmText="Eliminar Definitivamente"
-        variant="destructive"
-      />
-    </div>
+      </div>
+    </RoleGuard>
   )
 }
