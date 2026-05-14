@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Category } from "@/types"
+import { ModalShell } from "@/components/ui/modal-shell"
+import { PremiumInput } from "@/components/ui/premium-input"
+import { SectionTitle } from "@/components/ui/section-title"
+import { Layers, Save, Trash2, Info } from "lucide-react"
 
 interface CategoryModalProps {
   isOpen: boolean
@@ -49,8 +52,8 @@ export default function CategoryModal({ isOpen, onClose, onSave, category }: Cat
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
 
     if (!validateForm()) return
 
@@ -120,89 +123,82 @@ export default function CategoryModal({ isOpen, onClose, onSave, category }: Cat
     }
   }
 
-  if (!isOpen) return null
+  const modalFooter = (
+    <div className="flex gap-4">
+      {category && (
+        <Button
+          type="button"
+          onClick={handleDelete}
+          disabled={isLoading}
+          variant="ghost"
+          className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] text-rose-500 hover:bg-rose-500/10 transition-all"
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          Eliminar
+        </Button>
+      )}
+      <div className="flex-1"></div>
+      <Button
+        type="button"
+        onClick={onClose}
+        disabled={isLoading}
+        variant="ghost"
+        className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-foreground/5 transition-all"
+      >
+        Cancelar
+      </Button>
+      <Button
+        type="submit"
+        onClick={handleSubmit}
+        disabled={isLoading}
+        className="h-12 px-10 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-foreground text-background hover:opacity-90 shadow-xl shadow-black/10 transition-all active:scale-95"
+      >
+        {isLoading ? "Guardando..." : category ? "Actualizar" : "Crear Categoría"}
+      </Button>
+    </div>
+  )
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-        <div className="p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            {category ? "Editar Categoría" : "Nueva Categoría"}
-          </h2>
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      icon={category ? Save : Layers}
+      title={category ? "Editar Categoría" : "Nueva Categoría de Menú"}
+      subtitle={category ? `Editando: ${category.name}` : "Organiza tu oferta gastronómica"}
+      footer={modalFooter}
+    >
+      <form onSubmit={handleSubmit} className="space-y-12">
+        <section>
+          <SectionTitle icon={Layers} title="Detalles" subtitle="Información de la categoría" />
+          <div className="space-y-6">
+            <PremiumInput
+              label="Nombre de Categoría"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Ej: Entradas, Platos Principales..."
+              error={errors.name}
+            />
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre *
-              </label>
-              <Input
-                id="name"
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ej: Entradas, Platos Principales, Bebidas..."
-                className={errors.name ? "border-red-500" : ""}
-              />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción
-              </label>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Descripción (Opcional)</label>
               <textarea
-                id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Descripción opcional de la categoría..."
+                placeholder="Escribe una breve descripción..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full bg-foreground/[0.03] border border-border/50 rounded-2xl p-5 text-[11px] font-bold text-foreground placeholder:text-muted-foreground/40 focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none"
               />
             </div>
+          </div>
+        </section>
 
-            {errors.submit && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                {errors.submit}
-              </div>
-            )}
-
-            <div className="flex gap-3 pt-4">
-              {category && (
-                <Button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={isLoading}
-                  variant="outline"
-                  className="text-red-600 border-red-300 hover:bg-red-50"
-                >
-                  Eliminar
-                </Button>
-              )}
-
-              <div className="flex-1"></div>
-
-              <Button
-                type="button"
-                onClick={onClose}
-                disabled={isLoading}
-                variant="outline"
-              >
-                Cancelar
-              </Button>
-
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {isLoading ? "Guardando..." : category ? "Actualizar" : "Crear"}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+        {errors.submit && (
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+            <Info className="w-4 h-4 text-rose-500" />
+            <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">{errors.submit}</p>
+          </div>
+        )}
+      </form>
+    </ModalShell>
   )
 }
