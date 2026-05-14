@@ -38,20 +38,60 @@ export interface CreateOrderDto {
   items: CreateOrderItemDto[]
 }
 
+export interface UpdateOrderItemDto {
+  id?: string
+  productId: string
+  quantity: number
+  notes?: string | null
+}
+
+export interface UpdateOrderDto {
+  notes?: string | null
+  customerName?: string | null
+  customerDni?: string | null
+  items?: UpdateOrderItemDto[]
+}
+
 // ─── Selects reutilizables ───────────────────────────────────────────────────
 
 const orderInclude = {
-  user: { select: { id: true, name: true, role: true } },
+  user: { select: { id: true, name: true, username: true, role: true } },
   table: { select: { id: true, number: true, status: true, capacity: true } },
   orderItems: {
     include: {
       product: {
-        select: { id: true, name: true, price: true, isAvailable: true, isActive: true },
+        select: { 
+          id: true, 
+          name: true, 
+          price: true, 
+          description: true,
+          isAvailable: true, 
+          isActive: true,
+          category: { select: { name: true } }
+        },
       },
     },
     orderBy: { createdAt: "asc" as const },
   },
-  invoice: { select: { id: true, type: true, number: true } },
+  invoice: { 
+    select: { 
+      id: true, 
+      type: true, 
+      number: true,
+      customerName: true,
+      customerRuc: true,
+      customerAddress: true,
+      subtotal: true,
+      igv: true,
+      total: true,
+      paymentMethod: true,
+      amountPaid: true,
+      change: true,
+      status: true,
+      issuedAt: true,
+      user: { select: { name: true } }
+    } 
+  },
 } as const
 
 // ─── Consultas ───────────────────────────────────────────────────────────────
@@ -236,4 +276,129 @@ export async function markAllItemsServed(orderId: string) {
     where: { id: orderId },
     include: orderInclude,
   })
+}
+
+/**
+ * Actualiza los datos de un pedido, incluyendo sus items.
+ * Maneja la lógica de items nuevos, editados y eliminados.
+ */
+export async function update(id: string, dto: UpdateOrderDto) {
+  const existingOrder = await prisma.order.findUnique({
+    where: { id },
+    include: { 
+      orderItems: {
+        include: { product: { select: { name: true } } }
+      } 
+    },
+  })
+
+  if (!existingOrder) {
+    throw new Error(`Pedido con ID "${id}" no encontrado`)
+  }
+
+  const updateData: Record<string, any> = {}
+  if (dto.notes !== undefined) updateData.notes = dto.notes
+  if (dto.customerName !== undefined) updateData.customerName = dto.customerName
+  if (dto.customerDni !== undefined) updateData.customerDni = dto.customerDni
+
+  const result = await prisma.$transaction(async (tx) => {
+    // Si se proporcionan items, procesar cambios
+    if (dto.items && Array.isArray(dto.items)) {
+      const items = dto.items
+
+      // 1. Obtener productos necesarios para el cálculo de totales y precios
+      const productIds = Array.from(new Set(items.map((i) => i.productId)))
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds } },
+      })
+
+      // 2. Calcular nuevo total
+      let newTotalAmount = 0
+      items.forEach((item) => {
+        const product = products.find((p) => p.id === item.productId)
+        if (!product) throw new Error(`Producto ${item.productId} no encontrado`)
+        newTotalAmount += Number(product.price) * item.quantity
+      })
+      updateData.totalAmount = newTotalAmount
+
+      // 3. Identificar items a mantener, crear y eliminar
+      const existingItemsInDb = await tx.orderItem.findMany({
+        where: { orderId: id },
+      })
+
+      const dtoExistingItems = items.filter((i) => i.id && !i.id.startsWith("item_"))
+      const dtoNewItems = items.filter((i) => !i.id || i.id.startsWith("item_"))
+      const keepItemIds = dtoExistingItems.map((i) => i.id!)
+
+      // Eliminar items que no están en el DTO (excepto los ya servidos)
+      const itemsToDelete = existingItemsInDb.filter(
+        (dbItem) => !keepItemIds.includes(dbItem.id) && dbItem.status !== "SERVED"
+      )
+
+      if (itemsToDelete.length > 0) {
+        await tx.orderItem.deleteMany({
+          where: { id: { in: itemsToDelete.map((i) => i.id) } },
+        })
+      }
+
+      // 4. Actualizar items existentes
+      for (const itemDto of dtoExistingItems) {
+        const product = products.find((p) => p.id === itemDto.productId)!
+        await tx.orderItem.update({
+          where: { id: itemDto.id },
+          data: {
+            quantity: itemDto.quantity,
+            unitPrice: Number(product.price),
+            subtotal: Number(product.price) * itemDto.quantity,
+            notes: itemDto.notes ?? null,
+          },
+        })
+      }
+
+      // 5. Crear nuevos items
+      if (dtoNewItems.length > 0) {
+        await tx.orderItem.createMany({
+          data: dtoNewItems.map((itemDto) => {
+            const product = products.find((p) => p.id === itemDto.productId)!
+            return {
+              orderId: id,
+              productId: itemDto.productId,
+              quantity: itemDto.quantity,
+              unitPrice: Number(product.price),
+              subtotal: Number(product.price) * itemDto.quantity,
+              notes: itemDto.notes ?? null,
+              status: "PENDING",
+            }
+          }),
+        })
+
+        // Si el pedido estaba SERVED, volverlo a CONFIRMED para procesar nuevos items
+        if (existingOrder.status === "SERVED") {
+          updateData.status = "CONFIRMED"
+        }
+      }
+    }
+
+    // 6. Actualizar el pedido principal
+    const updatedOrder = await tx.order.update({
+      where: { id },
+      data: updateData,
+      include: orderInclude,
+    })
+
+    return updatedOrder
+  })
+
+  // 7. Disparar impresión en cocina (fuera de la transacción)
+  if (dto.items && Array.isArray(dto.items)) {
+    try {
+      const { printOrderChanges } = await import("./printer/kitchen-printer.service")
+      // No esperamos (await) a la impresión para no bloquear la respuesta de la API
+      printOrderChanges(id, (existingOrder as any).orderItems, dto.items)
+    } catch (e) {
+      console.error("Error al intentar imprimir cambios:", e)
+    }
+  }
+
+  return result
 }
