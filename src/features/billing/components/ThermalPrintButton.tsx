@@ -21,8 +21,8 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import toast from "react-hot-toast"
-import { FiscalReceiptPreview } from "@/components/FiscalReceiptPreview"
-import { KitchenTicketPreview } from "@/components/KitchenTicketPreview"
+import { FiscalReceiptPreview } from "@/features/billing/components/FiscalReceiptPreview"
+import { KitchenTicketPreview } from "@/features/billing/components/KitchenTicketPreview"
 import { Order } from "@/types"
 
 interface QueueStatus {

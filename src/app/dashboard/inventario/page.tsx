@@ -17,9 +17,9 @@ import {
 } from "lucide-react"
 
 // Hooks
-import { useInventory } from "@/hooks/useInventory"
-import { useInventoryCategories } from "@/hooks/useInventoryCategories"
-import { useInventoryAlerts } from "@/hooks/useInventoryAlerts"
+import { useInventory } from "@/features/inventory/hooks/useInventory"
+import { useInventoryCategories } from "@/features/inventory/hooks/useInventoryCategories"
+import { useInventoryAlerts } from "@/features/inventory/hooks/useInventoryAlerts"
 import { Ingredient, IngredientCategory } from "@/types"
 
 // Components
@@ -30,10 +30,10 @@ import { CategoryTable } from "./components/category-table"
 import { RoleGuard } from "@/components/auth/role-guard"
 
 // Modals (Existing)
-import IngredientModal from "@/components/IngredientModal"
-import StockAdjustModal from "@/components/StockAdjustModal"
-import BulkStockAdjustModal from "@/components/BulkStockAdjustModal"
-import IngredientCategoryModal from "@/components/IngredientCategoryModal"
+import IngredientModal from "@/features/inventory/components/IngredientModal"
+import StockAdjustModal from "@/features/inventory/components/StockAdjustModal"
+import BulkStockAdjustModal from "@/features/inventory/components/BulkStockAdjustModal"
+import IngredientCategoryModal from "@/features/inventory/components/IngredientCategoryModal"
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
 import { toast } from "react-hot-toast"
 

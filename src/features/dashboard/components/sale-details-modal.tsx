@@ -1,10 +1,10 @@
 "use client"
 
-import { Sale } from "@/hooks/useSales"
+import { Sale } from "@/features/dashboard/hooks/useSales"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { X, Receipt, User, Clock, MapPin, ShoppingBag, CreditCard } from "lucide-react"
-import ThermalPrintButton from "@/components/ThermalPrintButton"
+import ThermalPrintButton from "@/features/billing/components/ThermalPrintButton"
 import { useSession } from "next-auth/react"
 import { createMockOrder, createMockOrderItem } from "@/lib/type-converters"
 

@@ -4,9 +4,9 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import OrderItemsList from "@/components/OrderItemsList"
-import CompleteOrderModal from "@/components/CompleteOrderModal"
-import ThermalPrintButton from "@/components/ThermalPrintButton"
+import OrderItemsList from "@/features/orders/components/OrderItemsList"
+import CompleteOrderModal from "@/features/orders/components/CompleteOrderModal"
+import ThermalPrintButton from "@/features/billing/components/ThermalPrintButton"
 import ConfirmDialog from "@/components/ConfirmDialog"
 import { 
   ArrowLeft, 
@@ -22,9 +22,9 @@ import {
 } from "lucide-react"
 
 // Hooks Personalizados
-import { useOrderDetail } from "@/hooks/useOrderDetail"
-import { useOrderPayment } from "@/hooks/useOrderPayment"
-import { useOrderPrinting } from "@/hooks/useOrderPrinting"
+import { useOrderDetail } from "@/features/orders/hooks/useOrderDetail"
+import { useOrderPayment } from "@/features/orders/hooks/useOrderPayment"
+import { useOrderPrinting } from "@/features/orders/hooks/useOrderPrinting"
 
 import { RoleGuard } from "@/components/auth/role-guard"
 import { AppLoading } from "@/components/dashboard/AppLoading"

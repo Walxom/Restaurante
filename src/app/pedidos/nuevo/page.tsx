@@ -8,20 +8,20 @@ import { Input } from "@/components/ui/input"
 import { ArrowLeft, ShoppingCart, Utensils, User, MapPin, FileText } from "lucide-react"
 
 // Componentes
-import TableSelectorWithOccupied from "@/components/TableSelectorWithOccupied"
-import ProductGrid from "@/components/ProductGrid"
-import OrderCart from "@/components/OrderCart"
-import OrderCreatedModal from "@/components/OrderCreatedModal"
-import PrinterErrorModal from "@/components/PrinterErrorModal"
+import TableSelectorWithOccupied from "@/features/tables/components/TableSelectorWithOccupied"
+import ProductGrid from "@/features/menu/components/ProductGrid"
+import OrderCart from "@/features/orders/components/OrderCart"
+import OrderCreatedModal from "@/features/orders/components/OrderCreatedModal"
+import PrinterErrorModal from "@/features/billing/components/PrinterErrorModal"
 import { RoleGuard } from "@/components/auth/role-guard"
 import { OrderTypeSelector } from "@/components/orders/OrderTypeSelector"
 import { CustomerForm } from "@/components/orders/CustomerForm"
 import { CategoryTabs } from "@/components/orders/CategoryTabs"
 
 // Hooks y Tipos
-import { useCart } from "@/hooks/useCart"
-import { useOrderData } from "@/hooks/useOrderData"
-import { useCreateOrder } from "@/hooks/useCreateOrder"
+import { useCart } from "@/features/orders/hooks/useCart"
+import { useOrderData } from "@/features/orders/hooks/useOrderData"
+import { useCreateOrder } from "@/features/orders/hooks/useCreateOrder"
 import { CustomerData, OrderType, Table } from "@/types"
 
 import { OrderPageSkeleton } from "@/components/orders/OrderPageSkeleton"

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { CartItem, CustomerData, OrderType, CreatedOrder, Table } from "@/types"
-import { useThermalPrinter } from "@/components/PrintKitchenButton"
+import { useThermalPrinter } from "@/features/billing/components/PrintKitchenButton"
 import { createOrderSchema } from "@/lib/validations/order"
 
 interface UseCreateOrderProps {

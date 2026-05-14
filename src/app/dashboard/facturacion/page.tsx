@@ -8,15 +8,15 @@ import { Card, CardContent } from "@/components/ui/card"
 import { FileText, ArrowLeft } from "lucide-react"
 import { RoleGuard } from "@/components/auth/role-guard"
 
-import CreateInvoiceModal from "@/components/CreateInvoiceModal"
-import CompleteOrderModal from "@/components/CompleteOrderModal"
-import OrderDetailsModal from "@/components/OrderDetailsModal"
+import CreateInvoiceModal from "@/features/billing/components/CreateInvoiceModal"
+import CompleteOrderModal from "@/features/orders/components/CompleteOrderModal"
+import OrderDetailsModal from "@/features/orders/components/OrderDetailsModal"
 import InvoicesStats from "@/components/dashboard/InvoicesStats"
 import InvoicesFilters from "@/components/dashboard/InvoicesFilters"
 import InvoicesTable from "@/components/dashboard/InvoicesTable"
 import { AlertCircle, ArrowRight, ShieldAlert } from "lucide-react"
 
-import { useInvoices } from "@/hooks/useInvoices"
+import { useInvoices } from "@/features/billing/hooks/useInvoices"
 
 export default function FacturacionPage() {
   const { data: session } = useSession()

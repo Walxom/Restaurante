@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { usePublicCompanyInfo } from "@/hooks/useSystemConfig"
+import { usePublicCompanyInfo } from "@/features/dashboard/hooks/useSystemConfig"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, User, AlertTriangle } from "lucide-react"
 

@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'
-import { usePrinter } from '@/hooks/usePrinter'
+import { usePrinter } from '@/features/billing/hooks/usePrinter'
 
 export default function ThermalPrintAdmin() {
   const { 

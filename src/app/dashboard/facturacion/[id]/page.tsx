@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
-import ThermalPrintButton from "@/components/ThermalPrintButton"
+import ThermalPrintButton from "@/features/billing/components/ThermalPrintButton"
 import { Order } from "@/types"
 import { createMockOrder, createMockOrderItem } from "@/lib/type-converters"
 

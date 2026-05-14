@@ -1,6 +1,6 @@
 "use client"
 
-import { SalesStats } from "@/hooks/useSales"
+import { SalesStats } from "@/features/dashboard/hooks/useSales"
 import { DollarSign, ShoppingCart, TrendingUp, X } from "lucide-react"
 
 interface SalesStatsGridProps {

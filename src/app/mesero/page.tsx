@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import PedidosPorServirWidget from "@/components/dashboard/PedidosPorServirWidget"
 import PedidosServidosWidget from "@/components/dashboard/PedidosServidosWidget"
-import { useCompanyName } from "@/hooks/useSystemConfig"
+import { useCompanyName } from "@/features/dashboard/hooks/useSystemConfig"
 import { DashboardPageHeader } from "@/components/layout/DashboardPageHeader"
 import { 
   Users, 

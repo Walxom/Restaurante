@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Printer } from "lucide-react"
-import ThermalPrintAdmin from "@/components/ThermalPrintAdmin"
-import PrinterConfiguration from "@/components/PrinterConfiguration"
+import ThermalPrintAdmin from "@/features/billing/components/ThermalPrintAdmin"
+import PrinterConfiguration from "@/features/billing/components/PrinterConfiguration"
 import { RoleGuard } from "@/components/auth/role-guard"
 
 export default function ImpresionPage() {

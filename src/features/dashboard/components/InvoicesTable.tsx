@@ -1,6 +1,6 @@
 "use client"
 
-import { Invoice } from "@/hooks/useInvoices"
+import { Invoice } from "@/features/billing/hooks/useInvoices"
 import { 
   Table, 
   TableBody, 
