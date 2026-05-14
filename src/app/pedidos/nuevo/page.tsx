@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -24,13 +24,19 @@ import { useOrderData } from "@/hooks/use-order-data"
 import { useCreateOrder } from "@/hooks/use-create-order"
 import { CustomerData, OrderType, Table } from "@/types"
 
+import { OrderPageSkeleton } from "@/components/orders/OrderPageSkeleton"
+import { StateFeedback } from "@/components/ui/StateFeedback"
+
+// Forzar renderizado dinámico (esta página requiere autenticación y localStorage)
+export const dynamic = "force-dynamic"
+
 export default function NewOrderPage() {
   const { data: session } = useSession()
   const router = useRouter()
   
   // Hooks de lógica
-  const { cartItems, addToCart, updateCartItem, removeFromCart, calculateTotal } = useCart()
-  const { tables, categories, products, isLoading } = useOrderData()
+  const { cartItems, addToCart, updateCartItem, removeFromCart, clearCart, calculateTotal } = useCart()
+  const { tables, categories, products, isLoading, error, refreshData } = useOrderData()
   const { 
     isCreatingOrder, showOrderModal, setShowOrderModal, 
     createdOrder, printerError, setPrinterError, createOrder 
@@ -44,39 +50,89 @@ export default function NewOrderPage() {
   const [customerData, setCustomerData] = useState<CustomerData>({
     name: "", phone: "", address: "", addressReference: ""
   })
+  const [isFormHydrated, setIsFormHydrated] = useState(false)
 
-  const handleCreateOrder = () => {
-    createOrder({
+  // Cargar estado del formulario desde localStorage
+  useEffect(() => {
+    const savedType = localStorage.getItem("order_type")
+    const savedTable = localStorage.getItem("selected_table")
+    const savedCustomer = localStorage.getItem("customer_data")
+    const savedNotes = localStorage.getItem("order_notes")
+
+    if (savedType) setOrderType(savedType as OrderType)
+    if (savedTable) {
+      try { setSelectedTable(JSON.parse(savedTable)) } catch (e) {}
+    }
+    if (savedCustomer) {
+      try { setCustomerData(JSON.parse(savedCustomer)) } catch (e) {}
+    }
+    if (savedNotes) setNotes(savedNotes)
+    
+    setIsFormHydrated(true)
+  }, [])
+
+  // Persistir estado del formulario
+  useEffect(() => {
+    if (isFormHydrated) {
+      localStorage.setItem("order_type", orderType)
+      localStorage.setItem("selected_table", JSON.stringify(selectedTable))
+      localStorage.setItem("customer_data", JSON.stringify(customerData))
+      localStorage.setItem("order_notes", notes)
+    }
+  }, [orderType, selectedTable, customerData, notes, isFormHydrated])
+
+  const clearForm = () => {
+    setSelectedTable(null)
+    setNotes("")
+    setCustomerData({ name: "", phone: "", address: "", addressReference: "" })
+    localStorage.removeItem("order_type")
+    localStorage.removeItem("selected_table")
+    localStorage.removeItem("customer_data")
+    localStorage.removeItem("order_notes")
+  }
+
+  const handleCreateOrder = async () => {
+    const result = await createOrder({
       cartItems, orderType, customerData, 
       selectedTable, notes, session
     })
+
+    if (result) {
+      clearCart()
+      clearForm()
+    }
   }
 
   const filteredProducts = products.filter(product => 
     selectedCategory ? product.categoryId === selectedCategory : true
   )
 
-  if (isLoading) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-blue-600/20"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
-          </div>
-          <p className="text-muted-foreground font-medium animate-pulse">Preparando comandas...</p>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <StateFeedback
+          title="Error de Conexión"
+          description={error}
+          variant="error"
+          actionLabel="Reintentar Carga"
+          onAction={refreshData}
+          isLoading={isLoading}
+        />
       </div>
     )
   }
 
+  if (isLoading || !isFormHydrated) {
+    return <OrderPageSkeleton />
+  }
+
   return (
     <RoleGuard allowedRoles={["MESERO", "JEFE"]}>
-      <div className="min-h-screen bg-background transition-colors duration-500">
-        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/20 dark:from-slate-950 dark:via-blue-950/10 dark:to-slate-950 pointer-events-none" />
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="fixed inset-0 bg-linear-to-br from-blue-500/[0.02] via-transparent to-indigo-500/[0.02] pointer-events-none" />
         
         <div className="relative z-10 flex flex-col">
-          <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
+          <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
             <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 sm:gap-4">
@@ -109,7 +165,7 @@ export default function NewOrderPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               <div className="lg:col-span-3 space-y-8">
                 {/* Configuración del Pedido */}
-                <div className="bg-card/40 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl border border-border/50">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
                   <div className="mb-8">
                     <h2 className="text-xl font-bold text-foreground mb-1 tracking-tight flex items-center gap-2">
                       <User className="w-5 h-5 text-blue-500" />
@@ -125,21 +181,21 @@ export default function NewOrderPage() {
 
                 {/* Selección de Mesa */}
                 {orderType === 'MESA' && (
-                  <div className="bg-card/40 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl border border-border/50 animate-in fade-in duration-500">
+                  <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800 animate-in fade-in duration-500">
                     <div className="mb-8">
                       <h2 className="text-xl font-bold text-foreground mb-1 tracking-tight flex items-center gap-2">
                         <MapPin className="w-5 h-5 text-amber-500" />
                         Selección de Mesa
                       </h2>
                     </div>
-                    <div className="p-4 bg-background/30 rounded-2xl border border-border/30">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/50">
                       <TableSelectorWithOccupied tables={tables} selectedTable={selectedTable} onSelectTable={setSelectedTable} showOccupied={false} />
                     </div>
                   </div>
                 )}
 
                 {/* Menú del Día */}
-                <div className="bg-card/40 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl border border-border/50">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
                   <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                       <h2 className="text-xl font-bold text-foreground mb-1 tracking-tight flex items-center gap-2">
@@ -155,7 +211,7 @@ export default function NewOrderPage() {
                 </div>
 
                 {/* Observaciones */}
-                <div className="bg-card/40 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl border border-border/50">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
                   <div className="mb-4">
                     <h2 className="text-lg font-bold text-foreground mb-1 tracking-tight flex items-center gap-2">
                       <FileText className="w-5 h-5 text-indigo-500" />
@@ -166,7 +222,7 @@ export default function NewOrderPage() {
                     placeholder="Ej: Sin cebolla, extra salsa..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    className="h-12 bg-background/50 border-border/50 rounded-xl"
+                    className="h-12 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-xl"
                   />
                 </div>
               </div>

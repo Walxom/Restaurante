@@ -265,7 +265,7 @@ export async function PATCH(
 
       // Calcular nuevos totales
       newTotalAmount = 0
-      items.forEach((item: { productId: string; quantity: number; notes?: string }) => {
+      items.forEach((item: { productId: string; quantity: number; notes?: string | null }) => {
         const product = products.find(p => (p as { id: string }).id === item.productId) as { id: string; price: unknown }
         if (!product) {
           throw new Error(`Producto ${item.productId} no encontrado`)
@@ -285,7 +285,7 @@ export async function PATCH(
         console.log("Items recibidos para actualizar:", items)
 
         // Separar items existentes de nuevos
-        const existingItems = items.filter((item): item is { id: string; productId: string; quantity: number; notes?: string } => 
+        const existingItems = items.filter((item): item is { id: string; productId: string; quantity: number; notes?: string | null } => 
           !!item.id && !item.id.toString().startsWith('item_')
         )
         const newItems = items.filter(item => !item.id || item.id.toString().startsWith('item_'))
@@ -339,7 +339,7 @@ export async function PATCH(
                 quantity: (item as { quantity: number }).quantity,
                 unitPrice: Number((product as { price: unknown })!.price),
                 subtotal: subtotal,
-                notes: (item as { notes?: string }).notes || null
+                notes: (item as { notes?: string | null }).notes || null
               }
             })
           } else {
@@ -349,7 +349,7 @@ export async function PATCH(
 
         // Crear items nuevos
         if (newItems.length > 0) {
-          const newOrderItemsData = newItems.map((item: { productId: string; quantity: number; notes?: string }) => {
+          const newOrderItemsData = newItems.map((item: { productId: string; quantity: number; notes?: string | null }) => {
             const product = products.find((p) => (p as { id: string }).id === item.productId)
             const subtotal = Number((product as { price: unknown })!.price) * item.quantity
 
@@ -478,7 +478,7 @@ async function printOrderChanges(
           addedItems.push({
             productId: item.productId,
             quantity: item.quantity,
-            notes: (item as { notes?: string }).notes
+            notes: (item as { notes?: string | null }).notes
           })
         }
       }
@@ -567,7 +567,7 @@ function generateChangesTicket(data: {
   orderNumber: string
   tableNumber: string
   waiterName: string
-  addedItems: Array<{ productName: string; quantity: number; notes?: string }>
+  addedItems: Array<{ productName: string; quantity: number; notes?: string | null }>
   removedItems: Array<{ productName: string; quantity: number }>
   timestamp: Date
 }): string {

@@ -1,8 +1,31 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CartItem, Product } from "@/types"
+
+const CART_STORAGE_KEY = "restaurant_cart_items"
 
 export function useCart() {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // Cargar desde localStorage al iniciar
+  useEffect(() => {
+    const savedCart = localStorage.getItem(CART_STORAGE_KEY)
+    if (savedCart) {
+      try {
+        setCartItems(JSON.parse(savedCart))
+      } catch (e) {
+        console.error("Error loading cart from storage", e)
+      }
+    }
+    setIsHydrated(true)
+  }, [])
+
+  // Guardar en localStorage cuando cambie
+  useEffect(() => {
+    if (isHydrated) {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems))
+    }
+  }, [cartItems, isHydrated])
 
   const addToCart = (product: Product, quantity: number = 1, productNotes?: string) => {
     const existingItem = cartItems.find(item => item.productId === product.id)
@@ -43,6 +66,7 @@ export function useCart() {
 
   const clearCart = () => {
     setCartItems([])
+    localStorage.removeItem(CART_STORAGE_KEY)
   }
 
   const calculateTotal = () => {
@@ -50,7 +74,8 @@ export function useCart() {
   }
 
   return {
-    cartItems,
+    cartItems: isHydrated ? cartItems : [],
+    isHydrated,
     addToCart,
     updateCartItem,
     removeFromCart,

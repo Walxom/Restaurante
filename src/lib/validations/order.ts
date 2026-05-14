@@ -3,18 +3,18 @@ import { z } from "zod"
 const orderItemSchema = z.object({
   productId: z.string().min(1, "El ID del producto es requerido"),
   quantity: z.number().int().positive("La cantidad debe ser mayor a 0"),
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 export const createOrderSchema = z.object({
   tableId: z.string().optional(),
   type: z.enum(['MESA', 'PARA_LLEVAR', 'DELIVERY']).default('MESA'),
-  customerName: z.string().optional(),
-  customerDni: z.string().optional(),
-  customerPhone: z.string().optional(),
-  customerAddress: z.string().optional(),
-  customerAddressReference: z.string().optional(),
-  notes: z.string().optional(),
+  customerName: z.string().nullable().optional(),
+  customerDni: z.string().nullable().optional(),
+  customerPhone: z.string().nullable().optional(),
+  customerAddress: z.string().nullable().optional(),
+  customerAddressReference: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
   items: z.array(orderItemSchema).min(1, "El pedido debe tener al menos un item"),
   isAdditionalOrder: z.boolean().default(false),
 }).refine((data) => {
@@ -44,17 +44,17 @@ export const updateOrderStatusSchema = z.object({
 })
 
 export const updateOrderSchema = z.object({
-  notes: z.string().optional(),
-  customerName: z.string().optional(),
-  customerDni: z.string().optional(),
-  customerPhone: z.string().optional(),
-  customerAddress: z.string().optional(),
-  customerAddressReference: z.string().optional(),
+  notes: z.string().nullable().optional(),
+  customerName: z.string().nullable().optional(),
+  customerDni: z.string().nullable().optional(),
+  customerPhone: z.string().nullable().optional(),
+  customerAddress: z.string().nullable().optional(),
+  customerAddressReference: z.string().nullable().optional(),
   items: z.array(z.object({
     id: z.string().optional(),
     productId: z.string(),
     quantity: z.number().int().positive(),
-    notes: z.string().optional(),
+    notes: z.string().nullable().optional(),
   })).optional(),
 })
 

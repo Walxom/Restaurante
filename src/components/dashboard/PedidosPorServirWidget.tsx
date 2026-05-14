@@ -110,15 +110,15 @@ export default function PedidosPorServirWidget({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+        return 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20'
       case 'CONFIRMED':
-        return 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20'
+        return 'bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20'
       case 'PREPARING':
-        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+        return 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20'
       case 'READY':
-        return 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
+        return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
       default:
-        return 'bg-muted text-muted-foreground border border-border'
+        return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
     }
   }
 
@@ -185,15 +185,15 @@ export default function PedidosPorServirWidget({
   }
 
   return (
-    <div className={`bg-card/40 backdrop-blur-md rounded-xl sm:rounded-2xl border border-border/50 overflow-hidden shadow-sm ${className}`}>
+    <div className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${className}`}>
       {showHeader && (
         <div className="p-4 sm:p-6 border-b border-border/50">
           <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
               {title}
             </h2>
-            <span className="px-2 sm:px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full text-xs sm:text-sm font-bold text-orange-500">
+            <span className="px-2.5 py-0.5 bg-orange-100 dark:bg-orange-500/20 rounded-full text-xs font-bold text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20">
               {orders.length}
             </span>
           </div>
@@ -234,7 +234,7 @@ export default function PedidosPorServirWidget({
                 {orders.map((order) => (
                   <div 
                     key={order.id}
-                    className="group p-3 sm:p-4 bg-muted/30 hover:bg-muted/50 border border-border/40 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01]"
+                    className="group p-3 sm:p-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01] hover:border-slate-300 dark:hover:border-slate-600"
                     onClick={() => handleOrderClick(order.id)}
                   >
                     <div className="flex items-center justify-between">
@@ -247,7 +247,7 @@ export default function PedidosPorServirWidget({
                             {getOrderTypeName(order)}
                           </p>
                           {order.status === 'READY' && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/20 animate-pulse">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 animate-pulse">
                               ¡Listo!
                             </span>
                           )}

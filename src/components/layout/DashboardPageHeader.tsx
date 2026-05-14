@@ -46,11 +46,11 @@ export function DashboardPageHeader({
               </h1>
               <div className="flex items-center gap-2">
                 {userName && (
-                  <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-widest">
+                  <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                     {userName}
                   </p>
                 )}
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-muted/50 rounded-full border border-border/30">
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 dark:bg-slate-800/50 rounded-full border border-slate-200 dark:border-slate-700/50">
                   <div
                     className={`w-1.5 h-1.5 rounded-full animate-pulse ${
                       isOnline
@@ -58,7 +58,7 @@ export function DashboardPageHeader({
                         : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
                     }`}
                   ></div>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
+                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">
                     {isOnline ? "En línea" : "Desconectado"}
                   </span>
                 </div>
@@ -72,7 +72,7 @@ export function DashboardPageHeader({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-10 h-10 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all active:scale-95"
+                  className="w-10 h-10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all active:scale-95"
                   onClick={onNotificationsClick}
                 >
                   {alertsCount > 0 ? (
@@ -96,7 +96,7 @@ export function DashboardPageHeader({
               onClick={handleSignOut}
               variant="ghost"
               size="sm"
-              className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              className="text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Salir

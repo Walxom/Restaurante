@@ -1,7 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
 interface Table {
@@ -30,8 +29,11 @@ interface OrderCartProps {
   orderType?: 'MESA' | 'PARA_LLEVAR' | 'DELIVERY'
 }
 
-import { ShoppingCart, Trash2, Plus, Minus, Info, AlertCircle, Package, Truck, Utensils } from "lucide-react"
+import { ShoppingCart, Info } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { CartItem } from "./orders/CartItem"
+import { CartContextInfo } from "./orders/CartContextInfo"
+import { StateFeedback } from "./ui/StateFeedback"
 
 export default function OrderCart({ 
   items, 
@@ -81,131 +83,27 @@ export default function OrderCart({
       
       <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-border">
         {/* Información de Contexto */}
-        <div className="animate-in fade-in slide-in-from-top duration-500">
-          {orderType === 'MESA' && (
-            selectedTable ? (
-              <div className="bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20 flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                  <Utensils className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="font-black text-blue-500 text-sm uppercase tracking-wider">Mesa {selectedTable.number}</div>
-                  <div className="text-[11px] text-blue-500/70 font-bold uppercase tracking-tight">
-                    CAPACIDAD: {selectedTable.capacity} PERSONAS
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-amber-500/10 p-4 rounded-2xl border border-amber-500/20 flex items-center gap-4 animate-pulse">
-                <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center text-white">
-                  <AlertCircle className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="font-black text-amber-600 text-sm uppercase tracking-wider">Mesa no seleccionada</div>
-                  <div className="text-[10px] text-amber-600/70 font-bold uppercase tracking-tight">
-                    POR FAVOR, SELECCIONA UNA MESA
-                  </div>
-                </div>
-              </div>
-            )
-          )}
-
-          {orderType === 'PARA_LLEVAR' && (
-            <div className="bg-amber-500/10 p-4 rounded-2xl border border-amber-500/20 flex items-center gap-4">
-              <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
-                <Package className="w-6 h-6" />
-              </div>
-              <div>
-                <div className="font-black text-amber-600 text-sm uppercase tracking-wider">Para Llevar</div>
-                <div className="text-[10px] text-amber-600/70 font-bold uppercase tracking-tight">
-                  RECOJO EN MOSTRADOR
-                </div>
-              </div>
-            </div>
-          )}
-
-          {orderType === 'DELIVERY' && (
-            <div className="bg-indigo-500/10 p-4 rounded-2xl border border-indigo-500/20 flex items-center gap-4">
-              <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
-                <Truck className="w-6 h-6" />
-              </div>
-              <div>
-                <div className="font-black text-indigo-500 text-sm uppercase tracking-wider">Delivery</div>
-                <div className="text-[10px] text-indigo-500/70 font-bold uppercase tracking-tight">
-                  ENVÍO A DOMICILIO
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <CartContextInfo orderType={orderType} selectedTable={selectedTable} />
 
         {/* Lista de Items */}
         <div className="space-y-4">
           {items.length === 0 ? (
-            <div className="text-center py-12 flex flex-col items-center">
-              <div className="w-20 h-20 bg-muted/30 rounded-full flex items-center justify-center mb-4 text-muted-foreground/20">
-                <ShoppingCart className="w-10 h-10" />
-              </div>
-              <h3 className="text-sm font-black text-muted-foreground uppercase tracking-widest">El carrito está vacío</h3>
-              <p className="text-[10px] text-muted-foreground/60 mt-1 font-bold">Agrega platos del menú para continuar</p>
-            </div>
+            <StateFeedback
+              title="Carrito Vacío"
+              description="Agrega deliciosos platos del menú para comenzar a armar el pedido."
+              variant="empty"
+              className="py-12"
+            />
           ) : (
             items.map((item, index) => (
-              <div 
-                key={item.productId} 
-                className="bg-background/40 backdrop-blur-sm p-4 rounded-3xl border border-border/50 transition-all hover:border-blue-500/30 group animate-in slide-in-from-right duration-300"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <div className="font-black text-sm text-foreground group-hover:text-blue-500 transition-colors line-clamp-1">{item.name}</div>
-                    <div className="text-[10px] font-black text-emerald-500 tracking-wider">
-                      S/ {Number(item.price).toFixed(2)} C/U
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => onRemoveItem(item.productId)}
-                    className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all active:scale-90"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center bg-muted/30 rounded-xl p-1 border border-border/30">
-                    <button
-                      onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-background transition-colors active:scale-90"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-10 text-center text-xs font-black">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-background transition-colors active:scale-90"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">Subtotal</div>
-                    <div className="font-black text-sm text-foreground">
-                      S/ {(Number(item.price) * item.quantity).toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3 relative">
-                  <Input
-                    placeholder="Instrucciones adicionales..."
-                    value={item.notes || ""}
-                    onChange={(e) => updateNotes(item.productId, e.target.value)}
-                    className="text-[10px] h-9 bg-background/50 border-border/30 rounded-xl focus:ring-blue-500/20 px-3"
-                  />
-                </div>
-              </div>
+              <CartItem
+                key={item.productId}
+                item={item}
+                index={index}
+                onUpdateQuantity={(q) => updateQuantity(item.productId, q)}
+                onUpdateNotes={(n) => updateNotes(item.productId, n)}
+                onRemove={() => onRemoveItem(item.productId)}
+              />
             ))
           )}
         </div>

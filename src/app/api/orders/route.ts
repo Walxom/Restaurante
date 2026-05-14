@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
+import { createOrderSchema } from '@/lib/validations/order'
 import { emitNewOrder, emitTableStatusChange } from '@/lib/socket-events'
-
-const prisma = new PrismaClient()
 
 // Función para generar número de orden único
 function generateOrderNumber(): string {
@@ -139,8 +138,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-import { createOrderSchema } from '@/lib/validations/order'
-
 // POST /api/orders - Crear nuevo pedido
 export async function POST(request: NextRequest) {
   try {
@@ -222,7 +219,7 @@ export async function POST(request: NextRequest) {
 
     // Calcular totales
     let totalAmount = 0
-    const orderItemsData = items.map((item: { productId: string; quantity: number; notes?: string }) => {
+    const orderItemsData = items.map((item: { productId: string; quantity: number; notes?: string | null }) => {
       const product = products.find(p => p.id === item.productId)
       if (!product) {
         throw new Error(`Producto ${item.productId} no encontrado`)

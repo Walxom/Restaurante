@@ -215,7 +215,8 @@ export default function MeseroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+      <div className="fixed inset-0 bg-linear-to-br from-blue-500/[0.03] via-transparent to-indigo-500/[0.03] pointer-events-none" />
       {/* Header minimalista */}
       <DashboardPageHeader
         companyName={companyName}
@@ -227,40 +228,40 @@ export default function MeseroPage() {
       <main className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Estadísticas compactas */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-200/50 hover:shadow-lg transition-all duration-300">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Mesas Disponibles</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{stats.totalTables}</p>
+                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mesas Disponibles</p>
+                <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">{stats.totalTables}</p>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg sm:rounded-xl flex items-center justify-center">
-                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
+                <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-200/50 hover:shadow-lg transition-all duration-300">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Activos</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{stats.activeOrders}</p>
+                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Activos</p>
+                <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">{stats.activeOrders}</p>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg sm:rounded-xl flex items-center justify-center">
-                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
+              <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/10 rounded-xl flex items-center justify-center">
+                <Clock className="w-6 h-6 text-orange-600 dark:text-orange-400" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-200/50 hover:shadow-lg transition-all duration-300">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Ventas Activas</p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900 mt-1">
+                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ventas Activas</p>
+                <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
                   S/ {(typeof stats.totalSales === 'number' ? stats.totalSales : 0).toFixed(2)}
                 </p>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg sm:rounded-xl flex items-center justify-center">
-                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+              <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
           </div>
@@ -285,15 +286,16 @@ export default function MeseroPage() {
 
           <button
             onClick={() => router.push("/pedidos")}
-            className="group bg-white/70 backdrop-blur-sm hover:bg-white/90 border border-gray-200/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+            className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
           >
-            <div className="flex items-center justify-between">
+            <div className="absolute inset-0 bg-slate-500/[0.03] group-hover:bg-transparent transition-colors" />
+            <div className="flex items-center justify-between relative z-10">
               <div className="text-left">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Mis Pedidos</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">Ver y gestionar todos los pedidos</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Mis Pedidos</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Ver y gestionar todos los pedidos</p>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 group-hover:bg-gray-200 rounded-lg sm:rounded-xl flex items-center justify-center transition-colors">
-                <Eye className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+              <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 rounded-xl flex items-center justify-center transition-colors">
+                <Eye className="w-6 h-6 text-slate-600 dark:text-slate-300" />
               </div>
             </div>
           </button>
