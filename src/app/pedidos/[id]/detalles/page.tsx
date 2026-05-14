@@ -22,9 +22,9 @@ import {
 } from "lucide-react"
 
 // Hooks Personalizados
-import { useOrderDetail } from "@/hooks/use-order-detail"
-import { useOrderPayment } from "@/hooks/use-order-payment"
-import { useOrderPrinting } from "@/hooks/use-order-printing"
+import { useOrderDetail } from "@/hooks/useOrderDetail"
+import { useOrderPayment } from "@/hooks/useOrderPayment"
+import { useOrderPrinting } from "@/hooks/useOrderPrinting"
 
 import { RoleGuard } from "@/components/auth/role-guard"
 import { AppLoading } from "@/components/dashboard/AppLoading"

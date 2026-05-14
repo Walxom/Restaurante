@@ -19,9 +19,9 @@ import { CustomerForm } from "@/components/orders/CustomerForm"
 import { CategoryTabs } from "@/components/orders/CategoryTabs"
 
 // Hooks y Tipos
-import { useCart } from "@/hooks/use-cart"
-import { useOrderData } from "@/hooks/use-order-data"
-import { useCreateOrder } from "@/hooks/use-create-order"
+import { useCart } from "@/hooks/useCart"
+import { useOrderData } from "@/hooks/useOrderData"
+import { useCreateOrder } from "@/hooks/useCreateOrder"
 import { CustomerData, OrderType, Table } from "@/types"
 
 import { OrderPageSkeleton } from "@/components/orders/OrderPageSkeleton"

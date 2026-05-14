@@ -19,7 +19,7 @@ import { NotificationDrawer } from "@/components/dashboard/NotificationDrawer"
 import QuickActionButton, { ActionColor } from "@/components/dashboard/QuickActionButton"
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
 import { StatCard } from "@/components/dashboard/StatCard"
-import { usePrinter } from "@/hooks/use-printer"
+import { usePrinter } from "@/hooks/usePrinter"
 import { RoleGuard } from "@/components/auth/role-guard"
 
 export default function DashboardPage() {

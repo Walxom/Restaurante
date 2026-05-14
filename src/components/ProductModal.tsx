@@ -10,7 +10,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "react-hot-toast"
-import { Product, Category, Ingredient } from "@/types"
+import { Product, Category, Ingredient, RecipeIngredient } from "@/types"
 import { ProductIdentificationSection } from "./products/ProductIdentificationSection"
 import { RecipeIngredientSection } from "./products/RecipeIngredientSection"
 import { ModalShell } from "@/components/ui/modal-shell"
