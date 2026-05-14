@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from "@/lib/prisma"
 import { TableStatus } from '@/types'
-import { convertToBaseUnit } from '@/lib/units'
+import { convertToBaseUnit } from '@/features/inventory/utils/units'
 import { emitOrderItemUpdate, emitTableStatusChange } from '@/lib/socket-events'
 
 

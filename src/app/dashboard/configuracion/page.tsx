@@ -23,7 +23,7 @@ import { StatusIndicator } from "./components/status-indicator"
 import { 
   getSupportedTimezones, 
   type SystemConfigData as SystemConfig 
-} from "@/lib/system-config"
+} from "@/services/system.service"
 
 import { ConfigSkeleton } from "./components/config-skeleton"
 

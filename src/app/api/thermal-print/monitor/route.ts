@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { thermalPrintQueue } from '@/lib/server-thermal-printer'
+import { thermalPrintQueue } from '@/services/printer/server-thermal-printer'
 
 export async function GET(request: NextRequest) {
   try {

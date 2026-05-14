@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from "@/lib/prisma"
 import { OrderItemStatus } from '@/types'
 import { emitOrderUpdate } from '@/lib/socket-events'
-import { updateOrderSchema } from '@/lib/validations/order'
+import { updateOrderSchema } from '@/features/orders/validations/order'
 
 
 
@@ -531,7 +531,7 @@ async function printOrderChanges(
 
         // Intentar imprimir usando el servicio de configuración
         try {
-          const { PrinterConfigService } = await import('@/lib/printer-config')
+          const { PrinterConfigService } = await import('@/services/printer/printer-config')
           const kitchenPrinter = await PrinterConfigService.getKitchenPrinter()
 
           if (kitchenPrinter) {

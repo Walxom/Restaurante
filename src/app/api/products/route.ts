@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { createProductSchema } from "@/lib/validations/product"
+import { createProductSchema } from "@/features/menu/validations/product"
 
 // GET - Obtener todos los productos
 export async function GET(request: NextRequest) {

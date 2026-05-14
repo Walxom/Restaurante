@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { createCategorySchema } from "@/lib/validations/category"
+import { createCategorySchema } from "@/features/menu/validations/category"
 
 // GET - Obtener todas las categorías
 export async function GET(request: NextRequest) {

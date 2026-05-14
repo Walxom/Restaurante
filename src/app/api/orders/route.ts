@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { createOrderSchema } from '@/lib/validations/order'
+import { createOrderSchema } from '@/features/orders/validations/order'
 import { emitNewOrder, emitTableStatusChange } from '@/lib/socket-events'
 
 // Función para generar número de orden único

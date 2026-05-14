@@ -223,8 +223,8 @@ export async function POST(request: NextRequest) {
 async function checkFiscalPrinterStatus(): Promise<{ isConnected: boolean; message: string }> {
   try {
     // Importar servicio de configuración
-    const { PrinterConfigService } = await import('@/lib/printer-config');
-    const { getSystemConfig } = await import('@/lib/system-config-server');
+    const { PrinterConfigService } = await import('@/services/printer/printer-config');
+    const { getSystemConfig } = await import('@/services/system.service');
     
     // Obtener configuración de impresora fiscal
     const fiscalPrinter = await PrinterConfigService.getPrinterByType('FISCAL');
@@ -340,9 +340,9 @@ async function generateInvoiceNumber(type: 'BOLETA' | 'FACTURA'): Promise<string
 async function printFiscalReceipt(data: ReceiptData): Promise<{ success: boolean; error?: string }> {
   try {
     // Importar dependencias necesarias
-    const { PrinterConfigService } = await import('@/lib/printer-config');
-    const { ReceiptTemplates } = await import('@/lib/thermal-printer-commands');
-    const { getSystemConfig } = await import('@/lib/system-config-server');
+    const { PrinterConfigService } = await import('@/services/printer/printer-config');
+    const { ReceiptTemplates } = await import('@/services/printer/thermal-printer-commands');
+    const { getSystemConfig } = await import('@/services/system.service');
     
     // Obtener configuración de impresora fiscal
     const fiscalPrinter = await PrinterConfigService.getPrinterByType('FISCAL');

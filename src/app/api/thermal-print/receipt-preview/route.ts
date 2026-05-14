@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getSystemConfig } from '@/lib/system-config-server';
-import { PrinterConfigService } from '@/lib/printer-config';
+import { getSystemConfig } from '@/services/system.service';
+import { PrinterConfigService } from '@/services/printer/printer-config';
 
 interface ReceiptPreviewRequest {
   orderId: string;

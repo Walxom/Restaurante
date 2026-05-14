@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { validateDNI } from '@/lib/validators/documents'
+import { validateDNI } from '@/features/billing/validations/documents'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)

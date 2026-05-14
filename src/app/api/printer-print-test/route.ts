@@ -8,7 +8,7 @@ import { SerialPort } from 'serialport'
 async function getPrinterConfig() {
   try {
     // Primero intentar obtener de la base de datos directamente
-    const { PrinterConfigService } = await import('@/lib/printer-config')
+    const { PrinterConfigService } = await import('@/services/printer/printer-config')
     
     const kitchenPrinter = await PrinterConfigService.getKitchenPrinter()
     const fiscalPrinter = await PrinterConfigService.getPrinterByType('FISCAL')

@@ -3,7 +3,7 @@
 import { Eye, Clock, User, Pencil } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { getStatusColor, getStatusText, getOrderTypeInfo } from "@/lib/order-utils"
+import { getStatusColor, getStatusText, getOrderTypeInfo } from "@/features/orders/utils/order-utils"
 
 interface OrderCardProps {
   order: any

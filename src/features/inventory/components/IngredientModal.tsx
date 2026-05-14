@@ -10,7 +10,7 @@ import {
   getUnitsByCategory, 
   suggestUnitCategory,
   INGREDIENT_TYPE_SUGGESTIONS 
-} from "@/lib/units"
+} from "@/features/inventory/utils/units"
 import { Ingredient, IngredientCategory } from "@/types"
 import { ModalShell } from "@/components/ui/modal-shell"
 import { SectionTitle } from "@/components/ui/section-title"

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { thermalPrintQueue } from '@/lib/server-thermal-printer'
+import { thermalPrintQueue } from '@/services/printer/server-thermal-printer'
 import { prisma } from "@/lib/prisma"
 
 export async function POST(request: NextRequest) {
@@ -109,4 +109,5 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+}
+

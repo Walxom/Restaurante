@@ -28,7 +28,7 @@ import { useOrderPrinting } from "@/features/orders/hooks/useOrderPrinting"
 
 import { RoleGuard } from "@/components/auth/role-guard"
 import { AppLoading } from "@/components/dashboard/AppLoading"
-import { getOrderTypeLabel } from "@/lib/order-utils"
+import { getOrderTypeLabel } from "@/features/orders/utils/order-utils"
 
 export default function OrderDetailPage() {
   const { data: session } = useSession()

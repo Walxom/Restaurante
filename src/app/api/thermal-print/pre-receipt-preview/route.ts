@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getSystemConfig } from '@/lib/system-config-server'
+import { getSystemConfig } from '@/services/system.service'
 
 interface PreReceiptPreviewRequest {
     orderId: string

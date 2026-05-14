@@ -30,7 +30,7 @@ export async function GET() {
   }
 }
 
-import { createTableSchema } from "@/lib/validations/table"
+import { createTableSchema } from "@/features/tables/validations/table"
 
 // POST - Crear nueva mesa
 export async function POST(request: NextRequest) {

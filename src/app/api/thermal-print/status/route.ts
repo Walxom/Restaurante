@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { ThermalPrinter } from '@/lib/thermal-printer'
+import { ThermalPrinter } from '@/services/printer/thermal-printer'
 
 export async function GET() {
   try {

@@ -46,7 +46,7 @@ async function checkKitchenPrinterConnectivity(params: ConnectivityCheckRequest)
 
   if (!ip || !port) {
     try {
-      const { PrinterConfigService } = await import('@/lib/printer-config');
+      const { PrinterConfigService } = await import('@/services/printer/printer-config');
       const kitchenConfig = await PrinterConfigService.getKitchenPrinterConfig();
       
       if (kitchenConfig) {

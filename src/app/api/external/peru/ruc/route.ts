@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { validateRUC } from '@/lib/validators/documents'
+import { validateRUC } from '@/features/billing/validations/documents'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)

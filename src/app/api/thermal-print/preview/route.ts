@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { kitchenPrinter } from '@/lib/thermal-printer';
+import { kitchenPrinter } from '@/services/printer/thermal-printer';
 import { prisma } from '@/lib/prisma';
 
 interface PreviewRequest {

@@ -7,7 +7,7 @@
  */
 
 import { EventEmitter } from 'events'
-import { prisma } from './prisma'
+import { prisma } from '@/lib/prisma'
 
 // Declaración de tipos para el estado global
 declare global {

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Trash2, Search, Clock, UtensilsCrossed, Package } from "lucide-react"
 import { Ingredient } from "@/types"
-import { getCompatibleUnits, getUnitLabel } from "@/lib/units"
+import { getCompatibleUnits, getUnitLabel } from "@/features/inventory/utils/units"
 import { cn } from "@/lib/utils"
 import { SectionTitle } from "@/components/ui/section-title"
 

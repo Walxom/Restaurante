@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import ThermalPrintButton from "@/features/billing/components/ThermalPrintButton"
 import { Order } from "@/types"
-import { createMockOrder, createMockOrderItem } from "@/lib/type-converters"
+import { createMockOrder, createMockOrderItem } from "@/features/orders/utils/type-converters"
 
 interface Invoice {
   id: string

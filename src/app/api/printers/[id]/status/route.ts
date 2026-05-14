@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { PrinterConfigService } from '@/lib/printer-config';
+import { PrinterConfigService } from '@/services/printer/printer-config';
 
 // PATCH /api/printers/[id]/status - Cambiar estado de impresora
 export async function PATCH(

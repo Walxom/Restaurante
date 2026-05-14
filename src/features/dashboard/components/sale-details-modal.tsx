@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { X, Receipt, User, Clock, MapPin, ShoppingBag, CreditCard } from "lucide-react"
 import ThermalPrintButton from "@/features/billing/components/ThermalPrintButton"
 import { useSession } from "next-auth/react"
-import { createMockOrder, createMockOrderItem } from "@/lib/type-converters"
+import { createMockOrder, createMockOrderItem } from "@/features/orders/utils/type-converters"
 
 interface SaleDetailsModalProps {
   sale: Sale | null

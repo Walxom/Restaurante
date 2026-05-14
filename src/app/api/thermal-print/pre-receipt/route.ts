@@ -105,9 +105,9 @@ export async function POST(request: NextRequest) {
 
 async function printPreReceipt(data: PreReceiptData): Promise<{ success: boolean; error?: string }> {
     try {
-        const { PrinterConfigService } = await import('@/lib/printer-config')
-        const { ReceiptTemplates } = await import('@/lib/thermal-printer-commands')
-        const { getSystemConfig } = await import('@/lib/system-config-server')
+        const { PrinterConfigService } = await import('@/services/printer/printer-config')
+        const { ReceiptTemplates } = await import('@/services/printer/thermal-printer-commands')
+        const { getSystemConfig } = await import('@/services/system.service')
 
         // Usar la impresora de caja (fiscal) como destino
         const cashPrinter = await PrinterConfigService.getPrinterByType('FISCAL')
