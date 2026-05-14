@@ -234,7 +234,7 @@ export default function PedidosPorServirWidget({
                 {orders.map((order) => (
                   <div 
                     key={order.id}
-                    className="group p-3 sm:p-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01] hover:border-slate-300 dark:hover:border-slate-600"
+                    className="group p-3 sm:p-4 bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-[1.25rem] cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:scale-[1.01] hover:border-blue-500/20"
                     onClick={() => handleOrderClick(order.id)}
                   >
                     <div className="flex items-center justify-between">

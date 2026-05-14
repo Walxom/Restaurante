@@ -183,7 +183,12 @@ export default function UnifiedOrdersPage() {
               <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
                   {currentOrders.map((order) => (
-                    <OrderCard key={order.id} order={order} onClick={() => router.push(`/pedidos/${order.id}/detalles`)} />
+                    <OrderCard 
+                      key={order.id} 
+                      order={order} 
+                      onClick={() => router.push(`/pedidos/${order.id}/detalles`)} 
+                      onEdit={(id) => router.push(`/pedidos/${id}/edit`)}
+                    />
                   ))}
                 </div>
                 <div className="flex justify-center pb-8">

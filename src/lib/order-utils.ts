@@ -26,6 +26,15 @@ export const getStatusText = (status: string) => {
   }
 }
 
+export const getOrderTypeLabel = (type: string, tableNumber?: number) => {
+  switch (type) {
+    case 'MESA': return tableNumber ? `Mesa ${tableNumber}` : 'Mesa'
+    case 'DELIVERY': return 'Delivery'
+    case 'PARA_LLEVAR': return 'Para llevar'
+    default: return type
+  }
+}
+
 export const getOrderTypeInfo = (type: string, tableNumber?: number) => {
   switch (type) {
     case 'MESA': return { label: `Mesa ${tableNumber}`, icon: '🪑' }

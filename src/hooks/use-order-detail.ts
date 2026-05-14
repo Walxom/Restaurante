@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useOrdersSocket } from "@/hooks/useSocket"
 import { Order, OrderStatus } from "@/types"
+import { getStatusColor as getStatusColorUtil, getStatusText as getStatusTextUtil } from "@/lib/order-utils"
 
 export function useOrderDetail(orderId: string) {
   const [order, setOrder] = useState<Order | null>(null)
@@ -97,33 +98,8 @@ export function useOrderDetail(orderId: string) {
            !order.orderItems?.some((item: any) => item.status === 'SERVED')
   }, [order])
 
-  const getStatusColor = (status: OrderStatus) => {
-    switch (status) {
-      case 'PENDING': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
-      case 'CONFIRMED': return 'bg-blue-500/10 text-blue-500 border-blue-500/20'
-      case 'SERVED': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-      case 'COMPLETED': return 'bg-slate-500/10 text-slate-500 border-slate-500/20'
-      case 'CANCELLED': return 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-      case 'PREPARING': return 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'
-      case 'READY': return 'bg-purple-500/10 text-purple-500 border-purple-500/20'
-      case 'PAID': return 'bg-green-500/10 text-green-500 border-green-500/20'
-      default: return 'bg-slate-500/10 text-slate-500 border-slate-500/20'
-    }
-  }
-
-  const getStatusText = (status: OrderStatus) => {
-    switch (status) {
-      case 'PENDING': return 'Pendiente'
-      case 'CONFIRMED': return 'Confirmado'
-      case 'PREPARING': return 'Preparando'
-      case 'READY': return 'Listo'
-      case 'SERVED': return 'Servido'
-      case 'PAID': return 'Pagado'
-      case 'COMPLETED': return 'Completado'
-      case 'CANCELLED': return 'Cancelado'
-      default: return status
-    }
-  }
+  const getStatusColor = (status: OrderStatus) => getStatusColorUtil(status)
+  const getStatusText = (status: OrderStatus) => getStatusTextUtil(status)
 
   const getNextStatusActions = (status: OrderStatus) => {
     const actions: Array<{ status: OrderStatus; label: string; color: string; action: string }> = []

@@ -228,40 +228,40 @@ export default function MeseroPage() {
       <main className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Estadísticas compactas */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-md transition-all duration-300">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 group">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mesas Disponibles</p>
-                <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">{stats.totalTables}</p>
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-1">Mesas Disponibles</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tighter">{stats.totalTables}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
-                <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <div className="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300">
+                <Users className="w-7 h-7 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-md transition-all duration-300">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300 group">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Activos</p>
-                <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">{stats.activeOrders}</p>
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-1">Activos</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tighter">{stats.activeOrders}</p>
               </div>
-              <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/10 rounded-xl flex items-center justify-center">
-                <Clock className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+              <div className="w-14 h-14 bg-orange-50 dark:bg-orange-500/10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300">
+                <Clock className="w-7 h-7 text-orange-600 dark:text-orange-400" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-md transition-all duration-300">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 group">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ventas Activas</p>
-                <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-1">Ventas Activas</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tighter">
                   S/ {(typeof stats.totalSales === 'number' ? stats.totalSales : 0).toFixed(2)}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300">
+                <DollarSign className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
           </div>
@@ -325,30 +325,30 @@ export default function MeseroPage() {
 
       {/* Modal de confirmación para cerrar sesión */}
       {showLogoutModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
+        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 max-w-sm w-full mx-4 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-300">
             <div className="text-center">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <LogOut className="w-6 h-6 text-red-600" />
+              <div className="w-20 h-20 bg-rose-50 dark:bg-rose-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 ring-8 ring-rose-50/50 dark:ring-rose-500/5">
+                <LogOut className="w-10 h-10 text-rose-600 dark:text-rose-500" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">
                 ¿Cerrar sesión?
               </h3>
-              <p className="text-gray-600 mb-6">
-                ¿Estás seguro de que quieres cerrar tu sesión?
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+                Estás a punto de salir del sistema. <br />¿Deseas continuar?
               </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={cancelSignOut}
-                  className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
-                >
-                  Cancelar
-                </button>
+              <div className="flex flex-col gap-3">
                 <button
                   onClick={confirmSignOut}
-                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                  className="w-full px-6 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-rose-600/20 active:scale-95 transition-all"
                 >
-                  Cerrar sesión
+                  Sí, cerrar sesión
+                </button>
+                <button
+                  onClick={cancelSignOut}
+                  className="w-full px-6 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-black uppercase tracking-widest text-xs active:scale-95 transition-all"
+                >
+                  Cancelar
                 </button>
               </div>
             </div>

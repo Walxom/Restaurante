@@ -8,12 +8,6 @@ import OrderItemsList from "@/components/OrderItemsList"
 import CompleteOrderModal from "@/components/CompleteOrderModal"
 import ThermalPrintButton from "@/components/ThermalPrintButton"
 import ConfirmDialog from "@/components/ConfirmDialog"
-
-// Hooks Personalizados
-import { useOrderDetail } from "@/hooks/use-order-detail"
-import { useOrderPayment } from "@/hooks/use-order-payment"
-import { useOrderPrinting } from "@/hooks/use-order-printing"
-
 import { 
   ArrowLeft, 
   Clock, 
@@ -26,6 +20,15 @@ import {
   Search, 
   Printer 
 } from "lucide-react"
+
+// Hooks Personalizados
+import { useOrderDetail } from "@/hooks/use-order-detail"
+import { useOrderPayment } from "@/hooks/use-order-payment"
+import { useOrderPrinting } from "@/hooks/use-order-printing"
+
+import { RoleGuard } from "@/components/auth/role-guard"
+import { AppLoading } from "@/components/dashboard/AppLoading"
+import { getOrderTypeLabel } from "@/lib/order-utils"
 
 export default function OrderDetailPage() {
   const { data: session } = useSession()
@@ -46,11 +49,9 @@ export default function OrderDetailPage() {
     getStatusText,
     getNextStatusActions,
     canCancelOrder,
-    hasPendingItems
   } = useOrderDetail(orderId)
 
   const {
-    isProcessing: isCompleting,
     completeModalOpen,
     setCompleteModalOpen,
     processCompleteOrder
@@ -65,13 +66,6 @@ export default function OrderDetailPage() {
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [showKitchenPrintConfirm, setShowKitchenPrintConfirm] = useState(false)
-
-  // Verificar permisos
-  useEffect(() => {
-    if (session && session.user.role !== "MESERO" && session.user.role !== "JEFE") {
-      router.push("/dashboard")
-    }
-  }, [session, router])
 
   const handleCompleteOrder = () => {
     if (order) setCompleteModalOpen(true)
@@ -91,23 +85,14 @@ export default function OrderDetailPage() {
 
   const handleConfirmPrintToKitchen = async () => {
     setShowKitchenPrintConfirm(false)
-    await printToKitchen(session?.user?.name || 'Sistema')
+    await printToKitchen('Sistema')
   }
 
   const handlePrintPreReceipt = async () => {
     await printPreReceipt()
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col justify-center items-center min-h-screen bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <div className="text-xl font-black text-foreground uppercase tracking-widest">Cargando pedido...</div>
-        </div>
-      </div>
-    )
-  }
+  if (isLoading) return <AppLoading />
 
   if (error === "NOT_FOUND" || !order) {
     return (
@@ -124,7 +109,8 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <RoleGuard allowedRoles={["MESERO", "JEFE"]}>
+      <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card/40 backdrop-blur-md border-b border-border/50 sticky top-0 z-10">
         <div className="max-w-[1600px] mx-auto px-6 py-4">
@@ -137,18 +123,30 @@ export default function OrderDetailPage() {
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <div>
-                <h1 className="text-2xl font-black text-foreground tracking-tighter">
-                  Pedido #{order.orderNumber}
-                </h1>
-                <div className="flex items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(order.status)}`}>
-                    {getStatusText(order.status)}
-                  </span>
-                  <span className="text-xs text-muted-foreground font-bold">
-                    {order.type === 'MESA' ? `Mesa ${order.table?.number}` : order.type}
-                  </span>
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col">
+                  <h1 className="text-2xl font-black text-foreground tracking-tighter">
+                    Pedido #{order.orderNumber}
+                  </h1>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(order.status)}`}>
+                      {getStatusText(order.status)}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-bold">
+                      {getOrderTypeLabel(order.type, order.table?.number)}
+                    </span>
+                  </div>
                 </div>
+                {['PENDING', 'CONFIRMED', 'SERVED'].includes(order.status) && (
+                  <Button
+                    onClick={() => router.push(`/pedidos/${order.id}/edit`)}
+                    variant="outline"
+                    className="h-10 rounded-xl bg-blue-500/10 text-blue-500 border-blue-500/20 font-black uppercase tracking-widest text-[9px] hover:bg-blue-500 hover:text-white transition-all ml-4"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-2" />
+                    Modificar Pedido
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -188,7 +186,7 @@ export default function OrderDetailPage() {
                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Ubicación</label>
                     <div className="flex items-center gap-2 text-foreground font-bold">
                       <MapPin className="h-4 w-4 text-rose-500" />
-                      Mesa {order.table.number}
+                      {getOrderTypeLabel(order.type, order.table?.number)}
                     </div>
                   </div>
                 )}
@@ -306,6 +304,7 @@ export default function OrderDetailPage() {
         confirmText="Imprimir"
         cancelText="Cancelar"
       />
-    </div>
+      </div>
+    </RoleGuard>
   )
 }

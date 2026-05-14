@@ -1,6 +1,6 @@
 "use client"
 
-import { Eye, Clock, User } from "lucide-react"
+import { Eye, Clock, User, Pencil } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { getStatusColor, getStatusText, getOrderTypeInfo } from "@/lib/order-utils"
@@ -8,9 +8,10 @@ import { getStatusColor, getStatusText, getOrderTypeInfo } from "@/lib/order-uti
 interface OrderCardProps {
   order: any
   onClick: () => void
+  onEdit?: (id: string) => void
 }
 
-export function OrderCard({ order, onClick }: OrderCardProps) {
+export function OrderCard({ order, onClick, onEdit }: OrderCardProps) {
   const typeInfo = getOrderTypeInfo(order.type, order.table?.number)
 
   return (
@@ -27,8 +28,22 @@ export function OrderCard({ order, onClick }: OrderCardProps) {
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 truncate tracking-tight">
                 Pedido #{order.orderNumber}
               </h3>
-              <div className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                <Eye className="h-4 w-4 text-slate-500" />
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Eye className="h-4 w-4 text-slate-500" />
+                </div>
+                {onEdit && ['PENDING', 'CONFIRMED', 'SERVED'].includes(order.status) && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onEdit(order.id)
+                    }}
+                    className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                    title="Editar pedido"
+                  >
+                    <Pencil className="h-4 w-4 text-blue-500" />
+                  </button>
+                )}
               </div>
             </div>
             <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 space-y-2">
