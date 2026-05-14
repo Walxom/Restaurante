@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from "@/lib/prisma"
 import { TableStatus } from '@/types'
 import { convertToBaseUnit } from '@/lib/units'
 import { emitOrderItemUpdate, emitTableStatusChange } from '@/lib/socket-events'
 
-const prisma = new PrismaClient()
+
 
 // Función para deducir stock cuando un item se marca como servido
 async function deductStockForItem(itemId: string, tx: any) {

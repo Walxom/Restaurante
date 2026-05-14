@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 // PATCH /api/ingredients/bulk-stock - Ajustar stock de múltiples ingredientes
 export async function PATCH(request: NextRequest) {
@@ -120,7 +118,7 @@ export async function PATCH(request: NextRequest) {
     // Ejecutar todas las actualizaciones en una transacción
     const updatedIngredients = await prisma.$transaction(async (tx) => {
       const results = []
-      
+
       for (const update of updates) {
         const updatedIngredient = await tx.ingredient.update({
           where: { id: update.id },

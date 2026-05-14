@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 // DELETE /api/ingredients/bulk-delete - Eliminar múltiples ingredientes
 export async function DELETE(request: NextRequest) {
@@ -80,7 +78,7 @@ export async function DELETE(request: NextRequest) {
     // Ejecutar eliminación en transacción
     const deletedIngredients = await prisma.$transaction(async (tx) => {
       const results = []
-      
+
       for (const ingredient of ingredients) {
         const deleted = await tx.ingredient.delete({
           where: { id: ingredient.id }
@@ -114,7 +112,7 @@ export async function DELETE(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error al eliminar ingredientes masivamente:', error)
-    
+
     // Manejar errores específicos de Prisma
     if (error && typeof error === 'object' && 'code' in error && error.code === 'P2003') {
       return NextResponse.json({

@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 // GET /api/invoices/next-number - Obtener siguiente número correlativo
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user || session.user.role !== "JEFE") {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
@@ -26,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     // Obtener configuración del sistema
     let config = await prisma.systemConfig.findFirst()
-    
+
     if (!config) {
       // Crear configuración por defecto si no existe
       config = await prisma.systemConfig.create({
@@ -47,7 +45,7 @@ export async function GET(request: NextRequest) {
     const currentNumber = type === "BOLETA" 
       ? config.lastBoletaNumber 
       : config.lastFacturaNumber
-      
+
     const nextNumber = currentNumber + 1
     const series = type === "BOLETA" ? "B001" : "F001"
     const nextInvoiceNumber = `${series}-${nextNumber.toString().padStart(8, "0")}`
@@ -68,3 +66,4 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+

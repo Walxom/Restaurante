@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,7 +37,7 @@ export async function GET(request: NextRequest) {
       endDate.setHours(23, 59, 59, 999)
     } else {
       const targetYear = yearParam ? parseInt(yearParam) : now.getFullYear()
-      
+
       switch (filter) {
         case "all":
           startDate = new Date(targetYear, 0, 1)
@@ -59,7 +57,7 @@ export async function GET(request: NextRequest) {
           startDate = new Date()
           startDate.setHours(0, 0, 0, 0)
       }
-      
+
       // Si se especifica un año diferente al actual, ajustar las fechas
       if (yearParam && parseInt(yearParam) !== now.getFullYear()) {
         if (filter === "day") {
@@ -137,11 +135,11 @@ export async function GET(request: NextRequest) {
     ])
 
     const totalPages = Math.ceil(totalOrders / limit)
-    
+
     // Calcular estadísticas con TODAS las ventas del período, no solo las de la página actual
     const completedSales = allSalesForStats.filter(sale => sale.status === "COMPLETED")
     const cancelledSales = allSalesForStats.filter(sale => sale.status === "CANCELLED")
-    
+
     const totalSales = completedSales.reduce((sum, order) => sum + Number(order.totalAmount), 0)
     const totalCancelled = cancelledSales.length
     const averageTicket = completedSales.length > 0 ? totalSales / completedSales.length : 0
@@ -162,3 +160,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
   }
 }
+

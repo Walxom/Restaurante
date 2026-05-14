@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "@/lib/prisma"
 import { createProductSchema } from "@/lib/validations/product"
-
-const prisma = new PrismaClient()
 
 // GET - Obtener todos los productos
 export async function GET(request: NextRequest) {
@@ -265,3 +263,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+

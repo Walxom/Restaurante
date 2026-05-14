@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 // GET /api/products/deleted - Obtener productos eliminados
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session || session.user.role !== "JEFE") {
       return NextResponse.json(
         { error: "Solo los jefes pueden ver productos eliminados" },
@@ -24,11 +22,11 @@ export async function GET(request: NextRequest) {
 
     // Construir filtros para productos eliminados
     const where: Record<string, unknown> = { isActive: false }
-    
+
     if (categoryId) {
       where.categoryId = categoryId
     }
-    
+
     if (search) {
         where.OR = [
           { name: { contains: search } },
@@ -73,7 +71,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session || session.user.role !== "JEFE") {
       return NextResponse.json(
         { error: "Solo los jefes pueden reactivar productos" },
@@ -157,3 +155,4 @@ export async function PATCH(request: NextRequest) {
     )
   }
 }
+

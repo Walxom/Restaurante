@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server"
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 export async function GET() {
   try {
@@ -33,7 +31,7 @@ export async function GET() {
     })
   } catch (error) {
     console.error("Error al obtener información de la empresa:", error)
-    
+
     // Retornar información por defecto en caso de error
     return NextResponse.json({
       companyName: "Restaurant",
@@ -41,3 +39,4 @@ export async function GET() {
     })
   }
 }
+

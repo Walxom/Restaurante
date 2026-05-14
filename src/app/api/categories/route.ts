@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "@/lib/prisma"
 import { createCategorySchema } from "@/lib/validations/category"
-
-const prisma = new PrismaClient()
 
 // GET - Obtener todas las categorías
 export async function GET(request: NextRequest) {
@@ -114,3 +112,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+

@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return NextResponse.json(
         { error: "No autorizado" },
@@ -50,7 +48,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session || session.user.role !== "JEFE") {
       return NextResponse.json(
         { error: "No autorizado" },
@@ -59,7 +57,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    
+
     // Validar datos requeridos
     if (!body.companyName) {
       return NextResponse.json(
@@ -110,3 +108,4 @@ export async function PUT(request: NextRequest) {
     )
   }
 }
+

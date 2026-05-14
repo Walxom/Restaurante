@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { thermalPrintQueue } from '@/lib/server-thermal-printer'
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 export async function POST(request: NextRequest) {
   try {
     // Inicializar el servicio de procesamiento de cola
     await thermalPrintQueue.startProcessing()
-    
+
     // Persistir el estado en la base de datos
     await prisma.systemConfig.upsert({
       where: { id: "default" },
@@ -19,7 +17,7 @@ export async function POST(request: NextRequest) {
         isPrinterServiceEnabled: true 
       }
     })
-    
+
     return NextResponse.json({
       success: true,
       message: 'Servicio de impresión térmica iniciado y guardado',
@@ -44,14 +42,14 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     let status = thermalPrintQueue.getServiceStatus()
-    
+
     // LOGICA DE AUTO-ARRANQUE:
     // Si el servicio no está corriendo en memoria, verificamos si debería estarlo según la DB
     if (!status.isRunning) {
       const config = await prisma.systemConfig.findFirst({
         where: { id: "default" }
       })
-      
+
       if (config?.isPrinterServiceEnabled) {
         console.log('🔄 Auto-arrancando servicio de impresión basado en configuración de DB...')
         await thermalPrintQueue.startProcessing()
@@ -59,7 +57,7 @@ export async function GET(request: NextRequest) {
         status = thermalPrintQueue.getServiceStatus()
       }
     }
-    
+
     return NextResponse.json({
       success: true,
       data: {
@@ -86,13 +84,13 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     await thermalPrintQueue.stopProcessing()
-    
+
     // Persistir el estado detenido en la base de datos
     await prisma.systemConfig.update({
       where: { id: "default" },
       data: { isPrinterServiceEnabled: false }
     })
-    
+
     return NextResponse.json({
       success: true,
       message: 'Servicio de impresión térmica detenido y guardado',

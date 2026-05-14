@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 // GET /api/invoices - Listar facturas con filtros
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user || session.user.role !== "JEFE") {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
@@ -29,7 +27,7 @@ export async function GET(request: NextRequest) {
     if (type) where.type = type
     if (status) where.status = status
     if (paymentMethod) where.paymentMethod = paymentMethod
-    
+
     if (startDate || endDate) {
       where.issuedAt = {}
       if (startDate) (where.issuedAt as Record<string, unknown>).gte = new Date(startDate)
@@ -86,7 +84,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
@@ -247,7 +245,7 @@ export async function POST(request: NextRequest) {
             paymentMethod: 'EFECTIVO'
           }),
         })
-        
+
         if (response.ok) {
           printResult = { success: true, message: 'Comprobante impreso exitosamente' }
         } else {
@@ -282,10 +280,10 @@ async function generateInvoiceNumber(type: "BOLETA" | "FACTURA"): Promise<string
   const currentNumber = type === "BOLETA" 
     ? (config?.lastBoletaNumber || 0)
     : (config?.lastFacturaNumber || 0)
-    
+
   const nextNumber = currentNumber + 1
   const series = type === "BOLETA" ? "B001" : "F001"
-  
+
   return `${series}-${nextNumber.toString().padStart(8, "0")}`
 }
 

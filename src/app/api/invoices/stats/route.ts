@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 // GET /api/invoices/stats - Estadísticas de facturación
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user || session.user.role !== "JEFE") {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
@@ -60,13 +58,13 @@ export async function GET(request: NextRequest) {
     ] = await Promise.all([
       // Total de facturas
       prisma.invoice.count({ where }),
-      
+
       // Total de ingresos
       prisma.invoice.aggregate({
         where,
         _sum: { total: true }
       }),
-      
+
       // Facturas por tipo
       prisma.invoice.groupBy({
         by: ["type"],
@@ -74,7 +72,7 @@ export async function GET(request: NextRequest) {
         _count: { type: true },
         _sum: { total: true }
       }),
-      
+
       // Facturas por método de pago
       prisma.invoice.groupBy({
         by: ["paymentMethod"],
@@ -82,7 +80,7 @@ export async function GET(request: NextRequest) {
         _count: { paymentMethod: true },
         _sum: { total: true }
       }),
-      
+
       // Productos más vendidos
       prisma.invoiceItem.groupBy({
         by: ["description"],
@@ -99,7 +97,7 @@ export async function GET(request: NextRequest) {
         orderBy: { _sum: { quantity: "desc" } },
         take: 5
       }),
-      
+
       // Ingresos por día (últimos 7 días)
       getRevenueByDay(startDate, endDate)
     ])
@@ -164,7 +162,7 @@ async function getRevenueByDay(startDate: Date, endDate: Date) {
 
   // Agrupar por día
   const groupedByDay: Record<string, number> = {}
-  
+
   invoices.forEach(invoice => {
     const day = invoice.issuedAt.toISOString().split('T')[0]
     groupedByDay[day] = (groupedByDay[day] || 0) + Number(invoice.total)
@@ -175,3 +173,4 @@ async function getRevenueByDay(startDate: Date, endDate: Date) {
     .map(([date, revenue]) => ({ date, revenue }))
     .sort((a, b) => a.date.localeCompare(b.date))
 }
+

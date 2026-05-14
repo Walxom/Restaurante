@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
 
 // GET - Obtener todas las mesas
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return NextResponse.json(
         { error: "No autorizado" },
@@ -38,7 +36,7 @@ import { createTableSchema } from "@/lib/validations/table"
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session || session.user.role !== "JEFE") {
       return NextResponse.json(
         { error: "No autorizado" },
@@ -47,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    
+
     // Validar con Zod
     const validation = createTableSchema.safeParse(body)
     if (!validation.success) {
@@ -93,3 +91,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
