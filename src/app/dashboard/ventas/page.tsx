@@ -43,8 +43,9 @@ export default function HistorialVentasPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-6 animate-pulse">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative transition-colors duration-500">
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
+        <div className="relative z-10 flex flex-col items-center gap-6 animate-pulse">
           <div className="h-20 w-20 rounded-3xl bg-primary/20 flex items-center justify-center border border-primary/30 shadow-2xl shadow-primary/20">
             <BarChart3 className="w-10 h-10 text-primary animate-bounce" />
           </div>
@@ -58,30 +59,29 @@ export default function HistorialVentasPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-foreground selection:bg-primary/30">
-      {/* BACKGROUND DECORATION */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[25%] -left-[10%] w-[70%] h-[70%] bg-primary/5 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-blue-500/5 rounded-full blur-[100px]" />
-      </div>
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-500 selection:bg-primary/30">
+      {/* Fondo con gradientes dinámicos */}
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
 
       {/* HEADER PREMIUM */}
-      <header className="sticky top-0 z-40 bg-[#050505]/60 backdrop-blur-xl border-b border-white/[0.05]">
+      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6 min-w-0">
             <Button 
               onClick={() => router.push("/dashboard")} 
               variant="ghost"
-              className="group h-12 w-12 rounded-2xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.08] transition-all p-0"
+              data-testid="btn-back-dashboard"
+              className="group h-12 w-12 shrink-0 rounded-2xl bg-card/40 border border-border/50 hover:bg-foreground/5 transition-all p-0"
             >
               <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
             </Button>
-            <div className="h-10 w-px bg-white/[0.08]" />
-            <div>
-              <h1 className="text-sm font-black text-foreground uppercase tracking-[0.2em] leading-none mb-1">
-                Dashboard de Ventas
+            <div className="hidden sm:block h-10 w-px bg-border/50 shrink-0" />
+            <div className="flex flex-col min-w-0">
+              <h1 className="text-xs sm:text-sm md:text-base font-black text-foreground uppercase tracking-widest truncate">
+                <span className="inline sm:hidden">Ventas</span>
+                <span className="hidden sm:inline">Dashboard de Ventas</span>
               </h1>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+              <p className="hidden md:block text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 truncate">
                 Análisis de Transacciones y KPIs
               </p>
             </div>
@@ -92,7 +92,7 @@ export default function HistorialVentasPage() {
               <span className="text-[9px] font-black text-primary uppercase tracking-widest">Sincronización Activa</span>
               <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-50">Real-time data flow</span>
             </div>
-            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-lg shadow-primary/5">
+            <div className="hidden sm:flex h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-lg shadow-primary/5">
               <BarChart3 className="w-5 h-5 text-primary" />
             </div>
           </div>
@@ -114,13 +114,14 @@ export default function HistorialVentasPage() {
             
             {/* PAGINACIÓN COMPACTA ARRIBA */}
             {totalPages > 1 && (
-              <div className="flex items-center gap-4 bg-white/[0.03] border border-white/[0.05] p-1.5 rounded-2xl">
+              <div className="flex items-center gap-4 bg-card/40 backdrop-blur-md border border-border/50 p-1.5 rounded-2xl shadow-sm">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                  className="h-9 w-9 rounded-xl p-0 hover:bg-white/[0.05]"
+                  disabled={page === 1 || paginationLoading}
+                  data-testid="btn-page-prev"
+                  className="h-9 w-9 rounded-xl p-0 hover:bg-foreground/5"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
@@ -133,8 +134,9 @@ export default function HistorialVentasPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setPage(page + 1)}
-                  disabled={page === totalPages}
-                  className="h-9 w-9 rounded-xl p-0 hover:bg-white/[0.05]"
+                  disabled={page === totalPages || paginationLoading}
+                  data-testid="btn-page-next"
+                  className="h-9 w-9 rounded-xl p-0 hover:bg-foreground/5"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -165,7 +167,7 @@ export default function HistorialVentasPage() {
           />
 
           {/* INFO DE PIE DE TABLA */}
-          <div className="flex items-center justify-between px-6 py-4 bg-white/[0.02] rounded-2xl border border-white/[0.05]">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Hash className="w-3.5 h-3.5 text-primary" />

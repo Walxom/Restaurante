@@ -53,6 +53,7 @@ export function SalesFilters({
               <button
                 key={p.id}
                 onClick={() => setFilter(p.id)}
+                data-testid={`btn-filter-period-${p.id}`}
                 className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border ${
                   filter === p.id 
                     ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' 
@@ -73,6 +74,7 @@ export function SalesFilters({
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
+                data-testid="select-filter-status"
                 className="appearance-none bg-background/50 border border-border/50 rounded-xl px-4 py-2 pr-10 text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 transition-all outline-none"
               >
                 <option value="all">Todos los Estados</option>
@@ -89,6 +91,7 @@ export function SalesFilters({
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
+                data-testid="select-filter-year"
                 className="appearance-none bg-background/50 border border-border/50 rounded-xl px-4 py-2 pr-10 text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 transition-all outline-none"
               >
                 {availableYears.map(year => (
@@ -111,6 +114,7 @@ export function SalesFilters({
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                data-testid="input-filter-start-date"
                 className="w-full bg-background/50 border border-border/50 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none"
               />
             </div>
@@ -120,6 +124,7 @@ export function SalesFilters({
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
+                data-testid="input-filter-end-date"
                 className="w-full bg-background/50 border border-border/50 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none"
               />
             </div>

@@ -111,6 +111,7 @@ export function SalesTable({ sales, paginationLoading, onViewDetails }: SalesTab
                     variant="ghost"
                     size="sm"
                     onClick={() => onViewDetails(sale)}
+                    data-testid={`btn-view-sale-${sale.orderNumber}`}
                     className="h-8 w-8 rounded-lg p-0 text-primary hover:bg-primary/10 transition-all group-hover:scale-110"
                   >
                     <Eye className="w-4 h-4" />
