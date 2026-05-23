@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PrinterType, PrinterConnectionType, PrinterStatus } from '@/types'
+import { printerConfigSchema } from '@/features/billing/validations/printer-config'
 
 // Configuraciones por defecto
 const DEFAULT_CONFIGS = {
@@ -185,22 +186,22 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const { printerId, config } = await request.json()
+    const body = await request.json()
 
-    if (!printerId || !config) {
+    // Validar datos con Zod Schema
+    const result = printerConfigSchema.safeParse(body)
+    if (!result.success) {
+      const errorMessages = result.error.issues.map(err => err.message).join(", ")
       return NextResponse.json(
-        { error: 'Datos incompletos' },
+        { 
+          error: errorMessages, 
+          details: result.error.format() 
+        },
         { status: 400 }
       )
     }
 
-    // Validar que el printerId sea válido
-    if (!['fiscal', 'kitchen'].includes(printerId)) {
-      return NextResponse.json(
-        { error: 'ID de impresora inválido' },
-        { status: 400 }
-      )
-    }
+    const { printerId, config } = result.data
 
     console.log(`📝 Actualizando configuración de impresora ${printerId}:`, config)
 
