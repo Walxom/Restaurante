@@ -9,6 +9,9 @@ import { Eye, Printer, Loader2, AlertTriangle, CheckCircle, WifiOff } from 'luci
 interface KitchenTicketPreviewProps {
   orderId: string;
   trigger?: React.ReactNode;
+  // Control externo del estado del diálogo (para evitar nesting con DropdownMenu)
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onPrintSuccess?: () => void;
   onPrintError?: (error: string) => void;
 }
@@ -36,10 +39,14 @@ interface PreviewData {
 export function KitchenTicketPreview({ 
   orderId, 
   trigger, 
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   onPrintSuccess, 
   onPrintError 
 }: KitchenTicketPreviewProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = isControlled ? (controlledOpen ?? false) : internalOpen;
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -163,7 +170,7 @@ export function KitchenTicketPreview({
 
       if (result.success && result.isReachable) {
         onPrintSuccess?.();
-        setIsOpen(false);
+        handleOpenChange(false);
         // Mostrar mensaje de éxito con información de conectividad
         console.log('✅ Verificación exitosa:', result.message);
       } else {
@@ -178,27 +185,36 @@ export function KitchenTicketPreview({
   };
 
   const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
+    if (isControlled) {
+      controlledOnOpenChange?.(open);
+    } else {
+      setInternalOpen(open);
+    }
     if (open && !previewData) {
       generatePreview();
+    }
+    if (!open) {
+      setPreviewData(null);
     }
   };
 
   const defaultTrigger = (
     <Button variant="outline" size="sm">
-      <Eye className="h-4 w-4 mr-2" />
-      Vista Previa
+      <Printer className="h-4 w-4 mr-2" />
+      Reimprimir Ticket de Cocina
     </Button>
   );
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {trigger || defaultTrigger}
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          {trigger || defaultTrigger}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Vista Previa - Ticket de Cocina</DialogTitle>
+          <DialogTitle>Reimprimir Ticket de Cocina</DialogTitle>
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden flex flex-col space-y-4">
@@ -210,15 +226,15 @@ export function KitchenTicketPreview({
           ) : previewData ? (
             <>
               {/* Información del pedido */}
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-600 flex items-center justify-between">
+              <div className="p-4 bg-card/40 backdrop-blur-md border border-border/50 rounded-2xl shadow-sm">
+                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center justify-between">
                   <div>
-                    <strong>Pedido:</strong> {previewData.orderData.orderNumber} | 
-                    <strong> Mesa:</strong> {previewData.orderData.tableNumber} | 
-                    <strong> Items:</strong> {previewData.orderData.itemCount}
+                    <strong>Pedido:</strong> <span className="text-foreground">{previewData.orderData.orderNumber}</span> | 
+                    <strong> Mesa:</strong> <span className="text-foreground">{previewData.orderData.tableNumber}</span> | 
+                    <strong> Items:</strong> <span className="text-foreground">{previewData.orderData.itemCount}</span>
                   </div>
                   {previewData.orderData.isUrgent && (
-                    <span className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+                    <span className="bg-rose-500 text-white px-2 py-0.5 rounded-lg text-[9px] font-black tracking-widest uppercase animate-pulse">
                       URGENTE
                     </span>
                   )}
@@ -226,49 +242,61 @@ export function KitchenTicketPreview({
               </div>
 
               {/* Estado del servicio con detalles de conectividad */}
-              <Alert className={previewData.serviceStatus.isAvailable ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
+              <div className={`p-4 rounded-2xl border flex flex-col gap-3 shadow-sm ${
+                previewData.serviceStatus.isAvailable 
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400' 
+                  : 'bg-rose-500/10 border-rose-500/20 text-rose-700 dark:text-rose-400 animate-pulse'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <div className={`p-1.5 rounded-full ${previewData.serviceStatus.isAvailable ? 'bg-emerald-500/20' : 'bg-rose-500/20'}`}>
                     {previewData.serviceStatus.isAvailable ? (
-                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <CheckCircle className="h-4 w-4" />
                     ) : (
-                      <WifiOff className="h-4 w-4 text-red-600" />
+                      <WifiOff className="h-4 w-4" />
                     )}
-                    <AlertDescription className={previewData.serviceStatus.isAvailable ? 'text-green-800' : 'text-red-800'}>
-                      <strong>Estado:</strong> {previewData.serviceStatus.message}
-                    </AlertDescription>
                   </div>
-                  
-                  {/* Información de configuración */}
-                  {previewData.serviceStatus.config && (
-                    <div className="text-xs text-gray-600 pl-6">
-                      <div><strong>IP:</strong> {previewData.serviceStatus.config.ip}</div>
-                      <div><strong>Puerto:</strong> {previewData.serviceStatus.config.port}</div>
-                      <div><strong>Última verificación:</strong> {previewData.serviceStatus.lastCheck}</div>
-                    </div>
-                  )}
-                  
-                  {/* Nota informativa */}
-                  <div className="text-xs text-gray-500 pl-6 italic">
-                    Esta vista previa NO imprime. Solo verifica la conectividad del puerto {previewData.serviceStatus.config?.port || '9100'}.
+                  <div className="text-[10px] font-black uppercase tracking-widest leading-relaxed">
+                    Estado: <span className="opacity-80 font-bold">{previewData.serviceStatus.message}</span>
                   </div>
                 </div>
-              </Alert>
+                
+                {/* Información de configuración */}
+                {previewData.serviceStatus.config && (
+                  <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground pl-10 space-y-1 opacity-80">
+                    <div>IP: <span className="text-foreground">{previewData.serviceStatus.config.ip}</span></div>
+                    <div>Puerto: <span className="text-foreground">{previewData.serviceStatus.config.port}</span></div>
+                    <div>Última verificación: <span className="text-foreground">{previewData.serviceStatus.lastCheck}</span></div>
+                  </div>
+                )}
+                
+                {/* Nota informativa */}
+                <div className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/60 pl-10 italic">
+                  Esta vista previa NO imprime. Solo verifica la conectividad del puerto {previewData.serviceStatus.config?.port || '9100'}.
+                </div>
+              </div>
               
-              {/* Vista previa del ticket */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-xs whitespace-pre-line min-h-96">
-                  {previewData.preview}
+              {/* Vista previa del comprobante estilo papel térmico */}
+              <div className="flex-1 overflow-y-auto max-h-[450px] p-2 bg-slate-900/5 dark:bg-slate-50/5 rounded-[2rem] border border-border/50">
+                <div className="flex justify-center p-6">
+                  {/* Papel Térmico Realista */}
+                  <div className="w-full max-w-[320px] bg-[#fafafc] p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] relative border border-slate-200">
+                    {/* Bordes dentados simulados */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-[radial-gradient(circle_at_center,_#e2e8f0_2px,_transparent_0)] bg-[length:8px_8px] bg-repeat-x -translate-y-1/2 opacity-40" />
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-[radial-gradient(circle_at_center,_#e2e8f0_2px,_transparent_0)] bg-[length:8px_8px] bg-repeat-x translate-y-1/2 opacity-40" />
+
+                    <div className="font-mono text-[9px] sm:text-[10px] leading-relaxed text-slate-800 whitespace-pre overflow-x-auto">
+                      {previewData.preview}
+                    </div>
+                  </div>
                 </div>
               </div>
               
               {/* Botones de acción */}
-              <div className="flex gap-2 pt-2 border-t">
+              <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-border/50">
                 <Button 
                   onClick={handlePrint} 
                   disabled={isPrinting}
-                  className="flex-1"
-                  variant="secondary"
+                  className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/15 transition-all"
                 >
                   {isPrinting ? (
                     <>
@@ -283,21 +311,24 @@ export function KitchenTicketPreview({
                   )}
                 </Button>
                 <Button 
-                  variant="outline" 
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => handleOpenChange(false)}
                   disabled={isPrinting}
+                  className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] border border-border bg-card/50 text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-all shadow-sm"
                 >
                   Cerrar
                 </Button>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-blue-600 mt-0.5" />
-                  <div className="text-sm text-blue-800">
-                    <p className="font-medium">Vista previa sin impresión</p>
-                    <p className="text-xs mt-1">
-                      Esta vista previa NO imprime. El botón &quot;Verificar Conectividad&quot; solo revisa si la impresora está disponible en la red (puerto 9100).
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 text-blue-700 dark:text-blue-400">
+                <div className="flex items-start gap-3">
+                  <div className="p-1 rounded-full bg-blue-500/20">
+                    <Printer className="h-4 w-4 text-blue-500 shrink-0" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] font-black uppercase tracking-widest">Reimpresión de Comanda</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wide opacity-80 leading-normal">
+                      Esta vista digital simula la comanda térmica real. 
+                      El botón &quot;Verificar Conectividad&quot; comprueba si la ticketera de cocina responde en red.
                     </p>
                   </div>
                 </div>

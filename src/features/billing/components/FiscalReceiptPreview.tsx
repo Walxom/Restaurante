@@ -25,6 +25,9 @@ interface FiscalReceiptPreviewProps {
   customerName?: string;
   customerRuc?: string;
   trigger?: React.ReactNode;
+  // Control externo del estado del diálogo (para evitar nesting con DropdownMenu)
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onPrintSuccess?: () => void;
   onPrintError?: (error: string) => void;
 }
@@ -58,10 +61,15 @@ export function FiscalReceiptPreview({
   customerName,
   customerRuc,
   trigger, 
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   onPrintSuccess, 
   onPrintError 
 }: FiscalReceiptPreviewProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  // Modo controlado externamente (e.g. desde ThermalPrintButton) vs. modo autónomo con trigger
+  const isControlled = controlledOpen !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = isControlled ? (controlledOpen ?? false) : internalOpen;
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -128,7 +136,7 @@ export function FiscalReceiptPreview({
       if (response.ok) {
         toast.success(`${previewData.documentData.type} impresa exitosamente`);
         onPrintSuccess?.();
-        setIsOpen(false);
+        handleOpenChange(false);
       } else {
         throw new Error(result.error || 'Error al imprimir');
       }
@@ -143,9 +151,17 @@ export function FiscalReceiptPreview({
   };
 
   const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
+    if (isControlled) {
+      controlledOnOpenChange?.(open);
+    } else {
+      setInternalOpen(open);
+    }
     if (open && !previewData) {
       generatePreview();
+    }
+    if (!open) {
+      // Limpiar datos de preview al cerrar para que se recarguen la próxima vez
+      setPreviewData(null);
     }
   };
 
@@ -159,21 +175,24 @@ export function FiscalReceiptPreview({
 
   const defaultTrigger = (
     <Button variant="outline" size="sm">
-      <Eye className="h-4 w-4 mr-2" />
-      Vista Previa {documentType}
+      <Printer className="h-4 w-4 mr-2" />
+      Reimprimir {documentType}
     </Button>
   );
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {trigger || defaultTrigger}
-      </DialogTrigger>
+      {/* Solo renderizar el trigger cuando no se controla externamente */}
+      {!isControlled && (
+        <DialogTrigger asChild>
+          {trigger || defaultTrigger}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {getDocumentIcon()}
-            Vista Previa - {documentType}
+            Reimprimir - {documentType}
           </DialogTitle>
         </DialogHeader>
         
@@ -186,41 +205,41 @@ export function FiscalReceiptPreview({
           ) : previewData ? (
             <>
               {/* Información del documento */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-card/40 backdrop-blur-md border border-border/50 rounded-[2rem] shadow-sm">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Badge variant={previewData.documentData.type === 'FACTURA' ? 'default' : 'secondary'}>
+                    <Badge variant={previewData.documentData.type === 'FACTURA' ? 'default' : 'secondary'} className="rounded-xl px-2.5 py-0.5 text-[10px] font-black tracking-widest uppercase">
                       {previewData.documentData.type}
                     </Badge>
-                    <span className="text-sm font-medium">{previewData.documentData.number}</span>
+                    <span className="text-xs font-black text-foreground uppercase tracking-widest">{previewData.documentData.number}</span>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Receipt className="h-3 w-3" />
-                      <span>Pedido: {previewData.documentData.orderNumber}</span>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground space-y-1.5 opacity-80">
+                    <div className="flex items-center gap-2">
+                      <Receipt className="h-3.5 w-3.5 text-primary" />
+                      <span>Pedido: <span className="text-foreground">{previewData.documentData.orderNumber}</span></span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      <span>Cliente: {previewData.documentData.customerName}</span>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-3.5 w-3.5 text-primary" />
+                      <span className="truncate">Cliente: <span className="text-foreground">{previewData.documentData.customerName}</span></span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="space-y-2">
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-green-600">
+                <div className="space-y-2 flex flex-col justify-between md:items-end">
+                  <div className="md:text-right">
+                    <div className="text-xl font-black text-emerald-500 tracking-tight">
                       S/ {previewData.documentData.total}
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {previewData.documentData.itemCount} items
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                      {previewData.documentData.itemCount} items en pedido
                     </div>
                   </div>
                   
                   {/* Información de la empresa */}
                   {previewData.systemConfig && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground space-y-0.5 opacity-60">
                       <div className="flex items-center gap-1">
-                        <Building2 className="h-3 w-3" />
+                        <Building2 className="h-3 w-3 text-primary" />
                         <span>{previewData.systemConfig.companyName}</span>
                       </div>
                       <div>RUC: {previewData.systemConfig.companyRuc}</div>
@@ -230,35 +249,45 @@ export function FiscalReceiptPreview({
               </div>
 
               {/* Estado del servicio */}
-              <Alert className={previewData.serviceStatus.isAvailable ? 'border-green-200 bg-green-50' : 'border-orange-200 bg-orange-50'}>
-                <div className="flex items-center gap-2">
+              <div className={`p-4 rounded-2xl border flex items-center gap-3 shadow-sm ${
+                previewData.serviceStatus.isAvailable 
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400' 
+                  : 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400 animate-pulse'
+              }`}>
+                <div className={`p-1.5 rounded-full ${previewData.serviceStatus.isAvailable ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
                   {previewData.serviceStatus.isAvailable ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-4 w-4" />
                   ) : (
-                    <AlertTriangle className="h-4 w-4 text-orange-600" />
+                    <AlertTriangle className="h-4 w-4" />
                   )}
-                  <AlertDescription className={previewData.serviceStatus.isAvailable ? 'text-green-800' : 'text-orange-800'}>
-                    <strong>Estado:</strong> {previewData.serviceStatus.message}
-                  </AlertDescription>
                 </div>
-              </Alert>
+                <div className="text-[10px] font-black uppercase tracking-widest leading-relaxed">
+                  Estado: <span className="opacity-80 font-bold">{previewData.serviceStatus.message}</span>
+                </div>
+              </div>
               
-              {/* Vista previa del comprobante */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="bg-white border-2 border-dashed border-gray-300 p-6 rounded-lg">
-                  <div className="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs whitespace-pre-line min-h-96 max-h-96 overflow-y-auto">
-                    {previewData.preview}
+              {/* Vista previa del comprobante estilo papel térmico */}
+              <div className="flex-1 overflow-y-auto max-h-[450px] p-2 bg-slate-900/5 dark:bg-slate-50/5 rounded-[2rem] border border-border/50">
+                <div className="flex justify-center p-6">
+                  {/* Papel Térmico Realista */}
+                  <div className="w-full max-w-[320px] bg-[#fafafc] p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] relative border border-slate-200">
+                    {/* Bordes dentados simulados */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-[radial-gradient(circle_at_center,_#e2e8f0_2px,_transparent_0)] bg-[length:8px_8px] bg-repeat-x -translate-y-1/2 opacity-40" />
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-[radial-gradient(circle_at_center,_#e2e8f0_2px,_transparent_0)] bg-[length:8px_8px] bg-repeat-x translate-y-1/2 opacity-40" />
+
+                    <div className="font-mono text-[9px] sm:text-[10px] leading-relaxed text-slate-800 whitespace-pre overflow-x-auto">
+                      {previewData.preview}
+                    </div>
                   </div>
                 </div>
               </div>
               
               {/* Botones de acción */}
-              <div className="flex gap-2 pt-2 border-t">
+              <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-border/50">
                 <Button 
                   onClick={handlePrint} 
                   disabled={isPrinting}
-                  className="flex-1"
-                  variant="default"
+                  className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-primary text-primary-foreground hover:opacity-90 shadow-xl shadow-primary/15 transition-all"
                 >
                   {isPrinting ? (
                     <>
@@ -274,23 +303,25 @@ export function FiscalReceiptPreview({
                 </Button>
                 
                 <Button 
-                  variant="outline" 
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => handleOpenChange(false)}
                   disabled={isPrinting}
+                  className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] border border-border bg-card/50 text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-all shadow-sm"
                 >
                   Cerrar
                 </Button>
               </div>
 
               {/* Advertencia sobre ahorrar papel */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-start gap-2">
-                  <Eye className="h-4 w-4 text-blue-600 mt-0.5" />
-                  <div className="text-sm text-blue-800">
-                    <p className="font-medium">Modo Vista Previa</p>
-                    <p className="text-xs mt-1">
-                      Revisa el documento antes de imprimir para ahorrar papel. 
-                      Esta vista muestra exactamente cómo se verá el comprobante impreso.
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 text-blue-700 dark:text-blue-400">
+                <div className="flex items-start gap-3">
+                  <div className="p-1 rounded-full bg-blue-500/20">
+                    <Printer className="h-4 w-4 text-blue-500 shrink-0" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] font-black uppercase tracking-widest">Reimpresión de Comprobante</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wide opacity-80 leading-normal">
+                      Esta vista digital simula el papel térmico real. 
+                      Verifica la información antes de enviar la orden de reimpresión física.
                     </p>
                   </div>
                 </div>
