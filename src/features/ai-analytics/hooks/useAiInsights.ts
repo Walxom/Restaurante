@@ -1,24 +1,32 @@
 "use client"
 
 import useSWR from "swr"
-import {
-  type ForecastResponse,
-  type InventoryResponse,
-  type MarketBasketResponse,
-  type AiEngineHealth,
+import type {
+  ForecastResponse,
+  InventoryResponse,
+  MarketBasketResponse,
+  AiEngineHealth,
 } from "@/features/ai-analytics/types/ai.types"
 
 const AI_ENGINE_URL = process.env.NEXT_PUBLIC_AI_ENGINE_URL || "http://localhost:8000"
 
 const fetcher = async (url: string, options?: RequestInit) => {
-  const res = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  })
-  if (!res.ok) {
-    throw new Error(`AI Engine error: ${res.status} ${res.statusText}`)
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 4000)
+  try {
+    const res = await fetch(url, {
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      ...options,
+    })
+    clearTimeout(timeoutId)
+    if (!res.ok) throw new Error(`Error ${res.status}`)
+    return res.json()
+  } catch (err: any) {
+    clearTimeout(timeoutId)
+    if (err.name === "AbortError") throw new Error("Timeout")
+    throw err
   }
-  return res.json()
 }
 
 export function useAiHealth() {
@@ -28,7 +36,8 @@ export function useAiHealth() {
     {
       refreshInterval: 30000,
       revalidateOnFocus: false,
-      errorRetryCount: 2,
+      errorRetryCount: 0,
+      shouldRetryOnError: false,
     }
   )
   return {
@@ -39,19 +48,31 @@ export function useAiHealth() {
   }
 }
 
+function useAiData<T>(
+  key: string,
+  fetcherFn: () => Promise<T>,
+  refreshMs: number
+) {
+  const { data, error, isLoading } = useSWR<T>(key, fetcherFn, {
+    refreshInterval: refreshMs,
+    revalidateOnFocus: false,
+    errorRetryCount: 1,
+    shouldRetryOnError: false,
+    dedupingInterval: 5000,
+  })
+  return { data, error, isLoading }
+}
+
 export function useForecast(productId?: string) {
-  const { data, error, isLoading } = useSWR<ForecastResponse>(
-    [`${AI_ENGINE_URL}/api/insights/forecast`, productId],
-    ([url, pid]) =>
-      fetcher(url, {
+  const key = `${AI_ENGINE_URL}/api/insights/forecast`
+  const { data, error, isLoading } = useAiData<ForecastResponse>(
+    [key, productId],
+    () =>
+      fetcher(key, {
         method: "POST",
-        body: JSON.stringify({ productId: pid || null }),
+        body: JSON.stringify({ productId: productId || null }),
       }),
-    {
-      refreshInterval: 60000,
-      revalidateOnFocus: false,
-      errorRetryCount: 2,
-    }
+    60000
   )
   return {
     forecast: data?.ml.forecasts || [],
@@ -62,16 +83,16 @@ export function useForecast(productId?: string) {
 }
 
 export function useInventoryAlerts() {
+  const key = `${AI_ENGINE_URL}/api/insights/inventory`
   const { data, error, isLoading, mutate } = useSWR<InventoryResponse>(
-    `${AI_ENGINE_URL}/api/insights/inventory`,
-    (url) =>
-      fetcher(url, {
-        method: "POST",
-      }),
+    key,
+    () => fetcher(key, { method: "POST" }),
     {
       refreshInterval: 30000,
       revalidateOnFocus: false,
-      errorRetryCount: 2,
+      errorRetryCount: 1,
+      shouldRetryOnError: false,
+      dedupingInterval: 5000,
     }
   )
   return {
@@ -84,18 +105,15 @@ export function useInventoryAlerts() {
 }
 
 export function useMarketBasket(productId?: string) {
-  const { data, error, isLoading } = useSWR<MarketBasketResponse>(
-    [`${AI_ENGINE_URL}/api/insights/market-basket`, productId],
-    ([url, pid]) =>
-      fetcher(url, {
+  const key = `${AI_ENGINE_URL}/api/insights/market-basket`
+  const { data, error, isLoading } = useAiData<MarketBasketResponse>(
+    [key, productId],
+    () =>
+      fetcher(key, {
         method: "POST",
-        body: JSON.stringify({ productId: pid || null }),
+        body: JSON.stringify({ productId: productId || null }),
       }),
-    {
-      refreshInterval: 120000,
-      revalidateOnFocus: false,
-      errorRetryCount: 2,
-    }
+    120000
   )
   return {
     rules: data?.ml.rules || [],
@@ -107,5 +125,17 @@ export function useMarketBasket(productId?: string) {
 }
 
 export async function triggerRetrainAll(): Promise<{ status: string; message: string }> {
-  return fetcher(`${AI_ENGINE_URL}/api/train/all`, { method: "GET" })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
+  try {
+    const res = await fetch(`${AI_ENGINE_URL}/api/train/all`, {
+      method: "GET",
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+    if (!res.ok) throw new Error(`Error ${res.status}`)
+    return res.json()
+  } finally {
+    clearTimeout(timeoutId)
+  }
 }
