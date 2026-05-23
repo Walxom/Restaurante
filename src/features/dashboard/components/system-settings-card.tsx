@@ -12,9 +12,11 @@ interface SystemSettingsCardProps {
   onTaxChange: (value: string) => void
   onChange: (field: any, value: any) => void
   timezones: any[]
+  errors?: Record<string, string>
+  isSaving?: boolean
 }
 
-export function SystemSettingsCard({ config, taxPercentage, onTaxChange, onChange, timezones }: SystemSettingsCardProps) {
+export function SystemSettingsCard({ config, taxPercentage, onTaxChange, onChange, timezones, errors = {}, isSaving = false }: SystemSettingsCardProps) {
   if (!config) return null
 
   return (
@@ -36,18 +38,21 @@ export function SystemSettingsCard({ config, taxPercentage, onTaxChange, onChang
       </div>
       <div className="p-6 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <ConfigField label="IGV (%)" icon={Percent}>
+          <ConfigField id="taxRate" label="IGV (%)" icon={Percent} error={errors.taxRate}>
             <Input 
+              id="taxRate"
               type="number" 
               value={taxPercentage} 
               onChange={(e) => onTaxChange(e.target.value)} 
+              disabled={isSaving}
+              data-testid="input-tax-rate"
               className="pl-11 h-11 bg-background/50 border-border/50 rounded-xl focus:ring-primary/20 transition-all hover:bg-background/80 font-bold" 
             />
           </ConfigField>
 
-          <ConfigField label="Moneda" icon={Coins}>
-            <Select value={config.currency} onValueChange={(val) => onChange("currency", val)}>
-              <SelectTrigger className="bg-background/50 border-border/50 rounded-xl h-11 pl-11 text-sm font-bold focus:ring-primary/20 hover:bg-background/80 transition-all">
+          <ConfigField id="currency" label="Moneda" icon={Coins} error={errors.currency}>
+            <Select value={config.currency} onValueChange={(val) => onChange("currency", val)} disabled={isSaving}>
+              <SelectTrigger id="currency" data-testid="select-currency" className="bg-background/50 border-border/50 rounded-xl h-11 pl-11 text-sm font-bold focus:ring-primary/20 hover:bg-background/80 transition-all">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-card/95 backdrop-blur-xl border-border/50 rounded-xl shadow-2xl">
@@ -64,11 +69,12 @@ export function SystemSettingsCard({ config, taxPercentage, onTaxChange, onChang
             </Select>
           </ConfigField>
 
-          <ConfigField label="Zona Horaria" icon={Globe}>
+          <ConfigField id="timezone" label="Zona Horaria" icon={Globe} error={errors.timezone}>
             <TimeZoneSelect 
               value={config.timezone} 
               onValueChange={(val: string) => onChange("timezone", val)} 
               timezones={timezones} 
+              disabled={isSaving}
             />
           </ConfigField>
         </div>

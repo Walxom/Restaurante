@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { systemConfigSchema } from "@/features/dashboard/validations/system-config"
+import { invalidateConfigCache } from "@/services/system.service"
 
 export async function GET() {
   try {
@@ -58,46 +60,48 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json()
 
-    // Validar datos requeridos
-    if (!body.companyName) {
+    // Validar datos con Zod Schema
+    const result = systemConfigSchema.safeParse(body)
+    if (!result.success) {
+      const errorMessages = result.error.issues.map(err => err.message).join(", ")
       return NextResponse.json(
-        { error: "El nombre del restaurante es requerido" },
+        { 
+          error: errorMessages, 
+          details: result.error.format() 
+        },
         { status: 400 }
       )
     }
 
-    // Validar tasa de impuesto
-    if (body.taxRate < 0 || body.taxRate > 1) {
-      return NextResponse.json(
-        { error: "La tasa de IGV debe estar entre 0 y 1" },
-        { status: 400 }
-      )
-    }
+    const validatedData = result.data
 
     // Actualizar o crear la configuración
     const config = await prisma.systemConfig.upsert({
       where: { id: "default" },
       update: {
-        companyName: body.companyName,
-        companyAddress: body.companyAddress || null,
-        companyPhone: body.companyPhone || null,
-        companyRuc: body.companyRuc || null,
-        taxRate: parseFloat(body.taxRate),
-        currency: body.currency || "PEN",
-        timezone: body.timezone || "America/Lima",
+        companyName: validatedData.companyName,
+        companyAddress: validatedData.companyAddress || null,
+        companyPhone: validatedData.companyPhone || null,
+        companyRuc: validatedData.companyRuc || null,
+        taxRate: validatedData.taxRate,
+        currency: validatedData.currency,
+        timezone: validatedData.timezone,
         updatedAt: new Date(),
       },
       create: {
         id: "default",
-        companyName: body.companyName,
-        companyAddress: body.companyAddress || null,
-        companyPhone: body.companyPhone || null,
-        companyRuc: body.companyRuc || null,
-        taxRate: parseFloat(body.taxRate),
-        currency: body.currency || "PEN",
-        timezone: body.timezone || "America/Lima",
+        companyName: validatedData.companyName,
+        companyAddress: validatedData.companyAddress || null,
+        companyPhone: validatedData.companyPhone || null,
+        companyRuc: validatedData.companyRuc || null,
+        taxRate: validatedData.taxRate,
+        currency: validatedData.currency,
+        timezone: validatedData.timezone,
       }
     })
+
+    // Invalidar caché de servidor para asegurar consistencia de datos inmediata
+    invalidateConfigCache()
 
     return NextResponse.json(config)
   } catch (error) {

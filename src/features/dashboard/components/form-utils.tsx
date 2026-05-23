@@ -15,33 +15,65 @@ import { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface ConfigFieldProps {
+  id?: string
   label: string
   icon: LucideIcon
   children: React.ReactNode
   prefix?: string
+  error?: string
 }
 
-export function ConfigField({ label, icon: Icon, children, prefix }: ConfigFieldProps) {
+export function ConfigField({ id, label, icon: Icon, children, prefix, error }: ConfigFieldProps) {
   return (
-    <div className="space-y-2 group">
-      <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-widest opacity-70 group-focus-within:text-primary group-focus-within:opacity-100 transition-all">
+    <div className="space-y-2 group flex flex-col w-full">
+      <Label 
+        htmlFor={id} 
+        className={cn(
+          "text-[10px] sm:text-xs uppercase font-black tracking-widest transition-all",
+          error 
+            ? "text-rose-500 opacity-100" 
+            : "text-muted-foreground opacity-70 group-focus-within:text-primary group-focus-within:opacity-100"
+        )}
+      >
         {label}
       </Label>
-      <div className="relative flex">
-        {prefix && (
-          <div className="flex items-center px-4 border border-r-0 border-border/50 rounded-l-xl bg-background/50 text-muted-foreground text-xs font-black uppercase tracking-widest">
-            {prefix}
-          </div>
-        )}
-        <div className="relative flex-1">
-          <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-40 z-10 pointer-events-none group-focus-within:text-primary group-focus-within:opacity-100 transition-all" />
-          <div className={cn(
-            "relative",
-            prefix ? "[&>input]:rounded-l-none [&>select]:rounded-l-none" : ""
-          )}>
-            {children}
+      <div className="relative flex flex-col w-full">
+        <div className="relative flex w-full">
+          {prefix && (
+            <div className={cn(
+              "flex items-center px-4 border border-r-0 rounded-l-xl bg-background/50 text-muted-foreground text-xs font-black uppercase tracking-widest transition-colors",
+              error ? "border-rose-500/50 text-rose-500" : "border-border/50"
+            )}>
+              {prefix}
+            </div>
+          )}
+          <div className="relative flex-1">
+            <Icon className={cn(
+              "absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 z-10 pointer-events-none transition-all",
+              error 
+                ? "text-rose-500 opacity-100" 
+                : "text-muted-foreground opacity-40 group-focus-within:text-primary group-focus-within:opacity-100"
+            )} />
+            <div className={cn(
+              "relative [&>input]:transition-all [&>select]:transition-all [&>button]:transition-all",
+              prefix ? "[&>input]:rounded-l-none [&>select]:rounded-l-none [&>button]:rounded-l-none" : "",
+              error 
+                ? "[&>input]:border-rose-500 [&>input]:focus:ring-rose-500/20 [&>input]:focus:border-rose-500 [&>button]:border-rose-500 [&>button]:focus:ring-rose-500/20" 
+                : ""
+            )}>
+              {children}
+            </div>
           </div>
         </div>
+        {error && (
+          <span 
+            role="alert" 
+            aria-live="polite" 
+            className="text-[10px] font-black text-rose-500 uppercase tracking-widest mt-1.5 animate-in fade-in slide-in-from-top-1 duration-200"
+          >
+            {error}
+          </span>
+        )}
       </div>
     </div>
   )
@@ -51,17 +83,18 @@ interface TimeZoneSelectProps {
   value: string
   onValueChange: (value: string) => void
   timezones: any[]
+  disabled?: boolean
 }
 
-export function TimeZoneSelect({ value, onValueChange, timezones }: TimeZoneSelectProps) {
+export function TimeZoneSelect({ value, onValueChange, timezones, disabled = false }: TimeZoneSelectProps) {
   const groups = [
     { label: "América", filter: (tz: any) => tz.value.startsWith("America/") },
     { label: "Otros", filter: (tz: any) => !tz.value.startsWith("America/") },
   ]
 
   return (
-    <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className="bg-background/50 border-border/50 rounded-xl h-11 pl-11 text-sm font-bold focus:ring-primary/20 hover:bg-background/80 transition-all">
+    <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+      <SelectTrigger id="timezone" data-testid="select-timezone" className="bg-background/50 border-border/50 rounded-xl h-11 pl-11 text-sm font-bold focus:ring-primary/20 hover:bg-background/80 transition-all">
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="bg-card/95 backdrop-blur-xl border-border/50 rounded-2xl shadow-2xl max-h-[300px]">

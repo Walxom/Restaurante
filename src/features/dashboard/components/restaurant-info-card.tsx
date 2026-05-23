@@ -8,9 +8,11 @@ interface RestaurantInfoCardProps {
   config: any
   onChange: (field: any, value: any) => void
   formatPhone: (value: string) => string
+  errors?: Record<string, string>
+  isSaving?: boolean
 }
 
-export function RestaurantInfoCard({ config, onChange, formatPhone }: RestaurantInfoCardProps) {
+export function RestaurantInfoCard({ config, onChange, formatPhone, errors = {}, isSaving = false }: RestaurantInfoCardProps) {
   if (!config) return null
 
   return (
@@ -32,18 +34,24 @@ export function RestaurantInfoCard({ config, onChange, formatPhone }: Restaurant
       </div>
       <div className="p-6 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <ConfigField label="Nombre Comercial" icon={Building2}>
+          <ConfigField id="companyName" label="Nombre Comercial" icon={Building2} error={errors.companyName}>
             <Input 
-              value={config.companyName} 
+              id="companyName"
+              value={config.companyName || ""} 
               onChange={(e) => onChange("companyName", e.target.value)} 
+              disabled={isSaving}
+              data-testid="input-company-name"
               className="pl-11 h-11 bg-background/50 border-border/50 rounded-xl focus:ring-primary/20 transition-all hover:bg-background/80 font-bold" 
             />
           </ConfigField>
 
-          <ConfigField label="RUC / Identificación" icon={FileText}>
+          <ConfigField id="companyRuc" label="RUC / Identificación" icon={FileText} error={errors.companyRuc}>
             <Input 
+              id="companyRuc"
               value={config.companyRuc || ""} 
               onChange={(e) => onChange("companyRuc", e.target.value)} 
+              disabled={isSaving}
+              data-testid="input-company-ruc"
               className="pl-11 h-11 bg-background/50 border-border/50 rounded-xl focus:ring-primary/20 transition-all hover:bg-background/80 font-bold font-mono" 
               maxLength={11} 
             />
@@ -51,19 +59,25 @@ export function RestaurantInfoCard({ config, onChange, formatPhone }: Restaurant
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <ConfigField label="Teléfono" icon={Phone} prefix="+51">
+          <ConfigField id="companyPhone" label="Teléfono" icon={Phone} prefix="+51" error={errors.companyPhone}>
             <Input 
+              id="companyPhone"
               value={config.companyPhone ? config.companyPhone.replace('+51 ', '') : ""} 
               onChange={(e) => onChange("companyPhone", e.target.value ? `+51 ${formatPhone(e.target.value)}` : "")} 
+              disabled={isSaving}
+              data-testid="input-company-phone"
               className="pl-11 h-11 bg-background/50 border-border/50 rounded-xl focus:ring-primary/20 transition-all hover:bg-background/80 font-bold" 
               maxLength={11} 
             />
           </ConfigField>
 
-          <ConfigField label="Dirección Fiscal" icon={MapPin}>
+          <ConfigField id="companyAddress" label="Dirección Fiscal" icon={MapPin} error={errors.companyAddress}>
             <Input 
+              id="companyAddress"
               value={config.companyAddress || ""} 
               onChange={(e) => onChange("companyAddress", e.target.value)} 
+              disabled={isSaving}
+              data-testid="input-company-address"
               className="pl-11 h-11 bg-background/50 border-border/50 rounded-xl focus:ring-primary/20 transition-all hover:bg-background/80 font-bold text-xs" 
             />
           </ConfigField>
