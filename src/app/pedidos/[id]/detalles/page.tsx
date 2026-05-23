@@ -96,11 +96,11 @@ export default function OrderDetailPage() {
 
   if (error === "NOT_FOUND" || !order) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-screen bg-background">
+      <div className="flex flex-col justify-center items-center min-h-screen bg-background animate-in fade-in duration-500">
         <div className="text-center space-y-6">
-           <Search className="w-16 h-16 text-muted-foreground mx-auto opacity-20" />
-           <h2 className="text-2xl font-black text-rose-600 uppercase tracking-tighter">Pedido no encontrado</h2>
-          <Button onClick={() => router.push("/pedidos")} className="bg-blue-600 hover:bg-blue-700 h-12 rounded-2xl px-8 font-black uppercase tracking-widest">
+          <Search className="w-16 h-16 text-muted-foreground mx-auto opacity-20 animate-pulse" />
+          <h2 className="text-xl font-black text-rose-600 uppercase tracking-widest">Pedido no encontrado</h2>
+          <Button onClick={() => router.push("/pedidos")} className="bg-primary hover:bg-primary/95 text-primary-foreground h-11 rounded-xl px-6 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300">
             Volver a Pedidos
           </Button>
         </div>
@@ -110,56 +110,62 @@ export default function OrderDetailPage() {
 
   return (
     <RoleGuard allowedRoles={["MESERO", "JEFE"]}>
-      <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card/40 backdrop-blur-md border-b border-border/50 sticky top-0 z-10">
-        <div className="max-w-[1600px] mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Button 
-                onClick={() => router.push("/pedidos")} 
-                variant="ghost"
-                className="text-muted-foreground hover:text-foreground h-12 w-12 rounded-2xl bg-foreground/5"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="flex items-center gap-4">
-                <div className="flex flex-col">
-                  <h1 className="text-2xl font-black text-foreground tracking-tighter">
-                    Pedido #{order.orderNumber}
-                  </h1>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(order.status)}`}>
-                      {getStatusText(order.status)}
-                    </span>
-                    <span className="text-xs text-muted-foreground font-bold">
-                      {getOrderTypeLabel(order.type, order.table?.number)}
-                    </span>
+      <div className="min-h-screen bg-background transition-colors duration-500">
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col">
+          <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50 transition-all duration-300">
+            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                <Button 
+                  onClick={() => router.push("/pedidos")} 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-9 w-9 shrink-0 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all duration-300"
+                  aria-label="Volver al panel"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="hidden sm:flex h-10 w-10 shrink-0 rounded-2xl bg-primary/10 items-center justify-center border border-primary/20">
+                    <FileText className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <h1 className="text-xs sm:text-sm md:text-base font-black text-foreground uppercase tracking-widest truncate">
+                      Pedido #{order.orderNumber}
+                    </h1>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${getStatusColor(order.status)}`}>
+                        {getStatusText(order.status)}
+                      </span>
+                      <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
+                        {getOrderTypeLabel(order.type, order.table?.number)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                {['PENDING', 'CONFIRMED', 'SERVED'].includes(order.status) && (
-                  <Button
-                    onClick={() => router.push(`/pedidos/${order.id}/edit`)}
-                    variant="outline"
-                    className="h-10 rounded-xl bg-blue-500/10 text-blue-500 border-blue-500/20 font-black uppercase tracking-widest text-[9px] hover:bg-blue-500 hover:text-white transition-all ml-4"
-                  >
-                    <Plus className="w-3.5 h-3.5 mr-2" />
-                    Modificar Pedido
-                  </Button>
-                )}
               </div>
+              {['PENDING', 'CONFIRMED', 'SERVED'].includes(order.status) && (
+                <Button
+                  onClick={() => router.push(`/pedidos/${order.id}/edit`)}
+                  size="sm"
+                  className="h-9 px-3 sm:px-4 bg-primary hover:bg-primary/95 text-primary-foreground rounded-xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300"
+                >
+                  <Plus className="w-3.5 h-3.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Modificar Pedido</span>
+                  <span className="sm:hidden">Modificar</span>
+                </Button>
+              )}
             </div>
-          </div>
-        </div>
-      </header>
+          </header>
 
       <main className="max-w-[1600px] mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Información del Pedido */}
           <div className="lg:col-span-1 space-y-8">
-            <div className="bg-card/40 backdrop-blur-md rounded-[2.5rem] p-8 border border-border/50 shadow-xl">
-              <h2 className="text-lg font-black text-foreground uppercase tracking-widest mb-6 flex items-center gap-3">
-                <Clock className="h-5 w-5 text-blue-500" />
+            <div className="bg-card/40 backdrop-blur-md rounded-[2.5rem] p-8 border border-border/50 shadow-sm transition-all duration-500 hover:shadow-md animate-in fade-in slide-in-from-bottom-4">
+              <h2 className="text-sm font-black text-foreground uppercase tracking-widest mb-6 flex items-center gap-3">
+                <Clock className="h-5 w-5 text-primary animate-pulse" />
                 Detalles
               </h2>
               
@@ -174,7 +180,7 @@ export default function OrderDetailPage() {
                 <div className="grid gap-1">
                   <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Atendido por</label>
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-500">
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary">
                       <User className="h-4 w-4" />
                     </div>
                     <p className="font-bold text-foreground">{order.user.name}</p>
@@ -304,6 +310,7 @@ export default function OrderDetailPage() {
         confirmText="Imprimir"
         cancelText="Cancelar"
       />
+        </div>
       </div>
     </RoleGuard>
   )
