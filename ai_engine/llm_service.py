@@ -123,7 +123,7 @@ class LLMService:
             contents=prompt,
             config={
                 "temperature": 0.4,
-                "max_output_tokens": 200,
+                "max_output_tokens": 1024,
                 "top_p": 0.8,
             }
         )
