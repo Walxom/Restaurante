@@ -28,6 +28,7 @@ class LLMService:
         self.last_failure_time = 0.0
 
         self.client = None
+        self._gemini_model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
         self._narrative_cache: dict[str, dict] = {}
 
         if self.api_key:
@@ -156,7 +157,7 @@ class LLMService:
 
             try:
                 response = self.client.models.generate_content(
-                    model="gemini-3.1-flash-lite",
+                    model=self._gemini_model,
                     contents=prompt,
                     config=types.GenerateContentConfig(
                         temperature=0.4,
@@ -166,7 +167,7 @@ class LLMService:
                 )
             except NameError:
                 response = self.client.models.generate_content(
-                    model="gemini-3.1-flash-lite",
+                    model=self._gemini_model,
                     contents=prompt,
                     config={
                         "temperature": 0.4,
