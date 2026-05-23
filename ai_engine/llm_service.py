@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import time
 import hashlib
 from datetime import datetime
@@ -25,6 +26,9 @@ class LLMService:
 
         self.client = None
         self._narrative_cache: dict[str, dict] = {}
+        self._last_call_time = 0.0
+        self._min_call_interval = 3.0
+
         if self.api_key:
             try:
                 from google import genai
@@ -116,6 +120,24 @@ class LLMService:
 
         return "Insight no disponible en este momento."
 
+    def _rate_limit(self):
+        now = time.time()
+        elapsed = now - self._last_call_time
+        if elapsed < self._min_call_interval:
+            wait = self._min_call_interval - elapsed
+            print(f"[LLM] Rate limit interno: esperando {wait:.1f}s...")
+            time.sleep(wait)
+        self._last_call_time = time.time()
+
+    def _parse_retry_delay(self, error_str: str) -> int:
+        try:
+            m = re.search(r'retryDelay["\s:]+(\d+)', error_str)
+            if m:
+                return int(m.group(1))
+        except Exception:
+            pass
+        return 35
+
     def _call_gemini_api(self, prompt: str) -> str:
         if not self.client:
             raise RuntimeError("Gemini no configurado (sin client)")
@@ -125,44 +147,67 @@ class LLMService:
         except ImportError:
             pass
 
-        try:
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.4,
-                    max_output_tokens=2048,
-                    top_p=0.8,
-                ),
-            )
-        except NameError:
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config={
-                    "temperature": 0.4,
-                    "max_output_tokens": 2048,
-                    "top_p": 0.8,
-                }
-            )
+        max_retries = 2
+        last_error = None
 
-        finish_reason = "unknown"
-        text = ""
-        try:
-            if response.candidates:
-                c = response.candidates[0]
-                finish_reason = str(c.finish_reason) if hasattr(c, 'finish_reason') else "unknown"
-                for part in c.content.parts if hasattr(c, 'content') else []:
-                    if hasattr(part, 'text') and part.text:
-                        text += part.text
-        except Exception:
-            text = response.text if hasattr(response, 'text') else ""
+        for attempt in range(max_retries + 1):
+            self._rate_limit()
 
-        if not text:
-            raise RuntimeError(f"Respuesta vacia de Gemini (finish_reason={finish_reason})")
+            try:
+                response = self.client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.4,
+                        max_output_tokens=2048,
+                        top_p=0.8,
+                    ),
+                )
+            except NameError:
+                response = self.client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
+                    config={
+                        "temperature": 0.4,
+                        "max_output_tokens": 2048,
+                        "top_p": 0.8,
+                    }
+                )
+            except Exception as e:
+                error_str = str(e)
+                is_rate_limit = "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str
 
-        print(f"[LLM] Respuesta Gemini: {len(text)} chars, finish_reason={finish_reason}")
-        return text
+                if is_rate_limit and attempt < max_retries:
+                    delay = self._parse_retry_delay(error_str)
+                    print(f"[LLM] 429 Rate limit: esperando {delay}s (intento {attempt + 1}/{max_retries + 1})...")
+                    time.sleep(delay)
+                    last_error = e
+                    continue
+                elif is_rate_limit:
+                    delay = self._parse_retry_delay(error_str)
+                    raise RuntimeError(f"Rate limit 429 tras {max_retries} reintentos. Espera {delay}s.")
+                else:
+                    raise
+
+            finish_reason = "unknown"
+            text = ""
+            try:
+                if response.candidates:
+                    c = response.candidates[0]
+                    finish_reason = str(c.finish_reason) if hasattr(c, 'finish_reason') else "unknown"
+                    for part in c.content.parts if hasattr(c, 'content') else []:
+                        if hasattr(part, 'text') and part.text:
+                            text += part.text
+            except Exception:
+                text = response.text if hasattr(response, 'text') else ""
+
+            if not text:
+                raise RuntimeError(f"Respuesta vacia de Gemini (finish_reason={finish_reason})")
+
+            print(f"[LLM] Respuesta Gemini: {len(text)} chars, finish_reason={finish_reason}")
+            return text
+
+        raise RuntimeError(f"Gemini no disponible tras {max_retries} reintentos")
 
     def _cache_key(self, ml_data: dict) -> str:
         raw = json.dumps(ml_data, sort_keys=True, ensure_ascii=False)
@@ -214,8 +259,13 @@ class LLMService:
                 return result
 
             except Exception as e:
-                print(f"[LLM] Error llamando a Gemini: {e}")
-                self._record_failure()
+                error_str = str(e)
+                is_rate_limit = "429" in error_str or "Rate limit" in error_str or "RESOURCE_EXHAUSTED" in error_str
+                if is_rate_limit:
+                    print(f"[LLM] 429 rate limit agotado, usando fallback.")
+                else:
+                    print(f"[LLM] Error llamando a Gemini: {e}")
+                    self._record_failure()
 
         mensaje = self._select_template(insight_type, ml_data)
         result = {
