@@ -18,9 +18,9 @@
     "db:setup": "pnpm prisma db push && pnpm db:seed",
     "test": "vitest run",
     "test:watch": "vitest",
-    "ai:install": "pip install -r ai_engine/requirements.txt",
-    "ai:generate": "python -m ai_engine.scripts.generate_synthetic_data",
-    "ai:start": "uvicorn ai_engine.main:app --reload --host 0.0.0.0 --port 8000",
+    "ai:setup": "node ai_engine/scripts/setup_env.js",
+    "ai:generate": ".\\ai_engine\\venv\\Scripts\\python.exe -m ai_engine.scripts.generate_synthetic_data",
+    "ai:start": ".\\ai_engine\\venv\\Scripts\\uvicorn.exe ai_engine.main:app --reload --host 0.0.0.0 --port 8000",
     "dev:ai": "concurrently \"pnpm dev\" \"pnpm ai:start\"",
     "dev:ai:next": "concurrently \"pnpm dev:next\" \"pnpm ai:start\""
   },

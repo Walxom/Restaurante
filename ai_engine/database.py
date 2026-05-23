@@ -51,7 +51,6 @@ def get_connection() -> sqlite3.Connection:
     db_path = get_database_path()
     conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode = WAL;")
     return conn
 
 
