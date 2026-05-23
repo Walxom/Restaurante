@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/scratch
 
 # next.js
 /.next/
@@ -43,7 +44,13 @@ next-env.d.ts
 /src/generated/prisma
     
 prisma/dev.db
+prisma/dev.db-shm
+prisma/dev.db-wal
 .env
+ai_engine/.env
+ai_engine/cache/
+ai_engine/__pycache__/
+ai_engine/**/__pycache__/
 scripts/
 
 .agents/

@@ -11,7 +11,7 @@ import { DashboardPageHeader } from "@/components/layout/DashboardPageHeader"
 import InvoiceWidget from "@/components/dashboard/InvoiceWidget"
 import PedidosPorServirWidget from "@/components/dashboard/PedidosPorServirWidget"
 import PedidosServidosWidget from "@/components/dashboard/PedidosServidosWidget"
-import { Users, TrendingUp, Package, DollarSign, Plus, Eye, LogOut, Truck, Clock, ArrowUp, ArrowDown, Activity, Utensils, CheckCircle2, AlertCircle, FileText, Printer, Settings, BookOpen } from "lucide-react"
+import { Users, TrendingUp, Package, DollarSign, Plus, Eye, LogOut, Truck, Clock, ArrowUp, ArrowDown, Activity, Utensils, CheckCircle2, AlertCircle, FileText, Printer, Settings, BookOpen, Brain } from "lucide-react"
 import { useCompanyName, useSystemConfig } from "@/features/dashboard/hooks/useSystemConfig"
 import ActionCard from "@/components/dashboard/ActionCard"
 import { useDashboardStats } from "@/features/dashboard/hooks/useDashboardStats"
@@ -65,6 +65,7 @@ export default function DashboardPage() {
   const navigateToFacturacion = () => navigateWithLoading("/dashboard/facturacion")
   const navigateToVentas = () => navigateWithLoading("/dashboard/ventas")
   const navigateToImpresion = () => navigateWithLoading("/impresion")
+  const navigateToInteligencia = () => navigateWithLoading("/dashboard/inteligencia")
 
 
   return (
@@ -83,6 +84,7 @@ export default function DashboardPage() {
         <Link href="/dashboard/ventas" prefetch={true}><span></span></Link>
         <Link href="/impresion" prefetch={true}><span></span></Link>
         <Link href="/dashboard/configuracion" prefetch={true}><span></span></Link>
+        <Link href="/dashboard/inteligencia" prefetch={true}><span></span></Link>
       </div>
 
       {/* Header minimalista */}
@@ -247,6 +249,7 @@ export default function DashboardPage() {
                   { label: 'Comprobantes', icon: FileText, color: 'indigo' as ActionColor, onClick: navigateToFacturacion },
                   { label: 'Ventas', icon: TrendingUp, color: 'pink' as ActionColor, onClick: navigateToVentas },
                   { label: 'Impresión', icon: Printer, color: 'teal' as ActionColor, onClick: navigateToImpresion },
+                  { label: 'IA', icon: Brain, color: 'purple' as ActionColor, onClick: navigateToInteligencia },
                   { label: 'Config', icon: Settings, color: 'gray' as ActionColor, onClick: navigateToConfig },
                 ].map((action) => (
                   <QuickActionButton
