@@ -2,14 +2,19 @@ const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
 const { Server } = require('socket.io')
-const path = require('path')
 
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = 'localhost'
 const port = process.env.PORT || 3001
 
-// Cuando esté listo Next.js, creamos el servidor HTTP y Socket.IO
-const app = next({ dev, hostname, port })
+// En dev activamos Turbopack para compilaciones hasta 10x más rápidas
+const app = next({
+  dev,
+  hostname,
+  port,
+  // Turbopack solo aplica en desarrollo; en producción se ignora esta opción
+  turbopack: dev,
+})
 
 const handle = app.getRequestHandler()
 
@@ -35,25 +40,26 @@ app.prepare().then(() => {
 
   // Manejar conexiones Socket.IO
   io.on('connection', (socket) => {
-    console.log('🔌 Cliente conectado:', socket.id)
+    // Solo logueamos conexiones en desarrollo para no saturar la consola
+    if (dev) {
+      console.log('🔌 Cliente conectado:', socket.id)
+    }
 
     // Unir automáticamente a la sala de pedidos
     socket.join('orders')
-    console.log('📋 Cliente unido a sala de pedidos')
 
-    // Manejar eventos personalizados
     socket.on('join_room', (room) => {
       socket.join(room)
-      console.log(`🏠 Cliente ${socket.id} se unió a la sala: ${room}`)
     })
 
     socket.on('leave_room', (room) => {
       socket.leave(room)
-      console.log(`🚪 Cliente ${socket.id} salió de la sala: ${room}`)
     })
 
     socket.on('disconnect', () => {
-      console.log('❌ Cliente desconectado:', socket.id)
+      if (dev) {
+        console.log('❌ Cliente desconectado:', socket.id)
+      }
     })
   })
 
@@ -66,12 +72,9 @@ app.prepare().then(() => {
       process.exit(1)
     })
     .listen(port, async () => {
-      console.log(`🚀 Servidor listo en http://${hostname}:${port}`)
+      const turboMsg = dev ? ' ⚡ (Turbopack)' : ''
+      console.log(`🚀 Servidor listo en http://${hostname}:${port}${turboMsg}`)
       console.log(`🔌 Socket.IO listo en puerto ${port}`)
-
-      // Se ha desactivado el inicio forzado. 
-      // El inicio ahora es inteligente y basado en la base de datos.
-      // await initializeThermalPrintService()
     })
 })
 
@@ -79,14 +82,12 @@ app.prepare().then(() => {
 function emitToRoom(room, event, data) {
   if (global.io) {
     global.io.to(room).emit(event, data)
-    console.log(`📡 Evento '${event}' emitido a sala '${room}':`, data)
   }
 }
 
 function emitToAll(event, data) {
   if (global.io) {
     global.io.emit(event, data)
-    console.log(`📡 Evento '${event}' emitido a todos:`, data)
   }
 }
 

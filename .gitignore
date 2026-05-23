@@ -51,6 +51,7 @@ ai_engine/.env
 ai_engine/cache/
 ai_engine/__pycache__/
 ai_engine/**/__pycache__/
+ai_engine/venv/
 scripts/
 
 .agents/

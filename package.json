@@ -3,9 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
+    "dev": "cross-env UV_THREADPOOL_SIZE=16 node --max-old-space-size=4096 server.js",
     "dev:next": "next dev --turbopack",
-    "dev:optimized": "cross-env UV_THREADPOOL_SIZE=32 NODE_MAX_WORKERS=16 TURBOPACK=1 node --max-old-space-size=16384 server.js",
     "build": "next build",
     "build:optimized": "cross-env NODE_OPTIONS='--max-old-space-size=16384' next build",
     "start": "cross-env NODE_ENV=production node server.js",
