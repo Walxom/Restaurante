@@ -88,3 +88,24 @@ export interface AiEngineHealth {
   trained: boolean
   timestamp: number
 }
+
+// === Chat types ===
+
+export interface ChatMessage {
+  role: "user" | "assistant"
+  content: string
+  timestamp?: string
+  type?: "llm" | "fallback" | "error"
+}
+
+export interface ChatRequest {
+  message: string
+  history?: Array<{ role: string; content: string }>
+}
+
+export interface ChatResponse {
+  role: "assistant"
+  content: string
+  timestamp: string
+  type: "llm" | "fallback" | "error"
+}

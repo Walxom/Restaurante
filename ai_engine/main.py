@@ -18,8 +18,10 @@ if env_path.exists():
     load_dotenv(env_path)
 
 from ai_engine.services.insight_service import InsightService
+from ai_engine.chat_service import ChatService
 
 insight_service = InsightService()
+chat_service = ChatService()
 
 
 @asynccontextmanager
@@ -57,6 +59,11 @@ class ForecastRequest(BaseModel):
 
 class MarketBasketRequest(BaseModel):
     productId: Optional[str] = None
+
+
+class ChatRequest(BaseModel):
+    message: str
+    history: Optional[list[dict]] = None
 
 
 @app.get("/health")
@@ -133,6 +140,20 @@ async def retrain_market_basket():
         return {"status": "ok", "message": f"Reglas de asociacion recalculadas con {len(transactions)} transacciones."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/chat")
+async def chat(req: ChatRequest):
+    try:
+        result = chat_service.chat(req.message, req.history)
+        return result
+    except Exception as e:
+        return {
+            "role": "assistant",
+            "content": f"Lo siento, ocurrio un error al procesar tu pregunta: {str(e)[:100]}",
+            "timestamp": time.time(),
+            "type": "error"
+        }
 
 
 if __name__ == "__main__":

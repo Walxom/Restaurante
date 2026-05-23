@@ -3,6 +3,7 @@
 import ForecastChart from "./ForecastChart"
 import InventoryAlertPanel from "./InventoryAlertPanel"
 import MarketBasketSuggestions from "./MarketBasketSuggestions"
+import AiChatPanel from "./AiChatPanel"
 import { useAiHealth } from "@/features/ai-analytics/hooks/useAiInsights"
 import { Brain, Wifi, WifiOff, RefreshCw } from "lucide-react"
 import { RoleGuard } from "@/components/auth/role-guard"
@@ -75,6 +76,11 @@ export default function AiDashboard() {
             </div>
 
             <MarketBasketSuggestions />
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+              <AiChatPanel />
+              <div className="hidden xl:block" />
+            </div>
           </main>
         </div>
       </div>
