@@ -20,7 +20,7 @@ export interface RecipeDto {
   instructions?: string | null
   prepTime?: number | null
   servings?: number | null
-  ingredients?: RecipeIngredientDto[]
+  ingredients?: RecipeIngredientDto[] | null
 }
 
 export interface CreateProductDto {
@@ -29,7 +29,7 @@ export interface CreateProductDto {
   price: number
   categoryId: string
   isAvailable?: boolean
-  recipe?: RecipeDto
+  recipe?: RecipeDto | null
 }
 
 export interface UpdateProductDto {
@@ -39,7 +39,7 @@ export interface UpdateProductDto {
   categoryId?: string
   isAvailable?: boolean
   isActive?: boolean
-  recipe?: RecipeDto
+  recipe?: RecipeDto | null
 }
 
 export interface ProductFilters {

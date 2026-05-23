@@ -39,6 +39,16 @@ export interface SalesStats {
     orders: number
     revenue: number
   }>
+  paymentMethods?: Array<{
+    method: string
+    count: number
+    revenue: number
+  }>
+  orderTypes?: Array<{
+    type: string
+    count: number
+    revenue: number
+  }>
 }
 
 interface UseSalesProps {

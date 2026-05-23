@@ -2,7 +2,7 @@ import { z } from "zod"
 
 export const systemConfigSchema = z.object({
   companyName: z
-    .string({ required_error: "El nombre comercial es requerido" })
+    .string({ message: "El nombre comercial es requerido" })
     .min(2, "El nombre comercial debe tener al menos 2 caracteres")
     .max(100, "El nombre comercial no puede exceder los 100 caracteres"),
   
@@ -32,16 +32,14 @@ export const systemConfigSchema = z.object({
     .or(z.literal("")),
 
   taxRate: z
-    .number({ required_error: "El IGV es requerido" })
+    .number({ message: "El IGV es requerido" })
     .min(0, "La tasa de IGV no puede ser menor al 0%")
     .max(0.30, "La tasa de IGV no puede ser mayor al 30% (0.30)"),
 
-  currency: z.enum(["PEN", "USD", "EUR", "CLP", "COP", "MXN"], {
-    errorMap: () => ({ message: "La moneda seleccionada no es compatible" }),
-  }),
+  currency: z.enum(["PEN", "USD", "EUR", "CLP", "COP", "MXN"]),
 
   timezone: z
-    .string({ required_error: "La zona horaria es requerida" })
+    .string({ message: "La zona horaria es requerida" })
     .min(1, "La zona horaria es requerida"),
 })
 

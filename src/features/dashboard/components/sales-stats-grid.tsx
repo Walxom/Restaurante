@@ -24,8 +24,8 @@ export function SalesStatsGrid({ stats }: SalesStatsGridProps) {
       glow: "shadow-emerald-500/20"
     },
     {
-      title: "Total Pedidos",
-      value: stats.totalOrders.toString(),
+      title: "Ticket Promedio",
+      value: formatCurrency(stats.averageTicket),
       icon: ShoppingCart,
       color: "from-blue-500 to-indigo-600",
       glow: "shadow-blue-500/20"

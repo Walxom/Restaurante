@@ -96,7 +96,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Obtener ventas paginadas y estadísticas completas por separado
-    const [sales, totalOrders, allSalesForStats] = await Promise.all([
+    const [
+      sales,
+      totalOrders,
+      allSalesForStats,
+      topProductsRaw,
+      topWaitersRaw,
+      paymentMethodsRaw
+    ] = await Promise.all([
       // Ventas paginadas para mostrar en la tabla
       prisma.order.findMany({
         where: {
@@ -129,7 +136,66 @@ export async function GET(request: NextRequest) {
         },
         select: {
           status: true,
+          totalAmount: true,
+          createdAt: true,
+          type: true
+        }
+      }),
+      // Productos más vendidos
+      prisma.orderItem.groupBy({
+        by: ["productId"],
+        where: {
+          order: {
+            status: "COMPLETED",
+            createdAt: { gte: startDate, lte: endDate }
+          }
+        },
+        _sum: {
+          quantity: true,
+          subtotal: true
+        },
+        orderBy: {
+          _sum: {
+            quantity: "desc"
+          }
+        },
+        take: 5
+      }),
+      // Rendimiento de meseros (Top Waiters)
+      prisma.order.groupBy({
+        by: ["userId"],
+        where: {
+          status: "COMPLETED",
+          createdAt: { gte: startDate, lte: endDate }
+        },
+        _count: {
+          id: true
+        },
+        _sum: {
           totalAmount: true
+        },
+        orderBy: {
+          _sum: {
+            totalAmount: "desc"
+          }
+        },
+        take: 5
+      }),
+      // Métodos de pago de las facturas emitidas para pedidos completados
+      prisma.invoice.groupBy({
+        by: ["paymentMethod"],
+        where: {
+          status: "ISSUED",
+          order: {
+            status: "COMPLETED",
+            createdAt: { gte: startDate, lte: endDate }
+          }
+        },
+        _count: {
+          id: true
+        },
+        _sum: {
+          total: true
         }
       })
     ])
@@ -144,6 +210,72 @@ export async function GET(request: NextRequest) {
     const totalCancelled = cancelledSales.length
     const averageTicket = completedSales.length > 0 ? totalSales / completedSales.length : 0
 
+    // Consultar nombres de productos y meseros en paralelo para resolver IDs
+    const productIds = topProductsRaw.map(p => p.productId)
+    const userIds = topWaitersRaw.map(w => w.userId)
+
+    const [products, users] = await Promise.all([
+      prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, name: true }
+      }),
+      prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, name: true }
+      })
+    ])
+
+    // Resolver Top Products
+    const topProducts = topProductsRaw.map(item => {
+      const prod = products.find(p => p.id === item.productId)
+      return {
+        name: prod?.name || "Producto desconocido",
+        quantity: item._sum.quantity || 0,
+        revenue: Number(item._sum.subtotal || 0)
+      }
+    })
+
+    // Resolver Top Waiters
+    const topWaiters = topWaitersRaw.map(item => {
+      const user = users.find(u => u.id === item.userId)
+      return {
+        name: user?.name || "Usuario desconocido",
+        orders: item._count.id || 0,
+        revenue: Number(item._sum.totalAmount || 0)
+      }
+    })
+
+    // Resolver Payment Methods
+    const paymentMethods = paymentMethodsRaw.map(item => ({
+      method: item.paymentMethod,
+      count: item._count.id || 0,
+      revenue: Number(item._sum.total || 0)
+    }))
+
+    // Calcular en memoria Ventas por Tipo de Atención
+    const typeMap = new Map<string, { count: number; revenue: number }>()
+    for (const sale of completedSales) {
+      const type = sale.type || "MESA"
+      const existing = typeMap.get(type) || { count: 0, revenue: 0 }
+      typeMap.set(type, {
+        count: existing.count + 1,
+        revenue: existing.revenue + Number(sale.totalAmount)
+      })
+    }
+    const orderTypes = Array.from(typeMap.entries()).map(([type, data]) => ({
+      type,
+      count: data.count,
+      revenue: data.revenue
+    }))
+
+    // Calcular en memoria Ventas por Hora (Peak Hours)
+    const hourMap = Array.from({ length: 24 }, (_, i) => ({ hour: i, sales: 0, orders: 0 }))
+    for (const sale of completedSales) {
+      const hour = new Date(sale.createdAt).getHours()
+      hourMap[hour].sales += Number(sale.totalAmount)
+      hourMap[hour].orders += 1
+    }
+
     return NextResponse.json({
       sales,
       stats: { 
@@ -151,7 +283,12 @@ export async function GET(request: NextRequest) {
         totalOrders, 
         averageTicket,
         completedOrders: completedSales.length,
-        cancelledOrders: totalCancelled
+        cancelledOrders: totalCancelled,
+        topProducts,
+        topWaiters,
+        paymentMethods,
+        orderTypes,
+        salesByHour: hourMap
       },
       totalPages
     })
