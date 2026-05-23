@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react"
 import type { ChatMessage } from "@/features/ai-analytics/types/ai.types"
 
-const AI_ENGINE_URL = process.env.NEXT_PUBLIC_AI_ENGINE_URL || "http://localhost:8000"
+const AI_ENGINE_URL = "http://localhost:8000"
 
 export function useAiChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([{
