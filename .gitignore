@@ -47,5 +47,8 @@ prisma/dev.db
 scripts/
 
 .agents/
+
+# DOCUMENTASAO
+
 docs/
 architecture_refactoring_plan.md

@@ -2,9 +2,6 @@
  * @service ingredient.service.ts
  * Capa de servicios para la gestión de ingredientes/inventario.
  * Centraliza la lógica de negocio que antes vivía dispersa en las API routes.
- *
- * USO: Importar desde las API routes para separar lógica de negocio del transporte HTTP.
- * NUNCA importar directamente desde componentes React (solo desde rutas de API o server actions).
  */
 
 import { prisma } from "@/lib/prisma"
@@ -14,59 +11,156 @@ import { prisma } from "@/lib/prisma"
 export interface CreateIngredientDto {
   name: string
   unit: string
+  unitCategory?: string | null
   currentStock: number
   minStock: number
+  maxStock?: number | null
+  cost?: number | null
   categoryId?: string | null
 }
 
 export interface UpdateIngredientDto {
   name?: string
   unit?: string
+  unitCategory?: string | null
   currentStock?: number
   minStock?: number
+  maxStock?: number | null
+  cost?: number | null
   categoryId?: string | null
   isActive?: boolean
 }
 
-export interface StockAdjustmentDto {
-  ingredientId: string
-  adjustment: number
-  reason?: string
+export interface IngredientFilters {
+  search?: string | null
+  stockFilter?: string | null // 'all', 'low', 'critical', 'ok', 'empty'
+  categoryId?: string | null
+  minCost?: number | null
+  maxCost?: number | null
+  sortBy?: string | null
+  sortOrder?: 'asc' | 'desc'
+  page?: number
+  limit?: number
 }
 
-export interface BulkStockAdjustmentDto {
-  adjustments: StockAdjustmentDto[]
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Calcula el estado visual y semántico del stock de un ingrediente.
+ */
+export function calculateStockStatus(currentStock: number, minStock: number) {
+  const stockPercentage = minStock > 0 ? (currentStock / minStock) : (currentStock > 0 ? 2 : 0)
+  let status = 'ok'
+  let statusColor = 'green'
+  let statusText = 'Stock OK'
+
+  if (currentStock <= 0) {
+    status = 'empty'
+    statusColor = 'gray'
+    statusText = 'Agotado'
+  } else if (stockPercentage <= 0.2) {
+    status = 'critical'
+    statusColor = 'red'
+    statusText = 'Stock Crítico'
+  } else if (stockPercentage <= 1) {
+    status = 'low'
+    statusColor = 'yellow'
+    statusText = 'Stock Bajo'
+  }
+
+  return {
+    status,
+    statusColor,
+    statusText,
+    stockPercentage: Math.round(stockPercentage * 100)
+  }
 }
 
 // ─── Consultas ───────────────────────────────────────────────────────────────
 
 /**
- * Devuelve todos los ingredientes activos con su categoría.
+ * Devuelve ingredientes basados en filtros complejos y paginación.
  */
-export async function findAllActive() {
-  return prisma.ingredient.findMany({
-    where: { isActive: true },
-    include: { category: true },
-    orderBy: { name: "asc" },
-  })
+export async function findMany(filters: IngredientFilters) {
+  const { 
+    page = 1, 
+    limit = 20, 
+    search, 
+    categoryId, 
+    minCost, 
+    maxCost, 
+    stockFilter, 
+    sortBy = 'name', 
+    sortOrder = 'asc' 
+  } = filters
+  
+  const skip = (page - 1) * limit
+
+  const where: any = { isActive: true }
+  
+  if (search) {
+    where.name = { contains: search }
+  }
+
+  if (categoryId && categoryId !== 'all') {
+    where.categoryId = categoryId
+  }
+
+  if (minCost !== undefined || maxCost !== undefined) {
+    where.cost = {}
+    if (minCost !== null && minCost !== undefined) where.cost.gte = minCost
+    if (maxCost !== null && maxCost !== undefined) where.cost.lte = maxCost
+  }
+
+  // Stock Filter en Prisma (si es posible)
+  if (stockFilter === 'empty') {
+    where.currentStock = { lte: 0 }
+  }
+
+  const orderBy: any = {}
+  orderBy[sortBy as string] = sortOrder
+
+  const [ingredients, totalCount] = await Promise.all([
+    prisma.ingredient.findMany({
+      where,
+      include: { category: { select: { id: true, name: true, color: true } } },
+      orderBy,
+      skip,
+      take: limit
+    }),
+    prisma.ingredient.count({ where })
+  ])
+
+  // Aplicar filtros de stock en memoria si son complejos (relación current/min)
+  let resultIngredients = ingredients
+  if (stockFilter && !['all', 'empty'].includes(stockFilter)) {
+    resultIngredients = ingredients.filter(i => {
+      const { status } = calculateStockStatus(i.currentStock, i.minStock)
+      return status === stockFilter
+    })
+  }
+
+  const processed = resultIngredients.map(i => ({
+    ...i,
+    ...calculateStockStatus(i.currentStock, i.minStock)
+  }))
+
+  return {
+    ingredients: processed,
+    pagination: {
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / limit),
+      totalItems: totalCount,
+      itemsPerPage: limit
+    }
+  }
 }
 
 /**
- * Devuelve ingredientes eliminados lógicamente (soft-delete).
- */
-export async function findDeleted() {
-  return prisma.ingredient.findMany({
-    where: { isActive: false },
-    include: { category: true },
-    orderBy: { name: "asc" },
-  })
-}
-
-/**
- * Devuelve un ingrediente por su ID, incluyendo categoría y relaciones con productos.
+ * Busca un ingrediente por ID.
  */
 export async function findById(id: string) {
-  return prisma.ingredient.findUnique({
+  const ingredient = await prisma.ingredient.findUnique({
     where: { id },
     include: {
       category: true,
@@ -75,141 +169,121 @@ export async function findById(id: string) {
       },
     },
   })
-}
 
-/**
- * Devuelve estadísticas de inventario: total activos, con stock bajo, sin stock.
- */
-export async function getStats() {
-  const [total, lowStock, outOfStock] = await Promise.all([
-    prisma.ingredient.count({ where: { isActive: true } }),
-    prisma.ingredient.count({
-      where: { isActive: true, currentStock: { lte: prisma.ingredient.fields.minStock } },
-    }),
-    prisma.ingredient.count({ where: { isActive: true, currentStock: { lte: 0 } } }),
-  ])
+  if (!ingredient) return null
 
-  return { total, lowStock, outOfStock }
-}
-
-/**
- * Devuelve ingredientes con stock por debajo del mínimo (alertas de inventario).
- */
-export async function findLowStock() {
-  return prisma.ingredient.findMany({
-    where: {
-      isActive: true,
-      currentStock: { lte: prisma.ingredient.fields.minStock },
-    },
-    include: { category: true },
-    orderBy: { currentStock: "asc" },
-  })
+  return {
+    ...ingredient,
+    ...calculateStockStatus(ingredient.currentStock, ingredient.minStock)
+  }
 }
 
 // ─── Mutaciones ──────────────────────────────────────────────────────────────
 
 /**
- * Crea un nuevo ingrediente. Lanza error si ya existe uno activo con el mismo nombre.
+ * Crea o reactiva un ingrediente.
  */
-export async function create(data: CreateIngredientDto) {
-  const existing = await prisma.ingredient.findFirst({
-    where: { name: data.name, isActive: true },
+export async function create(dto: CreateIngredientDto) {
+  const name = dto.name.trim()
+
+  // 1. Verificar si existe uno activo
+  const existingActive = await prisma.ingredient.findFirst({
+    where: { name, isActive: true }
   })
 
-  if (existing) {
-    throw new Error(`Ya existe un ingrediente activo con el nombre "${data.name}"`)
+  if (existingActive) {
+    throw new Error(`Ya existe un ingrediente activo con el nombre "${name}"`)
   }
 
-  return prisma.ingredient.create({
+  // 2. Buscar si existe uno inactivo para reactivar
+  const inactive = await prisma.ingredient.findFirst({
+    where: { name, isActive: false }
+  })
+
+  let ingredient;
+  if (inactive) {
+    ingredient = await prisma.ingredient.update({
+      where: { id: inactive.id },
+      data: {
+        ...dto,
+        name,
+        isActive: true,
+        updatedAt: new Date()
+      },
+      include: { category: true }
+    })
+  } else {
+    ingredient = await prisma.ingredient.create({
+      data: {
+        ...dto,
+        name,
+        isActive: true
+      },
+      include: { category: true }
+    })
+  }
+
+  return {
+    ...ingredient,
+    ...calculateStockStatus(ingredient.currentStock, ingredient.minStock)
+  }
+}
+
+/**
+ * Actualiza un ingrediente.
+ */
+export async function update(id: string, dto: UpdateIngredientDto) {
+  const ingredient = await prisma.ingredient.update({
+    where: { id },
     data: {
-      name: data.name,
-      unit: data.unit,
-      currentStock: data.currentStock,
-      minStock: data.minStock,
-      categoryId: data.categoryId ?? null,
+      ...dto,
+      ...(dto.name && { name: dto.name.trim() })
     },
-    include: { category: true },
+    include: { category: true }
   })
+
+  return {
+    ...ingredient,
+    ...calculateStockStatus(ingredient.currentStock, ingredient.minStock)
+  }
 }
 
 /**
- * Actualiza los campos de un ingrediente existente.
+ * Elimina o desactiva un ingrediente según su uso en el menú.
  */
-export async function update(id: string, data: UpdateIngredientDto) {
-  return prisma.ingredient.update({
-    where: { id },
-    data,
-    include: { category: true },
-  })
-}
-
-/**
- * Soft-delete: desactiva un ingrediente (isActive = false).
- */
-export async function softDelete(id: string) {
-  return prisma.ingredient.update({
-    where: { id },
-    data: { isActive: false },
-  })
-}
-
-/**
- * Restaura un ingrediente eliminado lógicamente.
- */
-export async function restore(id: string) {
-  return prisma.ingredient.update({
-    where: { id },
-    data: { isActive: true },
-  })
-}
-
-/**
- * Elimina múltiples ingredientes en soft-delete.
- */
-export async function bulkSoftDelete(ids: string[]) {
-  return prisma.ingredient.updateMany({
-    where: { id: { in: ids } },
-    data: { isActive: false },
-  })
-}
-
-/**
- * Ajusta el stock de un ingrediente (puede ser positivo o negativo).
- * Lanza error si el resultado dejaría el stock negativo.
- */
-export async function adjustStock(dto: StockAdjustmentDto) {
+export async function remove(id: string) {
   const ingredient = await prisma.ingredient.findUnique({
-    where: { id: dto.ingredientId },
+    where: { id },
+    include: {
+      recipeIngredients: {
+        include: {
+          recipe: {
+            include: {
+              product: { select: { id: true, name: true, isActive: true } }
+            }
+          }
+        }
+      }
+    }
   })
 
-  if (!ingredient) {
-    throw new Error(`Ingrediente con ID "${dto.ingredientId}" no encontrado`)
+  if (!ingredient) throw new Error("Ingrediente no encontrado")
+
+  const activeProducts = ingredient.recipeIngredients.filter(ri => ri.recipe.product.isActive)
+
+  if (activeProducts.length > 0) {
+    const names = activeProducts.map(ri => ri.recipe.product.name).join(", ")
+    throw new Error(`No se puede eliminar: está en uso en productos activos (${names})`)
   }
 
-  const newStock = ingredient.currentStock + dto.adjustment
-  if (newStock < 0) {
-    throw new Error(
-      `Stock insuficiente. Stock actual: ${ingredient.currentStock}, ajuste solicitado: ${dto.adjustment}`
-    )
+  if (ingredient.recipeIngredients.length > 0) {
+    // Soft delete if it has history with inactive products
+    return prisma.ingredient.update({
+      where: { id },
+      data: { isActive: false }
+    })
+  } else {
+    // Hard delete if no relations at all
+    return prisma.ingredient.delete({ where: { id } })
   }
-
-  return prisma.ingredient.update({
-    where: { id: dto.ingredientId },
-    data: { currentStock: newStock },
-    include: { category: true },
-  })
-}
-
-/**
- * Ajusta el stock de múltiples ingredientes en una transacción atómica.
- */
-export async function bulkAdjustStock(dto: BulkStockAdjustmentDto) {
-  return prisma.$transaction(
-    dto.adjustments.map((adj) =>
-      prisma.ingredient.update({
-        where: { id: adj.ingredientId },
-        data: { currentStock: { increment: adj.adjustment } },
-      })
-    )
-  )
 }

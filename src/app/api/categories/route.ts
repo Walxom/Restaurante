@@ -1,56 +1,36 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import * as CategoryService from "@/services/category.service"
 import { createCategorySchema } from "@/features/menu/validations/category"
 
 // GET - Obtener todas las categorías
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-
     if (!session) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    // Obtener parámetros de consulta
     const { searchParams } = new URL(request.url)
     const showAll = searchParams.get('showAll') === 'true'
+    
+    // Solo el JEFE puede ver categorías inactivas
+    const includeInactive = (session.user.role === "JEFE" && showAll)
 
-    // Para administradores (JEFE), mostrar todas si se solicita
-    // Para meseros, solo mostrar activas
-    const whereCondition = (session.user.role === "JEFE" && showAll)
-      ? {} // Mostrar todas (activas e inactivas)
-      : { isActive: true } // Solo activas
-
-    const categories = await prisma.category.findMany({
-      where: whereCondition,
-      include: {
-        products: {
-          where: { isActive: true },
-          select: { id: true }
-        }
-      },
-      orderBy: { name: 'asc' }
-    })
-
-    // Agregar contador de productos
-    const categoriesWithCount = categories.map((category: any) => ({
-      ...category,
-      productCount: category.products.length,
-      products: undefined // Remover los productos del response
+    const categories = await CategoryService.findAll(includeInactive)
+    
+    // Adaptar formato para compatibilidad (productCount)
+    const formattedCategories = categories.map((c: any) => ({
+      ...c,
+      productCount: c._count?.products ?? 0,
+      _count: undefined
     }))
 
-    return NextResponse.json(categoriesWithCount)
+    return NextResponse.json(formattedCategories)
   } catch (error) {
     console.error("Error al obtener categorías:", error)
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Error interno" }, { status: 500 })
   }
 }
 
@@ -58,12 +38,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-
     if (!session || session.user.role !== "JEFE") {
-      return NextResponse.json(
-        { error: "Solo los jefes pueden crear categorías" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
     const body = await request.json()
@@ -72,44 +48,18 @@ export async function POST(request: NextRequest) {
     const validation = createCategorySchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Datos de categoría inválidos", details: validation.error.issues },
+        { error: "Datos inválidos", details: validation.error.issues },
         { status: 400 }
       )
     }
 
-    const { name, description } = validation.data
-
-    // Verificar que el nombre no esté ya en uso
-    const existingCategory = await prisma.category.findFirst({
-      where: {
-        name: name.trim(),
-        isActive: true
-      }
-    })
-
-    if (existingCategory) {
-      return NextResponse.json(
-        { error: "Ya existe una categoría con ese nombre" },
-        { status: 400 }
-      )
-    }
-
-    // Crear la categoría
-    const category = await prisma.category.create({
-      data: {
-        name: name.trim(),
-        description: description?.trim() || null,
-        isActive: true,
-      }
-    })
-
+    const category = await CategoryService.create(validation.data)
     return NextResponse.json(category)
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error al crear categoría:", error)
     return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
+      { error: error.message || "Error interno" },
+      { status: error.message?.includes("Ya existe") ? 400 : 500 }
     )
   }
 }
-

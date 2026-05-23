@@ -1,47 +1,31 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import * as TableService from "@/services/table.service"
+import { createTableSchema } from "@/features/tables/validations/table"
 
 // GET - Obtener todas las mesas
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
-
     if (!session) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    const tables = await prisma.table.findMany({
-      where: { isActive: true },
-      orderBy: { number: 'asc' }
-    })
-
+    const tables = await TableService.findAllActive()
     return NextResponse.json(tables)
   } catch (error) {
     console.error("Error al obtener mesas:", error)
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Error interno" }, { status: 500 })
   }
 }
-
-import { createTableSchema } from "@/features/tables/validations/table"
 
 // POST - Crear nueva mesa
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-
     if (!session || session.user.role !== "JEFE") {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
     const body = await request.json()
@@ -50,45 +34,18 @@ export async function POST(request: NextRequest) {
     const validation = createTableSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Datos de mesa inválidos", details: validation.error.issues },
+        { error: "Datos inválidos", details: validation.error.issues },
         { status: 400 }
       )
     }
 
-    const { number, capacity, status } = validation.data
-
-    // Verificar que el número de mesa no exista (solo entre mesas activas)
-    const existingTable = await prisma.table.findFirst({
-      where: { 
-        number: number,
-        isActive: true
-      }
-    })
-
-    if (existingTable) {
-      return NextResponse.json(
-        { error: "Ya existe una mesa con ese número" },
-        { status: 400 }
-      )
-    }
-
-    // Crear la mesa
-    const table = await prisma.table.create({
-      data: {
-        number,
-        capacity,
-        status,
-        isActive: true,
-      }
-    })
-
+    const table = await TableService.create(validation.data)
     return NextResponse.json(table)
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error al crear mesa:", error)
     return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
+      { error: error.message || "Error interno" },
+      { status: error.message?.includes("Ya existe") ? 400 : 500 }
     )
   }
 }
-

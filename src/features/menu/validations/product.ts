@@ -8,19 +8,19 @@ export const recipeIngredientSchema = z.object({
 })
 
 export const recipeSchema = z.object({
-  instructions: z.string().optional(),
-  prepTime: z.number().int().nonnegative().optional(),
-  servings: z.number().int().positive().default(1),
-  ingredients: z.array(recipeIngredientSchema).optional(),
+  instructions: z.string().nullable().optional(),
+  prepTime: z.number().int().nonnegative().nullable().optional(),
+  servings: z.number().int().positive().nullable().optional().default(1),
+  ingredients: z.array(recipeIngredientSchema).nullable().optional(),
 })
 
 export const createProductSchema = z.object({
   name: z.string().min(1, "El nombre del producto es requerido"),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   price: z.coerce.number().positive("El precio debe ser mayor a 0"),
   categoryId: z.string().min(1, "La categoría es requerida"),
   isAvailable: z.boolean().default(true),
-  recipe: recipeSchema.optional(),
+  recipe: recipeSchema.nullable().optional(),
 })
 
 export const updateProductSchema = createProductSchema.partial()

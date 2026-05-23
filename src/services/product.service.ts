@@ -3,18 +3,33 @@
  * Capa de servicios para la gestión de productos del menú.
  *
  * USO: Importar desde las API routes para separar lógica de negocio del transporte HTTP.
- * NUNCA importar directamente desde componentes React.
  */
 
 import { prisma } from "@/lib/prisma"
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
+export interface RecipeIngredientDto {
+  ingredientId: string
+  quantity: number
+  unit: string
+  notes?: string | null
+}
+
+export interface RecipeDto {
+  instructions?: string | null
+  prepTime?: number | null
+  servings?: number | null
+  ingredients?: RecipeIngredientDto[]
+}
+
 export interface CreateProductDto {
   name: string
   description?: string | null
   price: number
   categoryId: string
+  isAvailable?: boolean
+  recipe?: RecipeDto
 }
 
 export interface UpdateProductDto {
@@ -24,46 +39,67 @@ export interface UpdateProductDto {
   categoryId?: string
   isAvailable?: boolean
   isActive?: boolean
+  recipe?: RecipeDto
+}
+
+export interface ProductFilters {
+  categoryId?: string | null
+  isAvailable?: boolean | null
+  search?: string | null
+  includeInactive?: boolean
 }
 
 // ─── Selects reutilizables ───────────────────────────────────────────────────
 
 const productInclude = {
   category: { select: { id: true, name: true } },
+  recipe: {
+    include: {
+      ingredients: {
+        include: {
+          ingredient: {
+            select: { id: true, name: true, unit: true, currentStock: true }
+          }
+        }
+      }
+    }
+  }
 } as const
 
 // ─── Consultas ───────────────────────────────────────────────────────────────
 
 /**
- * Devuelve todos los productos activos con su categoría.
+ * Devuelve productos basados en filtros.
  */
-export async function findAllActive() {
-  return prisma.product.findMany({
-    where: { isActive: true },
-    include: productInclude,
-    orderBy: [{ category: { name: "asc" } }, { name: "asc" }],
-  })
-}
+export async function findMany(filters: ProductFilters) {
+  const where: any = {}
 
-/**
- * Devuelve todos los productos disponibles para el menú público.
- */
-export async function findAvailable() {
-  return prisma.product.findMany({
-    where: { isActive: true, isAvailable: true },
-    include: productInclude,
-    orderBy: [{ category: { name: "asc" } }, { name: "asc" }],
-  })
-}
+  if (!filters.includeInactive) {
+    where.isActive = true
+  }
 
-/**
- * Devuelve productos eliminados (soft-delete).
- */
-export async function findDeleted() {
+  if (filters.categoryId) {
+    where.categoryId = filters.categoryId
+  }
+
+  if (filters.isAvailable !== undefined && filters.isAvailable !== null) {
+    where.isAvailable = filters.isAvailable
+  }
+
+  if (filters.search) {
+    where.OR = [
+      { name: { contains: filters.search } },
+      { description: { contains: filters.search } }
+    ]
+  }
+
   return prisma.product.findMany({
-    where: { isActive: false },
+    where,
     include: productInclude,
-    orderBy: { name: "asc" },
+    orderBy: [
+      { category: { name: 'asc' } },
+      { name: 'asc' }
+    ]
   })
 }
 
@@ -80,75 +116,183 @@ export async function findById(id: string) {
 // ─── Mutaciones ──────────────────────────────────────────────────────────────
 
 /**
- * Crea un nuevo producto. Lanza error si ya existe uno activo con el mismo nombre en la misma categoría.
+ * Crea o reactiva un producto con su receta opcional.
  */
-export async function create(data: CreateProductDto) {
-  const existing = await prisma.product.findFirst({
-    where: {
-      name: data.name,
-      categoryId: data.categoryId,
-      isActive: true,
-    },
+export async function create(dto: CreateProductDto) {
+  const name = dto.name.trim()
+
+  // 1. Verificar si existe uno activo
+  const existingActive = await prisma.product.findFirst({
+    where: { name, categoryId: dto.categoryId, isActive: true }
   })
 
-  if (existing) {
-    throw new Error(`Ya existe un producto activo con el nombre "${data.name}" en esa categoría`)
+  if (existingActive) {
+    throw new Error(`Ya existe un producto activo con el nombre "${name}" en esta categoría`)
   }
 
-  return prisma.product.create({
-    data: {
-      name: data.name,
-      description: data.description ?? null,
-      price: data.price,
-      categoryId: data.categoryId,
-      isAvailable: true,
-      isActive: true,
-    },
-    include: productInclude,
+  // 2. Buscar si existe uno inactivo para reactivar
+  const inactive = await prisma.product.findFirst({
+    where: { name, categoryId: dto.categoryId, isActive: false }
+  })
+
+  return prisma.$transaction(async (tx) => {
+    let product;
+
+    if (inactive) {
+      // Reactivar
+      product = await tx.product.update({
+        where: { id: inactive.id },
+        data: {
+          description: dto.description?.trim() || null,
+          price: dto.price,
+          isAvailable: dto.isAvailable ?? true,
+          isActive: true,
+          updatedAt: new Date()
+        }
+      })
+    } else {
+      // Crear nuevo
+      product = await tx.product.create({
+        data: {
+          name,
+          description: dto.description?.trim() || null,
+          price: dto.price,
+          categoryId: dto.categoryId,
+          isAvailable: dto.isAvailable ?? true,
+          isActive: true,
+        }
+      })
+    }
+
+    // Manejar Receta
+    if (dto.recipe) {
+      // Limpiar anterior si existe
+      await tx.recipe.deleteMany({ where: { productId: product.id } })
+
+      // Crear nueva
+      await tx.recipe.create({
+        data: {
+          productId: product.id,
+          instructions: dto.recipe.instructions ?? null,
+          prepTime: dto.recipe.prepTime ?? null,
+          servings: dto.recipe.servings ?? 1,
+          ingredients: {
+            create: dto.recipe.ingredients?.map(i => ({
+              ingredientId: i.ingredientId,
+              quantity: i.quantity,
+              unit: i.unit,
+              notes: i.notes ?? null
+            })) || []
+          }
+        }
+      })
+    }
+
+    return tx.product.findUnique({
+      where: { id: product.id },
+      include: productInclude
+    })
   })
 }
 
 /**
- * Actualiza los campos de un producto existente.
+ * Actualiza un producto y su receta.
  */
-export async function update(id: string, data: UpdateProductDto) {
-  return prisma.product.update({
-    where: { id },
-    data,
-    include: productInclude,
+export async function update(id: string, dto: UpdateProductDto) {
+  // Validar duplicados si se cambia el nombre
+  if (dto.name) {
+    const existing = await prisma.product.findUnique({ where: { id } })
+    if (existing && existing.name !== dto.name.trim()) {
+      const duplicate = await prisma.product.findFirst({
+        where: { 
+          name: dto.name.trim(), 
+          categoryId: dto.categoryId || existing.categoryId,
+          isActive: true,
+          id: { not: id }
+        }
+      })
+      if (duplicate) throw new Error("Ya existe otro producto con ese nombre")
+    }
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const { recipe, ...productData } = dto
+
+    const product = await tx.product.update({
+      where: { id },
+      data: {
+        ...productData,
+        ...(productData.name && { name: productData.name.trim() }),
+        ...(productData.description !== undefined && { description: productData.description?.trim() || null }),
+      }
+    })
+
+    if (recipe !== undefined) {
+      await tx.recipe.deleteMany({ where: { productId: id } })
+      
+      if (recipe) {
+        await tx.recipe.create({
+          data: {
+            productId: id,
+            instructions: recipe.instructions ?? null,
+            prepTime: recipe.prepTime ?? null,
+            servings: recipe.servings ?? 1,
+            ingredients: {
+              create: recipe.ingredients?.map(i => ({
+                ingredientId: i.ingredientId,
+                quantity: i.quantity,
+                unit: i.unit,
+                notes: i.notes ?? null
+              })) || []
+            }
+          }
+        })
+      }
+    }
+
+    return tx.product.findUnique({
+      where: { id },
+      include: productInclude
+    })
   })
 }
 
 /**
- * Soft-delete de un producto.
+ * Elimina o desactiva un producto dependiendo de si tiene historial.
  */
-export async function softDelete(id: string) {
-  return prisma.product.update({
+export async function remove(id: string) {
+  const product = await prisma.product.findUnique({
     where: { id },
-    data: { isActive: false, isAvailable: false },
+    include: { _count: { select: { orderItems: true } } }
   })
+
+  if (!product) throw new Error("Producto no encontrado")
+
+  if (product._count.orderItems > 0) {
+    // Soft delete
+    return prisma.product.update({
+      where: { id },
+      data: { isActive: false, isAvailable: false }
+    })
+  } else {
+    // Hard delete
+    return prisma.$transaction(async (tx) => {
+      await tx.recipe.deleteMany({ where: { productId: id } })
+      return tx.product.delete({ where: { id } })
+    })
+  }
 }
 
 /**
- * Restaura un producto eliminado.
- */
-export async function restore(id: string) {
-  return prisma.product.update({
-    where: { id },
-    data: { isActive: true },
-  })
-}
-
-/**
- * Alterna la disponibilidad de un producto (para el menú en tiempo real).
+ * Alterna disponibilidad.
  */
 export async function toggleAvailability(id: string) {
-  const product = await prisma.product.findUnique({ where: { id } })
-  if (!product) throw new Error(`Producto con ID "${id}" no encontrado`)
+  const current = await prisma.product.findUnique({ where: { id }, select: { isAvailable: true } })
+  if (!current) throw new Error("Producto no encontrado")
 
   return prisma.product.update({
     where: { id },
-    data: { isAvailable: !product.isAvailable },
-    include: productInclude,
+    data: { isAvailable: !current.isAvailable },
+    include: productInclude
   })
 }
