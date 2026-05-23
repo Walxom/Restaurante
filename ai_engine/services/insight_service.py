@@ -93,5 +93,5 @@ class InsightService:
             "rules": enriched
         }
 
-    def get_narrative_insight(self, insight_type: str, ml_data: dict) -> dict:
-        return self.llm.generate_insight(ml_data)
+    def get_narrative_insight(self, insight_type: str, ml_data: dict, prompt_ml: dict = None) -> dict:
+        return self.llm.generate_insight(ml_data, prompt_ml)

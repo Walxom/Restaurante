@@ -76,11 +76,21 @@ async def health():
     }
 
 
+def _trim_ml_data(ml_data: dict, max_items: int = 5) -> dict:
+    trimmed = dict(ml_data)
+    if "forecasts" in trimmed and len(trimmed["forecasts"]) > max_items:
+        trimmed["forecasts"] = trimmed["forecasts"][:max_items]
+    if "rules" in trimmed and len(trimmed["rules"]) > max_items:
+        trimmed["rules"] = trimmed["rules"][:max_items]
+    return trimmed
+
+
 @app.post("/api/insights/forecast")
 async def forecast_insight(req: ForecastRequest):
     try:
         ml_data = insight_service.get_forecast_insight(req.productId)
-        narrative = insight_service.get_narrative_insight("forecast", ml_data)
+        prompt_ml = _trim_ml_data(ml_data)
+        narrative = insight_service.get_narrative_insight("forecast", ml_data, prompt_ml)
         return {"ml": ml_data, "narrative": narrative}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -90,7 +100,8 @@ async def forecast_insight(req: ForecastRequest):
 async def inventory_insight():
     try:
         ml_data = insight_service.get_inventory_insight()
-        narrative = insight_service.get_narrative_insight("inventory", ml_data)
+        prompt_ml = _trim_ml_data(ml_data)
+        narrative = insight_service.get_narrative_insight("inventory", ml_data, prompt_ml)
         return {"ml": ml_data, "narrative": narrative}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -100,7 +111,8 @@ async def inventory_insight():
 async def market_basket_insight(req: MarketBasketRequest):
     try:
         ml_data = insight_service.get_market_basket_insight(req.productId)
-        narrative = insight_service.get_narrative_insight("market_basket", ml_data)
+        prompt_ml = _trim_ml_data(ml_data)
+        narrative = insight_service.get_narrative_insight("market_basket", ml_data, prompt_ml)
         return {"ml": ml_data, "narrative": narrative}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -120,28 +120,57 @@ class LLMService:
         if not self.client:
             raise RuntimeError("Gemini no configurado (sin client)")
 
-        response = self.client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config={
-                "temperature": 0.4,
-                "max_output_tokens": 1024,
-                "top_p": 0.8,
-            }
-        )
+        try:
+            from google.genai import types
+        except ImportError:
+            pass
 
-        text = response.text
+        try:
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.4,
+                    max_output_tokens=2048,
+                    top_p=0.8,
+                ),
+            )
+        except NameError:
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config={
+                    "temperature": 0.4,
+                    "max_output_tokens": 2048,
+                    "top_p": 0.8,
+                }
+            )
+
+        finish_reason = "unknown"
+        text = ""
+        try:
+            if response.candidates:
+                c = response.candidates[0]
+                finish_reason = str(c.finish_reason) if hasattr(c, 'finish_reason') else "unknown"
+                for part in c.content.parts if hasattr(c, 'content') else []:
+                    if hasattr(part, 'text') and part.text:
+                        text += part.text
+        except Exception:
+            text = response.text if hasattr(response, 'text') else ""
+
         if not text:
-            raise RuntimeError("Respuesta vacia de Gemini")
+            raise RuntimeError(f"Respuesta vacia de Gemini (finish_reason={finish_reason})")
 
+        print(f"[LLM] Respuesta Gemini: {len(text)} chars, finish_reason={finish_reason}")
         return text
 
     def _cache_key(self, ml_data: dict) -> str:
         raw = json.dumps(ml_data, sort_keys=True, ensure_ascii=False)
         return hashlib.md5(raw.encode()).hexdigest()
 
-    def generate_insight(self, ml_data: dict) -> dict:
+    def generate_insight(self, ml_data: dict, prompt_ml: dict = None) -> dict:
         insight_type = ml_data.get("tipo", "forecast")
+        api_data = prompt_ml if prompt_ml is not None else ml_data
         ckey = self._cache_key(ml_data)
         cached = self._narrative_cache.get(ckey)
         if cached is not None:
@@ -169,7 +198,7 @@ class LLMService:
                     "escribe el parrafo completo aunque sean 4-6 oraciones. "
                     "Responde SOLO con la recomendacion, sin introducciones ni despedidas. "
                     "Usa emojis solo cuando sea relevante para la accion.\n\n"
-                    f"Datos:\n{json.dumps(ml_data, indent=2, ensure_ascii=False)}\n\n"
+                    f"Datos:\n{json.dumps(api_data, indent=2, ensure_ascii=False)}\n\n"
                     f"Contexto base:\n{template}"
                 )
 
