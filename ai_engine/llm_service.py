@@ -14,6 +14,9 @@ if env_path.exists():
 
 
 class LLMService:
+    _last_call_time = 0.0
+    _min_call_interval = 3.0
+
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY", "")
         self.timeout = float(os.getenv("GEMINI_TIMEOUT_SECONDS", "3.0"))
@@ -26,8 +29,6 @@ class LLMService:
 
         self.client = None
         self._narrative_cache: dict[str, dict] = {}
-        self._last_call_time = 0.0
-        self._min_call_interval = 3.0
 
         if self.api_key:
             try:
@@ -122,12 +123,12 @@ class LLMService:
 
     def _rate_limit(self):
         now = time.time()
-        elapsed = now - self._last_call_time
-        if elapsed < self._min_call_interval:
-            wait = self._min_call_interval - elapsed
+        elapsed = now - LLMService._last_call_time
+        if elapsed < LLMService._min_call_interval:
+            wait = LLMService._min_call_interval - elapsed
             print(f"[LLM] Rate limit interno: esperando {wait:.1f}s...")
             time.sleep(wait)
-        self._last_call_time = time.time()
+        LLMService._last_call_time = time.time()
 
     def _parse_retry_delay(self, error_str: str) -> int:
         try:
