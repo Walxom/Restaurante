@@ -13,7 +13,10 @@
     "start:production": "cross-env NODE_ENV=production UV_THREADPOOL_SIZE=32 node --max-old-space-size=12288 server.js",
     "start:network": "cross-env NODE_ENV=production UV_THREADPOOL_SIZE=32 node --max-old-space-size=12288 server-production.js",
     "lint": "eslint .",
+    "db:generate": "pnpm prisma generate",
+    "db:push": "pnpm prisma db push",
     "db:seed": "pnpm tsx --env-file=.env prisma/seed.ts",
+    "db:setup": "pnpm prisma db push && pnpm db:seed",
     "test": "vitest run",
     "test:watch": "vitest"
   },
