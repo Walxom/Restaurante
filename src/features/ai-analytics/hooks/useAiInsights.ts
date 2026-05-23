@@ -10,29 +10,34 @@ import type {
 
 const AI_ENGINE_URL = "http://localhost:8000"
 
-const fetcher = async (url: string, options?: RequestInit) => {
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 4000)
-  try {
-    const res = await fetch(url, {
-      headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
-      ...options,
-    })
-    clearTimeout(timeoutId)
-    if (!res.ok) throw new Error(`Error ${res.status}`)
-    return res.json()
-  } catch (err: any) {
-    clearTimeout(timeoutId)
-    if (err.name === "AbortError") throw new Error("Timeout")
-    throw err
+const makeFetcher = (timeoutMs: number) => {
+  return async (url: string, options?: RequestInit) => {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      const res = await fetch(url, {
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        ...options,
+      })
+      clearTimeout(timeoutId)
+      if (!res.ok) throw new Error(`Error ${res.status}`)
+      return res.json()
+    } catch (err: any) {
+      clearTimeout(timeoutId)
+      if (err.name === "AbortError") throw new Error("Timeout")
+      throw err
+    }
   }
 }
+
+const fastFetcher = makeFetcher(4000)
+const slowFetcher = makeFetcher(20000)
 
 export function useAiHealth() {
   const { data, error, isLoading } = useSWR<AiEngineHealth>(
     `${AI_ENGINE_URL}/health`,
-    fetcher,
+    fastFetcher,
     {
       refreshInterval: 30000,
       revalidateOnFocus: false,
@@ -67,12 +72,12 @@ export function useForecast(productId?: string) {
   const key = `${AI_ENGINE_URL}/api/insights/forecast`
   const { data, error, isLoading } = useAiData<ForecastResponse>(
     [key, productId],
-    () =>
-      fetcher(key, {
-        method: "POST",
-        body: JSON.stringify({ productId: productId || null }),
-      }),
-    60000
+      () =>
+        slowFetcher(key, {
+          method: "POST",
+          body: JSON.stringify({ productId: productId || null }),
+        }),
+      60000
   )
   return {
     forecast: data?.ml.forecasts || [],
@@ -86,7 +91,7 @@ export function useInventoryAlerts() {
   const key = `${AI_ENGINE_URL}/api/insights/inventory`
   const { data, error, isLoading, mutate } = useSWR<InventoryResponse>(
     key,
-    () => fetcher(key, { method: "POST" }),
+    () => slowFetcher(key, { method: "POST" }),
     {
       refreshInterval: 30000,
       revalidateOnFocus: false,
@@ -108,12 +113,12 @@ export function useMarketBasket(productId?: string) {
   const key = `${AI_ENGINE_URL}/api/insights/market-basket`
   const { data, error, isLoading } = useAiData<MarketBasketResponse>(
     [key, productId],
-    () =>
-      fetcher(key, {
-        method: "POST",
-        body: JSON.stringify({ productId: productId || null }),
-      }),
-    120000
+      () =>
+        slowFetcher(key, {
+          method: "POST",
+          body: JSON.stringify({ productId: productId || null }),
+        }),
+      120000
   )
   return {
     rules: data?.ml.rules || [],
@@ -126,7 +131,7 @@ export function useMarketBasket(productId?: string) {
 
 export async function triggerRetrainAll(): Promise<{ status: string; message: string }> {
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 10000)
+  const timeoutId = setTimeout(() => controller.abort(), 30000)
   try {
     const res = await fetch(`${AI_ENGINE_URL}/api/train/all`, {
       method: "GET",
