@@ -27,33 +27,33 @@ export default function InventoryAlertPanel() {
   }
 
   return (
-    <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 overflow-hidden shadow-sm">
-      <div className="p-4 sm:p-6 border-b border-border/50">
+    <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 overflow-hidden shadow-sm transition-all duration-500 hover:shadow-md animate-in fade-in slide-in-from-bottom-4">
+      <div className="p-4 sm:p-6 border-b border-border/50 bg-foreground/5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+            <div className="h-10 w-10 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 animate-in zoom-in-50 duration-500">
               <Package className="w-5 h-5 text-amber-500" />
             </div>
             <div>
               <h3 className="text-sm font-black text-foreground uppercase tracking-widest">
                 Inventario Predictivo
               </h3>
-              <p className="text-[10px] font-bold text-muted-foreground tracking-widest mt-1">
+              <p className="text-[10px] font-bold text-muted-foreground tracking-widest mt-1 uppercase opacity-60">
                 Alertas de stock basadas en demanda proyectada
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {stats.critical > 0 && (
+            {stats.critical.length > 0 && (
               <div className="flex items-center gap-1 px-2.5 py-1 bg-red-500/10 rounded-full border border-red-500/20">
                 <AlertCircle className="w-3 h-3 text-red-500" />
-                <span className="text-[9px] font-black text-red-500">{stats.critical}</span>
+                <span className="text-[9px] font-black text-red-500">{stats.critical.length}</span>
               </div>
             )}
-            {stats.warning > 0 && (
+            {stats.warning.length > 0 && (
               <div className="flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 rounded-full border border-amber-500/20">
                 <AlertTriangle className="w-3 h-3 text-amber-500" />
-                <span className="text-[9px] font-black text-amber-500">{stats.warning}</span>
+                <span className="text-[9px] font-black text-amber-500">{stats.warning.length}</span>
               </div>
             )}
             <Button
@@ -61,7 +61,7 @@ export default function InventoryAlertPanel() {
               size="icon"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="h-8 w-8 rounded-xl"
+              className="h-8 w-8 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-300"
             >
               <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
             </Button>
@@ -69,29 +69,29 @@ export default function InventoryAlertPanel() {
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 space-y-3">
+      <div className="p-4 sm:p-6 space-y-5">
         {isLoading ? (
-          <div className="animate-pulse space-y-3">
+          <div className="animate-pulse space-y-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="h-16 bg-muted rounded-xl" />
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-8">
-            <AlertCircle className="w-10 h-10 text-red-500/50 mx-auto mb-2" />
-            <p className="text-xs font-bold text-muted-foreground">Error: {error.message}</p>
+          <div className="text-center py-16 sm:py-20 flex flex-col items-center justify-center">
+            <AlertCircle className="w-10 h-10 text-red-500/50 mb-4 animate-pulse" />
+            <p className="text-xs font-black text-red-500 uppercase tracking-widest text-[10px] max-w-xs">Error: {error.message}</p>
           </div>
         ) : alerts.length === 0 ? (
-          <div className="text-center py-8">
-            <Package className="w-10 h-10 text-emerald-500/50 mx-auto mb-2" />
-            <p className="text-xs font-bold text-emerald-500">Todos los insumos en nivel optimo</p>
+          <div className="text-center py-16 sm:py-20 flex flex-col items-center justify-center">
+            <Package className="w-10 h-10 text-emerald-500/50 mb-4 animate-pulse" />
+            <p className="text-xs font-black text-emerald-500 uppercase tracking-widest">Todos los insumos en nivel óptimo</p>
           </div>
         ) : (
           <>
             {visibleAlerts.map((alert) => (
               <div
                 key={alert.ingredient_id}
-                className={`p-3 rounded-xl border ${
+                className={`p-4 sm:p-5 rounded-xl border ${
                   alert.status === "CRITICAL"
                     ? "bg-red-500/5 border-red-500/20"
                     : alert.status === "WARNING"
@@ -129,12 +129,12 @@ export default function InventoryAlertPanel() {
               <Button
                 variant="ghost"
                 onClick={() => setExpanded(!expanded)}
-                className="w-full h-10 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                className="w-full h-10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary/10 hover:text-primary transition-all duration-300"
               >
                 {expanded ? (
                   <><ChevronUp className="w-4 h-4 mr-2" /> Mostrar menos</>
                 ) : (
-                  <><ChevronDown className="w-4 h-4 mr-2" /> Ver {alerts.length - 6} alertas mas</>
+                  <><ChevronDown className="w-4 h-4 mr-2" /> Ver {alerts.length - 6} alertas más</>
                 )}
               </Button>
             )}

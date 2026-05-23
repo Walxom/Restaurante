@@ -9,9 +9,9 @@ export default function ForecastChart() {
 
   if (isLoading) {
     return (
-      <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 p-6">
+      <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 p-6 shadow-sm animate-in fade-in duration-300">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 w-48 bg-muted rounded" />
+          <div className="h-6 w-48 bg-muted rounded-xl" />
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="h-12 bg-muted rounded-xl" />
@@ -24,10 +24,10 @@ export default function ForecastChart() {
 
   if (error) {
     return (
-      <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 p-6">
+      <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 p-6 shadow-sm">
         <div className="flex items-center gap-3 text-red-500">
-          <AlertCircle className="w-5 h-5" />
-          <p className="text-sm font-medium">Error al conectar con el motor de IA: {error.message}</p>
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <p className="text-sm font-bold uppercase tracking-wider text-[11px]">Error al conectar con el motor de IA: {error.message}</p>
         </div>
       </div>
     )
@@ -35,14 +35,14 @@ export default function ForecastChart() {
 
   if (forecast.length === 0) {
     return (
-      <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 p-6">
-        <div className="text-center py-8">
-          <TrendingUp className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-            Sin datos de prediccion
+      <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 p-6 shadow-sm">
+        <div className="text-center py-16 sm:py-20 flex flex-col items-center justify-center">
+          <TrendingUp className="w-12 h-12 text-muted-foreground/30 mb-4 animate-pulse" />
+          <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">
+            Sin datos de predicción
           </p>
-          <p className="text-[10px] text-muted-foreground/60 mt-1">
-            Se necesitan ordenes historicas para generar forecasting.
+          <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mt-3 max-w-xs leading-relaxed">
+            Se necesitan órdenes históricas para generar forecasting.
           </p>
         </div>
       </div>
@@ -52,23 +52,23 @@ export default function ForecastChart() {
   const maxValue = Math.max(...top5.map((f) => f.total_predicted), 1)
 
   return (
-    <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 overflow-hidden shadow-sm">
-      <div className="p-4 sm:p-6 border-b border-border/50">
+    <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 overflow-hidden shadow-sm transition-all duration-500 hover:shadow-md animate-in fade-in slide-in-from-bottom-4">
+      <div className="p-4 sm:p-6 border-b border-border/50 bg-foreground/5">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-black text-foreground uppercase tracking-widest">
               Forecasting de Demanda
             </h3>
-            <p className="text-[10px] font-bold text-muted-foreground tracking-widest mt-1">
-              Proyeccion a 7 dias
+            <p className="text-[10px] font-bold text-muted-foreground tracking-widest mt-1 uppercase opacity-60">
+              Proyección a 7 días
             </p>
           </div>
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+          <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
             <TrendingUp className="w-5 h-5 text-primary" />
           </div>
         </div>
       </div>
-      <div className="p-4 sm:p-6 space-y-3">
+      <div className="p-4 sm:p-6 space-y-5">
         {top5.map((f) => {
           const barWidth = Math.max(8, (f.total_predicted / maxValue) * 100)
           return (

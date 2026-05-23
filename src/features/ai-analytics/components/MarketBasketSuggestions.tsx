@@ -13,9 +13,9 @@ export default function MarketBasketSuggestions() {
 
   if (isLoading) {
     return (
-      <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 p-6">
+      <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 p-6 shadow-sm animate-in fade-in duration-300">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 w-48 bg-muted rounded" />
+          <div className="h-6 w-48 bg-muted rounded-xl" />
           <div className="space-y-3">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="h-14 bg-muted rounded-xl" />
@@ -28,10 +28,10 @@ export default function MarketBasketSuggestions() {
 
   if (error) {
     return (
-      <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 p-6">
+      <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 p-6 shadow-sm">
         <div className="flex items-center gap-3 text-red-500">
-          <AlertCircle className="w-5 h-5" />
-          <p className="text-sm font-medium">Error al generar reglas de asociacion: {error.message}</p>
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <p className="text-sm font-black text-red-500 uppercase tracking-widest text-[10px]">Error al generar reglas de asociación: {error.message}</p>
         </div>
       </div>
     )
@@ -39,14 +39,14 @@ export default function MarketBasketSuggestions() {
 
   if (rules.length === 0) {
     return (
-      <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 p-6">
-        <div className="text-center py-8">
-          <ShoppingBag className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-            Sin reglas de asociacion
+      <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 p-6 shadow-sm">
+        <div className="text-center py-16 sm:py-24 flex flex-col items-center justify-center">
+          <ShoppingBag className="w-12 h-12 text-muted-foreground/30 mb-5 animate-pulse" />
+          <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">
+            Sin reglas de asociación
           </p>
-          <p className="text-[10px] text-muted-foreground/60 mt-1">
-            Se necesitan mas transacciones para detectar patrones de compra.
+          <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mt-3 max-w-xs leading-relaxed">
+            Se necesitan más transacciones para detectar patrones de compra.
           </p>
         </div>
       </div>
@@ -54,34 +54,34 @@ export default function MarketBasketSuggestions() {
   }
 
   return (
-    <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 overflow-hidden shadow-sm">
-      <div className="p-4 sm:p-6 border-b border-border/50">
+    <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 overflow-hidden shadow-sm transition-all duration-500 hover:shadow-md animate-in fade-in slide-in-from-bottom-4">
+      <div className="p-4 sm:p-6 border-b border-border/50 bg-foreground/5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+            <div className="h-10 w-10 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 animate-in zoom-in-50 duration-500">
               <ShoppingBag className="w-5 h-5 text-purple-500" />
             </div>
             <div>
               <h3 className="text-sm font-black text-foreground uppercase tracking-widest">
                 Canasta de Compra
               </h3>
-              <p className="text-[10px] font-bold text-muted-foreground tracking-widest mt-1">
-                Reglas de asociacion entre productos
+              <p className="text-[10px] font-bold text-muted-foreground tracking-widest mt-1 uppercase opacity-60">
+                Reglas de asociación entre productos
               </p>
             </div>
           </div>
-          <div className="h-8 px-3 bg-purple-500/10 rounded-full border border-purple-500/20 flex items-center gap-1.5">
+          <div className="h-8 px-3 bg-purple-500/10 rounded-full border border-purple-500/20 flex items-center gap-1.5 transition-all duration-300">
             <BarChart3 className="w-3 h-3 text-purple-500" />
-            <span className="text-[9px] font-black text-purple-500">{rules.length} reglas</span>
+            <span className="text-[9px] font-black text-purple-500 uppercase tracking-widest">{rules.length} reglas</span>
           </div>
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 space-y-3">
+      <div className="p-4 sm:p-6 space-y-5">
         {rules.slice(0, 6).map((rule, idx) => (
           <div
             key={idx}
-            className="p-3 rounded-xl bg-gradient-to-r from-purple-500/[0.03] to-transparent border border-purple-500/10"
+            className="p-4 sm:p-5 rounded-xl bg-gradient-to-r from-purple-500/[0.03] to-transparent border border-purple-500/10"
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2 flex-wrap">

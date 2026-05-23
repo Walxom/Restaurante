@@ -1,6 +1,6 @@
 "use client"
 
-import useSWR from "swr"
+import useSWR, { Key } from "swr"
 import type {
   ForecastResponse,
   InventoryResponse,
@@ -54,7 +54,7 @@ export function useAiHealth() {
 }
 
 function useAiData<T>(
-  key: string,
+  key: Key,
   fetcherFn: () => Promise<T>,
   refreshMs: number
 ) {

@@ -39,17 +39,17 @@ export default function AiChatPanel() {
   ]
 
   return (
-    <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 overflow-hidden shadow-sm flex flex-col h-[500px]">
-      <div className="p-4 sm:p-6 border-b border-border/50 flex items-center justify-between shrink-0">
+    <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 overflow-hidden shadow-sm flex flex-col h-[550px] transition-all duration-500 hover:shadow-md animate-in fade-in slide-in-from-bottom-4">
+      <div className="p-4 sm:p-6 border-b border-border/50 bg-foreground/5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+          <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 animate-in zoom-in-50 duration-500">
             <MessageCircle className="w-5 h-5 text-emerald-500" />
           </div>
           <div>
             <h3 className="text-sm font-black text-foreground uppercase tracking-widest">
               Chat con IA
             </h3>
-            <p className="text-[10px] font-bold text-muted-foreground tracking-widest mt-1">
+            <p className="text-[10px] font-bold text-muted-foreground tracking-widest mt-1 uppercase opacity-60">
               Consulta datos del negocio en lenguaje natural
             </p>
           </div>
@@ -75,7 +75,7 @@ export default function AiChatPanel() {
             className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[85%] rounded-2xl p-3.5 ${
+              className={`max-w-[85%] sm:max-w-2xl md:max-w-3xl rounded-2xl p-3.5 ${
                 msg.role === "user"
                   ? "bg-primary/10 border border-primary/20"
                   : msg.type === "llm"
@@ -131,7 +131,7 @@ export default function AiChatPanel() {
                   onClick={() => {
                     sendMessage(s)
                   }}
-                  className="px-3 py-1.5 bg-muted/30 hover:bg-muted/60 border border-border/50 rounded-xl text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="px-3 py-1.5 bg-muted/30 hover:bg-muted/60 border border-border/50 rounded-xl text-[10px] font-bold text-muted-foreground hover:text-primary hover:border-primary/30 transition-all duration-300 hover:scale-[1.02] active:scale-95"
                 >
                   {s}
                 </button>
@@ -149,7 +149,7 @@ export default function AiChatPanel() {
 
       <form
         onSubmit={handleSubmit}
-        className="p-4 border-t border-border/50 flex items-center gap-3 shrink-0"
+        className="p-4 border-t border-border/50 bg-foreground/5 flex items-center gap-3 shrink-0"
       >
         <input
           ref={inputRef}
@@ -158,13 +158,13 @@ export default function AiChatPanel() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Escribe tu pregunta..."
           disabled={isLoading}
-          className="flex-1 h-10 px-4 bg-muted/30 border border-border/50 rounded-xl text-xs font-medium text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all disabled:opacity-50"
+          className="flex-1 h-11 px-4 bg-background/50 border border-border/50 rounded-xl text-xs font-bold text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 hover:bg-background/80 transition-all disabled:opacity-50"
         />
         <Button
           type="submit"
           size="icon"
           disabled={isLoading || !input.trim()}
-          className="h-10 w-10 rounded-xl shrink-0"
+          className="h-11 w-11 rounded-xl shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300"
         >
           <Send className="w-4 h-4" />
         </Button>
