@@ -135,13 +135,13 @@ export default function UnifiedOrdersPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center animate-in fade-in duration-300">
         <div className="text-center">
           <div className="relative w-16 h-16 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-blue-600/20"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
           </div>
-          <p className="text-muted-foreground font-medium animate-pulse">Sincronizando pedidos...</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 animate-pulse">Sincronizando pedidos...</p>
         </div>
       </div>
     )
@@ -149,21 +149,45 @@ export default function UnifiedOrdersPage() {
 
   return (
     <RoleGuard allowedRoles={["MESERO", "JEFE"]}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-        <div className="fixed inset-0 bg-linear-to-br from-blue-500/[0.02] via-transparent to-indigo-500/[0.02] pointer-events-none" />
+      <div className="min-h-screen bg-background transition-colors duration-500">
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col">
-          <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
-            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <Button onClick={() => router.push(session?.user.role === "MESERO" ? "/mesero" : "/dashboard")} variant="ghost" size="sm" className="rounded-xl">
-                  <ArrowLeft className="w-4 h-4 mr-2" /> Dashboard
+          <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50 transition-all duration-300">
+            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                <Button 
+                  onClick={() => router.push(session?.user?.role === "MESERO" ? "/mesero" : "/dashboard")} 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-9 w-9 shrink-0 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all duration-300"
+                  aria-label="Volver al panel"
+                >
+                  <ArrowLeft className="w-5 h-5" />
                 </Button>
-                <div className="h-6 w-px bg-border/50" />
-                <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Gestión de Pedidos</h1>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="hidden sm:flex h-10 w-10 shrink-0 rounded-2xl bg-primary/10 items-center justify-center border border-primary/20">
+                    <FileText className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <h1 className="text-xs sm:text-sm md:text-base font-black text-foreground uppercase tracking-widest truncate">
+                      <span className="inline sm:hidden">Pedidos</span>
+                      <span className="hidden sm:inline">Gestión de Pedidos</span>
+                    </h1>
+                    <p className="hidden md:block text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 truncate">
+                      Sincronización y control en tiempo real
+                    </p>
+                  </div>
+                </div>
               </div>
-              <Button onClick={() => router.push("/pedidos/nuevo")} size="sm" className="bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-600/20">
-                <Plus className="h-4 w-4 mr-2" /> Nuevo Pedido
+              <Button 
+                onClick={() => router.push("/pedidos/nuevo")} 
+                size="sm" 
+                className="h-9 px-3 sm:px-4 bg-primary hover:bg-primary/95 text-primary-foreground rounded-xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300"
+              >
+                <Plus className="w-3.5 h-3.5 sm:mr-2" />
+                <span className="hidden sm:inline">Nuevo Pedido</span>
+                <span className="sm:hidden">Nuevo</span>
               </Button>
             </div>
           </header>
