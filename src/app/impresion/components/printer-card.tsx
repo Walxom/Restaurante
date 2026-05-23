@@ -1,5 +1,6 @@
 "use client"
 
+import { useId } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -39,6 +40,7 @@ export function PrinterCard({
   children,
   technicalInfo
 }: PrinterCardProps) {
+  const switchId = useId()
   
   const getStatusConfig = () => {
     if (!enabled) return { label: 'Deshabilitada', color: 'text-muted-foreground bg-muted', icon: XCircle }
@@ -78,8 +80,16 @@ export function PrinterCard({
 
         <div className="flex items-center justify-between p-4 bg-background/30 rounded-2xl border border-border/50">
           <div className="flex items-center gap-3">
-            <Switch checked={enabled} onCheckedChange={onEnabledChange} />
-            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground cursor-pointer">
+            <Switch 
+              id={switchId} 
+              checked={enabled} 
+              onCheckedChange={onEnabledChange} 
+              data-testid="switch-printer-enable" 
+            />
+            <Label 
+              htmlFor={switchId} 
+              className="text-[10px] font-black uppercase tracking-widest text-muted-foreground cursor-pointer"
+            >
               Habilitar Impresora
             </Label>
           </div>
@@ -90,6 +100,7 @@ export function PrinterCard({
             variant="outline"
             onClick={onTest}
             disabled={isTesting || !enabled}
+            data-testid="btn-test-printer"
             className="h-12 rounded-2xl font-black uppercase tracking-[0.15em] text-[10px] border-border/50 bg-background/30 hover:bg-background/50 transition-all"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isTesting ? 'animate-spin' : ''}`} />
@@ -98,6 +109,7 @@ export function PrinterCard({
           <Button
             onClick={onSave}
             disabled={isLoading}
+            data-testid="btn-save-printer"
             className="h-12 rounded-2xl font-black uppercase tracking-[0.15em] text-[10px] bg-primary shadow-lg shadow-primary/20 transition-all"
           >
             Guardar

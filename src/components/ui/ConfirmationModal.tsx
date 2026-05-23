@@ -42,30 +42,30 @@ export function ConfirmationModal({
 }: ConfirmationModalProps) {
 
   const variantStyles = {
-    primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20",
-    danger: "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/20",
-    destructive: "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/20",
-    warning: "bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg shadow-yellow-500/20",
-    success: "bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20",
-    info: "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20",
+    primary: "bg-primary hover:bg-primary/95 text-primary-foreground shadow-lg shadow-primary/20",
+    danger: "bg-destructive hover:bg-destructive/95 text-destructive-foreground shadow-lg shadow-destructive/20",
+    destructive: "bg-destructive hover:bg-destructive/95 text-destructive-foreground shadow-lg shadow-destructive/20",
+    warning: "bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-500/20",
+    success: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20",
+    info: "bg-primary hover:bg-primary/95 text-primary-foreground shadow-lg shadow-primary/20",
   };
 
   const iconBgStyles = {
-    primary: "bg-blue-100 dark:bg-blue-900/30",
-    danger: "bg-red-100 dark:bg-red-900/30",
-    destructive: "bg-red-100 dark:bg-red-900/30",
-    warning: "bg-yellow-100 dark:bg-yellow-900/30",
-    success: "bg-green-100 dark:bg-green-900/30",
-    info: "bg-blue-100 dark:bg-blue-900/30",
+    primary: "bg-primary/10",
+    danger: "bg-destructive/10",
+    destructive: "bg-destructive/10",
+    warning: "bg-amber-500/10 dark:bg-amber-900/30",
+    success: "bg-emerald-500/10 dark:bg-emerald-900/30",
+    info: "bg-primary/10",
   };
 
   const iconTextStyles = {
-    primary: "text-blue-600 dark:text-blue-400",
-    danger: "text-red-600 dark:text-red-400",
-    destructive: "text-red-600 dark:text-red-400",
-    warning: "text-yellow-600 dark:text-yellow-400",
-    success: "text-green-600 dark:text-green-400",
-    info: "text-blue-600 dark:text-blue-400",
+    primary: "text-primary",
+    danger: "text-destructive",
+    destructive: "text-destructive",
+    warning: "text-amber-500 dark:text-amber-400",
+    success: "text-emerald-500 dark:text-emerald-400",
+    info: "text-primary",
   };
 
   // Ícono por defecto según variante si no se provee uno
@@ -82,7 +82,7 @@ export function ConfirmationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none shadow-2xl">
+      <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border border-border/50 bg-card dark:bg-slate-950 shadow-2xl text-foreground">
         <div className="p-6">
           <div className="flex flex-col items-center text-center">
             <div className={cn(
@@ -106,7 +106,7 @@ export function ConfirmationModal({
               <DialogTitle className="text-xl font-black text-foreground uppercase tracking-widest">
                 {title}
               </DialogTitle>
-              <DialogDescription className="text-muted-foreground text-[11px] font-bold uppercase tracking-widest leading-relaxed opacity-60 max-w-[320px]">
+              <DialogDescription className="text-muted-foreground text-xs font-semibold leading-relaxed opacity-80 max-w-[320px]">
                 {description}
               </DialogDescription>
             </DialogHeader>
@@ -118,7 +118,7 @@ export function ConfirmationModal({
             <Button
               variant="outline"
               onClick={onClose}
-              className="flex-1 bg-background border-border text-foreground hover:bg-accent h-11 rounded-xl font-medium transition-all"
+              className="flex-1 bg-background border-border text-foreground hover:bg-accent h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all duration-300"
               disabled={isLoading}
             >
               {cancelText}
@@ -127,7 +127,7 @@ export function ConfirmationModal({
           <Button
             onClick={onConfirm}
             className={cn(
-              "flex-1 h-11 rounded-xl font-medium transition-all shadow-sm active:scale-95",
+              "flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all duration-300 shadow-sm active:scale-95",
               variantStyles[variant],
               !showCancel && "w-full"
             )}
