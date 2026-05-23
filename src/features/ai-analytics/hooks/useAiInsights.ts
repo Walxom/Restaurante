@@ -77,7 +77,7 @@ export function useForecast(productId?: string) {
           method: "POST",
           body: JSON.stringify({ productId: productId || null }),
         }),
-      60000
+      0
   )
   return {
     forecast: data?.ml.forecasts || [],
@@ -93,11 +93,12 @@ export function useInventoryAlerts() {
     key,
     () => slowFetcher(key, { method: "POST" }),
     {
-      refreshInterval: 30000,
+      refreshInterval: 0,
       revalidateOnFocus: false,
+      revalidateOnReconnect: false,
       errorRetryCount: 1,
       shouldRetryOnError: false,
-      dedupingInterval: 5000,
+      dedupingInterval: 60000,
     }
   )
   return {
@@ -118,7 +119,7 @@ export function useMarketBasket(productId?: string) {
           method: "POST",
           body: JSON.stringify({ productId: productId || null }),
         }),
-      120000
+      0
   )
   return {
     rules: data?.ml.rules || [],

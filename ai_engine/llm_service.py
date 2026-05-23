@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import hashlib
 from datetime import datetime
 from typing import Optional
 from dotenv import load_dotenv
@@ -23,6 +24,7 @@ class LLMService:
         self.last_failure_time = 0.0
 
         self.client = None
+        self._narrative_cache: dict[str, dict] = {}
         if self.api_key:
             try:
                 from google import genai
@@ -134,49 +136,65 @@ class LLMService:
 
         return text
 
+    def _cache_key(self, ml_data: dict) -> str:
+        raw = json.dumps(ml_data, sort_keys=True, ensure_ascii=False)
+        return hashlib.md5(raw.encode()).hexdigest()
+
     def generate_insight(self, ml_data: dict) -> dict:
         insight_type = ml_data.get("tipo", "forecast")
+        ckey = self._cache_key(ml_data)
+        cached = self._narrative_cache.get(ckey)
+        if cached is not None:
+            return cached
 
         if self.circuit_open and not self._can_retry():
             mensaje = self._select_template(insight_type, ml_data)
-            return {
+            result = {
                 "type": "fallback",
                 "mensaje": mensaje,
                 "tipo": insight_type,
                 "timestamp": datetime.now().isoformat(),
                 "reason": "circuit_open"
             }
+            self._narrative_cache[ckey] = result
+            return result
 
         if self.client and self.api_key:
             try:
                 template = self._select_template(insight_type, ml_data)
                 system_prompt = (
                     "Eres un asistente de inteligencia de negocios para una cevicheria peruana llamada 'Fondo Marino'. "
-                    "Recibes datos de ventas y debes generar recomendaciones UTILES, CONCRETAS, en tono profesional "
-                    "y directo, en espanol. LIMITATE a 2-3 oraciones. Responde SOLO con la recomendacion, "
-                    "sin introducciones ni despedidas. Usa emojis solo cuando sea relevante para la accion.\n\n"
+                    "Recibes datos de ventas y debes generar un parrafo fluido, completo y bien redactado "
+                    "con recomendaciones UTILES y CONCRETAS en espanol. No te cortes a medio camino: "
+                    "escribe el parrafo completo aunque sean 4-6 oraciones. "
+                    "Responde SOLO con la recomendacion, sin introducciones ni despedidas. "
+                    "Usa emojis solo cuando sea relevante para la accion.\n\n"
                     f"Datos:\n{json.dumps(ml_data, indent=2, ensure_ascii=False)}\n\n"
                     f"Contexto base:\n{template}"
                 )
 
                 response_text = self._call_gemini_api(system_prompt)
                 self._record_success()
-                return {
+                result = {
                     "type": "llm",
                     "mensaje": response_text,
                     "tipo": insight_type,
                     "timestamp": datetime.now().isoformat()
                 }
+                self._narrative_cache[ckey] = result
+                return result
 
             except Exception as e:
                 print(f"[LLM] Error llamando a Gemini: {e}")
                 self._record_failure()
 
         mensaje = self._select_template(insight_type, ml_data)
-        return {
+        result = {
             "type": "fallback",
             "mensaje": mensaje,
             "tipo": insight_type,
             "timestamp": datetime.now().isoformat(),
             "reason": "no_llm_available"
         }
+        self._narrative_cache[ckey] = result
+        return result
