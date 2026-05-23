@@ -54,4 +54,7 @@ ai_engine/**/__pycache__/
 ai_engine/venv/
 scripts/
 
+# pero NO ignorar ai_engine/scripts/
+!ai_engine/scripts/
+
 .agents/
