@@ -119,7 +119,7 @@ class LLMService:
             raise RuntimeError("Gemini no configurado (sin client)")
 
         response = self.client.models.generate_content(
-            model="gemini-2.0-flash-lite",
+            model="gemini-2.5-flash",
             contents=prompt,
             config={
                 "temperature": 0.4,
