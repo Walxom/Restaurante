@@ -151,7 +151,7 @@ export default function PedidosPorServirWidget({
     if (onOrderClick) {
       onOrderClick(orderId)
     } else {
-      router.push('/pedidos')
+      router.push(`/pedidos/${orderId}/detalles`)
     }
   }
 
@@ -213,7 +213,7 @@ export default function PedidosPorServirWidget({
             </button>
           </div>
         ) : (
-          <div className="space-y-2 sm:space-y-3 max-h-64 sm:max-h-80 overflow-y-auto">
+          <div className="space-y-2 sm:space-y-3 max-h-64 sm:max-h-80 overflow-y-auto overflow-x-hidden pr-1.5 custom-scrollbar">
             {loading ? (
               <div className="text-center py-6 sm:py-8">
                 <div className="animate-spin w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full mx-auto mb-2"></div>

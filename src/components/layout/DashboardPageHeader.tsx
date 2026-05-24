@@ -46,19 +46,19 @@ export function DashboardPageHeader({
               </h1>
               <div className="flex items-center gap-2">
                 {userName && (
-                  <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                  <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap truncate max-w-[110px] sm:max-w-none">
                     {userName}
                   </p>
                 )}
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 dark:bg-slate-800/50 rounded-full border border-slate-200 dark:border-slate-700/50">
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 dark:bg-slate-800/50 rounded-full border border-slate-200 dark:border-slate-700/50 shrink-0 whitespace-nowrap">
                   <div
-                    className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                    className={`w-1.5 h-1.5 rounded-full animate-pulse shrink-0 ${
                       isOnline
                         ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                         : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
                     }`}
                   ></div>
-                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">
+                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight shrink-0 whitespace-nowrap">
                     {isOnline ? "En línea" : "Desconectado"}
                   </span>
                 </div>

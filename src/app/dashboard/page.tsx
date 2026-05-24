@@ -212,7 +212,7 @@ export default function DashboardPage() {
             refreshTrigger={widgetRefreshTrigger}
             userRole="JEFE"
             maxOrders={6}
-            onOrderClick={() => router.push('/pedidos')}
+            onOrderClick={(orderId) => router.push(`/pedidos/${orderId}/detalles`)}
           />
 
           {/* Widget de Pedidos Servidos */}
@@ -220,7 +220,7 @@ export default function DashboardPage() {
             refreshTrigger={widgetRefreshTrigger}
             userRole="JEFE"
             maxOrders={6}
-            onOrderClick={() => router.push('/pedidos')}
+            onOrderClick={(orderId) => router.push(`/pedidos/${orderId}/detalles`)}
           />
         </div>
 

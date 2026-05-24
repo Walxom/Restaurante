@@ -35,7 +35,8 @@ export default function UnifiedOrdersPage() {
   const fetchOrders = useCallback(async () => {
     try {
       if (!session?.user?.id) return
-      const todayStr = new Date().toISOString().split('T')[0]
+      const now = new Date()
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
       const statusParam = filter === 'active' ? '&status=active' : `&status=${filter.toUpperCase()}`
       const response = await fetch(`/api/orders?showAll=true&date=${todayStr}${statusParam}`)
 
@@ -56,7 +57,8 @@ export default function UnifiedOrdersPage() {
     try {
       if (!session?.user?.id) return
 
-      const todayStr = new Date().toISOString().split('T')[0]
+      const now = new Date()
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
       // Realizamos peticiones paralelas para cada estado para asegurar precisión
       const [activeRes, completedRes, cancelledRes] = await Promise.all([

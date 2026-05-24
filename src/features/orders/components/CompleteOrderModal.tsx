@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Receipt, FileText, X, Search, Check, ShieldCheck, Sparkles } from 'lucide-react'
+import { Receipt, FileText, X, Search, Check, ShieldCheck, Sparkles, Coins, CreditCard, Smartphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function CompleteOrderModal({
@@ -17,6 +17,7 @@ export default function CompleteOrderModal({
 }: CompleteOrderModalProps) {
   const [selectedType, setSelectedType] = useState<'none' | 'boleta' | 'factura' | null>(null)
   const [customerData, setCustomerData] = useState({ name: '', document: '', ruc: '' })
+  const [paymentMethod, setPaymentMethod] = useState<'EFECTIVO' | 'TARJETA' | 'YAPE' | 'PLIN'>('EFECTIVO')
   const [isProcessing, setIsProcessing] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [isDniVerified, setIsDniVerified] = useState(false)
@@ -74,7 +75,7 @@ export default function CompleteOrderModal({
         name: customerData.name,
         document: customerData.document,
         ruc: selectedType === 'factura' ? customerData.ruc : undefined
-      })
+      }, paymentMethod)
       setReceiptNumber(receiptNum || '')
       setShowSuccess(true)
     } catch (error) {
@@ -87,6 +88,7 @@ export default function CompleteOrderModal({
   const handleClose = () => {
     setSelectedType(null)
     setCustomerData({ name: '', document: '', ruc: '' })
+    setPaymentMethod('EFECTIVO')
     setIsDniVerified(false)
     setIsRucVerified(false)
     setShowSuccess(false)
@@ -150,8 +152,54 @@ export default function CompleteOrderModal({
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total a Cobrar</p>
                 <h4 className="text-3xl font-black text-foreground tracking-tighter">S/ {(typeof totalAmount === 'string' ? parseFloat(totalAmount) : totalAmount).toFixed(2)}</h4>
               </div>
-              <div className="px-4 py-2 bg-emerald-500/10 rounded-xl">
-                <span className="text-xs font-black text-emerald-500 uppercase tracking-widest">Efectivo</span>
+              <div className={cn(
+                "px-4 py-2 rounded-xl transition-all duration-300",
+                paymentMethod === 'EFECTIVO' ? 'bg-emerald-500/10 text-emerald-500' :
+                paymentMethod === 'TARJETA' ? 'bg-blue-500/10 text-blue-500' :
+                paymentMethod === 'YAPE' ? 'bg-purple-500/10 text-purple-500' :
+                'bg-sky-500/10 text-sky-500'
+              )}>
+                <span className="text-xs font-black uppercase tracking-widest">
+                  {paymentMethod === 'EFECTIVO' ? 'Efectivo' :
+                   paymentMethod === 'TARJETA' ? 'Tarjeta' :
+                   paymentMethod === 'YAPE' ? 'Yape' : 'Plin'}
+                </span>
+              </div>
+            </div>
+
+            {/* Payment Method Selector Grid */}
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">Método de Pago</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { id: 'EFECTIVO', label: 'Efectivo', icon: Coins, color: 'emerald' },
+                  { id: 'TARJETA', label: 'Tarjeta', icon: CreditCard, color: 'blue' },
+                  { id: 'YAPE', label: 'Yape', icon: Smartphone, color: 'purple' },
+                  { id: 'PLIN', label: 'Plin', icon: Smartphone, color: 'sky' }
+                ].map((method) => (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => setPaymentMethod(method.id as any)}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 gap-2 text-center cursor-pointer",
+                      paymentMethod === method.id 
+                        ? `bg-${method.color}-500/10 border-${method.color}-500/50 shadow-lg shadow-${method.color}-500/5`
+                        : "bg-foreground/5 border-border/50 hover:border-foreground/20"
+                    )}
+                  >
+                    <method.icon className={cn(
+                      "w-5 h-5 transition-colors",
+                      paymentMethod === method.id ? `text-${method.color}-500` : "text-muted-foreground"
+                    )} />
+                    <span className={cn(
+                      "text-[10px] font-black uppercase tracking-tight",
+                      paymentMethod === method.id ? "text-foreground" : "text-muted-foreground"
+                    )}>
+                      {method.label}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -270,7 +318,7 @@ interface CompleteOrderModalProps {
     name: string
     document: string
     ruc?: string
-  }) => Promise<string>
+  }, paymentMethod?: string) => Promise<string>
   orderNumber: string
   totalAmount: number
 }

@@ -91,7 +91,7 @@ export default function FacturacionPage() {
     }).format(value || 0)
   }
 
-  const onCompleteOrder = async (receiptType: string, customerData: any) => {
+  const onCompleteOrder = async (receiptType: string, customerData: any, paymentMethod: string = 'EFECTIVO') => {
     try {
       let receiptNumber = ''
       
@@ -107,7 +107,7 @@ export default function FacturacionPage() {
             customerName: customerData?.name || 'Cliente',
             customerDocument: customerData?.document || '',
             customerRuc: receiptType === 'factura' ? customerData?.ruc : customerData?.document,
-            paymentMethod: 'EFECTIVO',
+            paymentMethod,
             amountPaid: selectedOrder.totalAmount
           })
         })

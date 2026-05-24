@@ -66,18 +66,26 @@ export function useInvoices() {
         const params = new URLSearchParams({
           status: "COMPLETED",
           withoutInvoice: "true",
-          showAll: "true",
-          page: currentPage.toString(),
-          limit: "10"
+          showAll: "true"
         })
-        
-        if (search) params.append("search", search)
         
         const response = await fetch(`/api/orders?${params}`)
         if (!response.ok) throw new Error("Error al cargar pedidos sin boleta")
         
         const data = await response.json()
-        const ordersAsInvoices = data.map((order: any) => ({
+        
+        // Filtrar localmente por búsqueda si es aplicable
+        let filteredOrders = data
+        if (search) {
+          const searchLower = search.toLowerCase()
+          filteredOrders = data.filter((order: any) => 
+            order.orderNumber.toLowerCase().includes(searchLower) ||
+            (order.customerName && order.customerName.toLowerCase().includes(searchLower)) ||
+            (order.customerDni && order.customerDni.toLowerCase().includes(searchLower))
+          )
+        }
+        
+        const ordersAsInvoices = filteredOrders.map((order: any) => ({
           id: order.id,
           number: order.orderNumber,
           type: "SIN_BOLETA",
@@ -93,10 +101,14 @@ export function useInvoices() {
             table: order.table
           }
         }))
-        setInvoices(ordersAsInvoices)
-        // La API de pedidos actual retorna un array directo, no tiene metadatos de paginación.
-        // Asumimos 1 página si el limit es alto o calculamos basándonos en los datos si fuera necesario.
-        setTotalPages(1) 
+        
+        // Paginación local en el cliente
+        const itemsPerPage = 10
+        setTotalPages(Math.ceil(ordersAsInvoices.length / itemsPerPage) || 1)
+        
+        const startIndex = (currentPage - 1) * itemsPerPage
+        const endIndex = startIndex + itemsPerPage
+        setInvoices(ordersAsInvoices.slice(startIndex, endIndex)) 
       } else {
         const params = new URLSearchParams({
           page: currentPage.toString(),

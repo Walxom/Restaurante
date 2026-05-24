@@ -11,7 +11,7 @@ export function useOrderPayment(order: Order | null, onPaymentSuccess: () => voi
   const [isProcessing, setIsProcessing] = useState(false)
   const [completeModalOpen, setCompleteModalOpen] = useState(false)
 
-  const processCompleteOrder = async (receiptType: string, customerData?: CustomerData) => {
+  const processCompleteOrder = async (receiptType: string, customerData?: CustomerData, paymentMethod: string = 'EFECTIVO') => {
     if (!order) return null
 
     setIsProcessing(true)
@@ -53,7 +53,7 @@ export function useOrderPayment(order: Order | null, onPaymentSuccess: () => voi
             customerName: customerData?.name || 'Cliente',
             customerDocument: customerData?.document || '',
             customerRuc: customerData?.ruc || '',
-            paymentMethod: 'EFECTIVO', // Por defecto, se puede expandir
+            paymentMethod,
             amountPaid: Number(order.totalAmount)
           })
         })
