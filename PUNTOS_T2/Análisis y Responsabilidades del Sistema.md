@@ -1,30 +1,3 @@
-**2026**
-
-**FACULTAD DE INGENIERIA**
-
-**TEMA:** SPRINTS 1
-
-**CURSO:** CALIDAD Y PRUEBAS DE SOFTWARE
-
-**DOCENTE:** CARLOS ALBERTO CHIRINOS MUNDACA
-
-**AUTORES: NRC:**
-
-* LUJAN GUEVARA, JEFFREY ANDERSON N00341596
-* PORRAS PEREDA, JOHAN ALDAIR N00329648
-* CHAFLOQUE SALINAS, JOSE LUIS N00309948
-* TERRONES QUEZADA, JOSBEL FABIAN N00282251
-
-**TRUJILLO – 2026**
-
-**ÍNDICE**
-
-[**Software de Desarrollo - Estructura Procedimental a Analizar** 3](#_Toc228517233)
-
-[**Temática** 3](#_Toc228517234)
-
-[**Responsabilidade del Sistema** 3](#_Toc228517235)
-
 # **Software de Desarrollo - Estructura Procedimental a Analizar**
 
 Sistema web monolítico full-stack desarrollado en TypeScript/Next.js 15 con React 19 para frontend, API Routes Node.js para backend, Prisma ORM como abstracción de datos sobre SQLite local, Socket.IO para comunicación real-time bidireccional, NextAuth para autenticación JWT, y Tailwind CSS + Radix UI para interfaz responsiva; arquitectura actualmente orientada a una sucursal pero extensible mediante rediseño a multi-tenancy para operación en 100 sucursales distribuidas.
