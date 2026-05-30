@@ -59,7 +59,7 @@ export function SalesAnalyticsPanel({ stats, loading }: SalesAnalyticsPanelProps
             onClick={() => setActiveTab(tab.id as any)}
             className={`flex items-center gap-2 px-4 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 shrink-0 ${
               activeTab === tab.id
-                ? "bg-primary text-white shadow-lg shadow-primary/20"
+                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                 : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
             }`}
           >

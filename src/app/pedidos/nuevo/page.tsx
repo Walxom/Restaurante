@@ -228,7 +228,7 @@ export default function NewOrderPage() {
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
                     </div>
                   </div>
-                  <div className="p-2">
+                  <div className="p-2 max-h-[60vh] lg:max-h-[600px] overflow-y-auto custom-scrollbar rounded-xl border border-transparent dark:border-slate-800/50 bg-slate-50/30 dark:bg-slate-900/20">
                     <ProductGrid products={filteredProducts} onAddToCart={addToCart} cartItems={cartItems} />
                   </div>
                 </div>
