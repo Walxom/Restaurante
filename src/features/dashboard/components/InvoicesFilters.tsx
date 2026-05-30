@@ -48,9 +48,9 @@ export default function InvoicesFilters({ filters, handleSearch, clearFilters }:
         {/* Aquí podrías añadir un indicador de filtros activos si quisieras */}
       </div>
       <div className="p-4 sm:p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-3 sm:gap-4">
           {/* Búsqueda Principal */}
-          <div className="lg:col-span-2 relative group">
+          <div className="md:col-span-4 lg:col-span-4 relative group">
             <Input
               placeholder="Buscar por número, cliente, RUC..."
               value={search}
@@ -61,75 +61,81 @@ export default function InvoicesFilters({ filters, handleSearch, clearFilters }:
           </div>
           
           {/* Tipo de Comprobante */}
-          <Select
-            value={withoutReceiptFilter ? "SIN_BOLETA" : typeFilter || "all"}
-            onValueChange={(value) => {
-              if (value === "SIN_BOLETA") {
-                setWithoutReceiptFilter(true);
-                setTypeFilter("");
-              } else if (value === "all") {
-                setWithoutReceiptFilter(false);
-                setTypeFilter("");
-              } else {
-                setWithoutReceiptFilter(false);
-                setTypeFilter(value);
-              }
-            }}
-          >
-            <SelectTrigger className="bg-background/50 border-border/50 rounded-xl h-11 text-sm font-bold focus:ring-primary/20 hover:bg-background/80 transition-all">
-              <SelectValue placeholder="Tipo de Comprobante" />
-            </SelectTrigger>
-            <SelectContent className="bg-card/95 backdrop-blur-xl border-border/50 rounded-xl shadow-2xl">
-              <SelectItem value="all" className="font-bold uppercase tracking-widest text-[10px]">Todos los tipos</SelectItem>
-              <SelectItem value="BOLETA" className="font-bold uppercase tracking-widest text-[10px]">Boleta</SelectItem>
-              <SelectItem value="FACTURA" className="font-bold uppercase tracking-widest text-[10px]">Factura</SelectItem>
-              <SelectItem value="SIN_BOLETA" className="font-bold uppercase tracking-widest text-[10px] text-orange-500">Sin boleta</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="md:col-span-2 lg:col-span-2">
+            <Select
+              value={withoutReceiptFilter ? "SIN_BOLETA" : typeFilter || "all"}
+              onValueChange={(value) => {
+                if (value === "SIN_BOLETA") {
+                  setWithoutReceiptFilter(true);
+                  setTypeFilter("");
+                } else if (value === "all") {
+                  setWithoutReceiptFilter(false);
+                  setTypeFilter("");
+                } else {
+                  setWithoutReceiptFilter(false);
+                  setTypeFilter(value);
+                }
+              }}
+            >
+              <SelectTrigger className="bg-background/50 border-border/50 rounded-xl h-11 text-sm font-bold focus:ring-primary/20 hover:bg-background/80 transition-all w-full">
+                <SelectValue placeholder="Tipo de Comprobante" />
+              </SelectTrigger>
+              <SelectContent className="bg-card/95 backdrop-blur-xl border-border/50 rounded-xl shadow-2xl">
+                <SelectItem value="all" className="font-bold uppercase tracking-widest text-[10px]">Todos los tipos</SelectItem>
+                <SelectItem value="BOLETA" className="font-bold uppercase tracking-widest text-[10px]">Boleta</SelectItem>
+                <SelectItem value="FACTURA" className="font-bold uppercase tracking-widest text-[10px]">Factura</SelectItem>
+                <SelectItem value="SIN_BOLETA" className="font-bold uppercase tracking-widest text-[10px] text-orange-500">Sin boleta</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Método de Pago */}
-          <Select
-            value={paymentFilter || "all"}
-            onValueChange={(value) => setPaymentFilter(value === "all" ? "" : value)}
-            disabled={withoutReceiptFilter}
-          >
-            <SelectTrigger className={cn(
-              "bg-background/50 border-border/50 rounded-xl h-11 text-sm font-bold focus:ring-primary/20 hover:bg-background/80 transition-all",
-              withoutReceiptFilter && "opacity-30 cursor-not-allowed"
-            )}>
-              <SelectValue placeholder="Método de Pago" />
-            </SelectTrigger>
-            <SelectContent className="bg-card/95 backdrop-blur-xl border-border/50 rounded-xl shadow-2xl">
-              <SelectItem value="all" className="font-bold uppercase tracking-widest text-[10px]">Todos los pagos</SelectItem>
-              <SelectItem value="EFECTIVO" className="font-bold uppercase tracking-widest text-[10px]">Efectivo</SelectItem>
-              <SelectItem value="TARJETA" className="font-bold uppercase tracking-widest text-[10px]">Tarjeta</SelectItem>
-              <SelectItem value="YAPE" className="font-bold uppercase tracking-widest text-[10px] text-indigo-500">Yape</SelectItem>
-              <SelectItem value="PLIN" className="font-bold uppercase tracking-widest text-[10px] text-teal-500">Plin</SelectItem>
-              <SelectItem value="TRANSFERENCIA" className="font-bold uppercase tracking-widest text-[10px]">Transferencia</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="md:col-span-2 lg:col-span-2">
+            <Select
+              value={paymentFilter || "all"}
+              onValueChange={(value) => setPaymentFilter(value === "all" ? "" : value)}
+              disabled={withoutReceiptFilter}
+            >
+              <SelectTrigger className={cn(
+                "bg-background/50 border-border/50 rounded-xl h-11 text-sm font-bold focus:ring-primary/20 hover:bg-background/80 transition-all w-full",
+                withoutReceiptFilter && "opacity-30 cursor-not-allowed"
+              )}>
+                <SelectValue placeholder="Método de Pago" />
+              </SelectTrigger>
+              <SelectContent className="bg-card/95 backdrop-blur-xl border-border/50 rounded-xl shadow-2xl">
+                <SelectItem value="all" className="font-bold uppercase tracking-widest text-[10px]">Todos los pagos</SelectItem>
+                <SelectItem value="EFECTIVO" className="font-bold uppercase tracking-widest text-[10px]">Efectivo</SelectItem>
+                <SelectItem value="TARJETA" className="font-bold uppercase tracking-widest text-[10px]">Tarjeta</SelectItem>
+                <SelectItem value="YAPE" className="font-bold uppercase tracking-widest text-[10px] text-indigo-500">Yape</SelectItem>
+                <SelectItem value="PLIN" className="font-bold uppercase tracking-widest text-[10px] text-teal-500">Plin</SelectItem>
+                <SelectItem value="TRANSFERENCIA" className="font-bold uppercase tracking-widest text-[10px]">Transferencia</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Estado */}
-          <Select
-            value={statusFilter || "all"}
-            onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}
-            disabled={withoutReceiptFilter}
-          >
-            <SelectTrigger className={cn(
-              "bg-background/50 border-border/50 rounded-xl h-11 text-sm font-bold focus:ring-primary/20 hover:bg-background/80 transition-all",
-              withoutReceiptFilter && "opacity-30 cursor-not-allowed"
-            )}>
-              <SelectValue placeholder="Estado" />
-            </SelectTrigger>
-            <SelectContent className="bg-card/95 backdrop-blur-xl border-border/50 rounded-xl shadow-2xl">
-              <SelectItem value="all" className="font-bold uppercase tracking-widest text-[10px]">Todos los estados</SelectItem>
-              <SelectItem value="ISSUED" className="font-bold uppercase tracking-widest text-[10px] text-emerald-500">Emitidas</SelectItem>
-              <SelectItem value="CANCELLED" className="font-bold uppercase tracking-widest text-[10px] text-rose-500">Anuladas</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="md:col-span-2 lg:col-span-2">
+            <Select
+              value={statusFilter || "all"}
+              onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}
+              disabled={withoutReceiptFilter}
+            >
+              <SelectTrigger className={cn(
+                "bg-background/50 border-border/50 rounded-xl h-11 text-sm font-bold focus:ring-primary/20 hover:bg-background/80 transition-all w-full",
+                withoutReceiptFilter && "opacity-30 cursor-not-allowed"
+              )}>
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent className="bg-card/95 backdrop-blur-xl border-border/50 rounded-xl shadow-2xl">
+                <SelectItem value="all" className="font-bold uppercase tracking-widest text-[10px]">Todos los estados</SelectItem>
+                <SelectItem value="ISSUED" className="font-bold uppercase tracking-widest text-[10px] text-emerald-500">Emitidas</SelectItem>
+                <SelectItem value="CANCELLED" className="font-bold uppercase tracking-widest text-[10px] text-rose-500">Anuladas</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Acciones */}
-          <div className="flex gap-2">
+          <div className="md:col-span-2 lg:col-span-2 flex gap-2">
             <Button 
               onClick={handleSearch} 
               className="flex-1 h-11 rounded-xl font-black uppercase tracking-widest text-[10px] bg-primary shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
