@@ -21,8 +21,10 @@ import {
   Loader2,
   Ban,
   CheckCircle2,
-  Lock
+  Lock,
+  Mail
 } from "lucide-react"
+import SendEmailModal from "@/features/billing/components/SendEmailModal"
 
 interface Invoice {
   id: string
@@ -80,6 +82,7 @@ export default function FacturaDetailsPage({
   const [cancelling, setCancelling] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelReason, setCancelReason] = useState("")
+  const [showEmailModal, setShowEmailModal] = useState(false)
   
   const [invoiceId, setInvoiceId] = useState<string>("")
 
@@ -367,14 +370,24 @@ export default function FacturaDetailsPage({
               )
             })()}
             {invoice.status === "ISSUED" && (
-              <Button 
-                onClick={() => setShowCancelModal(true)}
-                variant="destructive"
-                className="rounded-full font-bold shadow-lg shadow-red-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-              >
-                <Ban className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Anular</span>
-              </Button>
+              <>
+                <Button 
+                  onClick={() => setShowEmailModal(true)}
+                  variant="outline"
+                  className="rounded-full font-bold shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500 hover:text-white"
+                >
+                  <Mail className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Enviar Correo</span>
+                </Button>
+                <Button 
+                  onClick={() => setShowCancelModal(true)}
+                  variant="destructive"
+                  className="rounded-full font-bold shadow-lg shadow-red-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  <Ban className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Anular</span>
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -618,71 +631,68 @@ export default function FacturaDetailsPage({
             )}
           </div>
         </div>
+      </main>
 
-        {/* Modal de Anulación Glassmorphism */}
-        {showCancelModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div 
-              className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300"
-              onClick={() => !cancelling && setShowCancelModal(false)}
-            />
-            <div className="relative bg-card/60 backdrop-blur-2xl border border-border/50 rounded-[2rem] w-full max-w-md shadow-2xl p-8 animate-in zoom-in-95 fade-in duration-300">
-              <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-6 border border-red-500/20 mx-auto">
-                <AlertTriangle className="w-8 h-8 text-red-500" />
-              </div>
-              
-              <h3 className="text-2xl font-black text-foreground text-center mb-2">Anular Comprobante</h3>
-              <p className="text-muted-foreground text-center mb-8 text-sm leading-relaxed">
-                Esta acción invalidará la boleta/factura en el sistema y no se puede deshacer. ¿Deseas continuar?
-              </p>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1">
-                    Motivo de la anulación (Obligatorio)
-                  </label>
-                  <Input
-                    value={cancelReason}
-                    onChange={(e) => setCancelReason(e.target.value)}
-                    placeholder="Ej. Error en los datos del cliente..."
-                    className="w-full h-12 rounded-xl bg-background/50 border-border focus:ring-red-500/20 focus:border-red-500 transition-all"
-                  />
-                </div>
-                
-                <div className="flex flex-col gap-3 pt-2">
-                  <Button
-                    onClick={handleCancelInvoice}
-                    disabled={cancelling || cancelReason.trim().length < 5}
-                    variant="destructive"
-                    className="w-full h-12 rounded-xl font-bold shadow-lg shadow-red-500/20"
-                  >
-                    {cancelling ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Procesando Anulación...
-                      </>
-                    ) : (
-                      "Confirmar Anulación"
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setShowCancelModal(false)
-                      setCancelReason("")
-                      setError(null)
-                    }}
-                    variant="ghost"
-                    disabled={cancelling}
-                    className="w-full h-12 rounded-xl font-bold hover:bg-foreground/5"
-                  >
-                    Mantener Comprobante
-                  </Button>
-                </div>
-              </div>
+      {/* Modal para anular */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-card/90 backdrop-blur-2xl border border-border/50 rounded-[2rem] p-8 shadow-2xl max-w-md w-full animate-in zoom-in-95">
+            <h3 className="text-xl font-black text-foreground mb-4">Anular Comprobante</h3>
+            <p className="text-muted-foreground mb-6 text-sm">
+              ¿Estás seguro de que deseas anular el comprobante <strong>{invoice.number}</strong>? 
+              Esta acción no se puede deshacer. Por favor, indica el motivo de la anulación.
+            </p>
+            
+            <div className="space-y-4 mb-8">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                Motivo de anulación
+              </label>
+              <Input 
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Ej. Error en RUC, pedido cancelado..."
+                className="bg-foreground/5 border-border/50 rounded-xl"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowCancelModal(false)
+                  setCancelReason("")
+                }}
+                disabled={cancelling}
+                className="flex-1 rounded-xl"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleCancelInvoice}
+                disabled={cancelling || cancelReason.trim().length < 5}
+                className="flex-1 rounded-xl shadow-lg shadow-red-500/20"
+              >
+                {cancelling ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Anulando...
+                  </>
+                ) : (
+                  "Confirmar Anulación"
+                )}
+              </Button>
             </div>
           </div>
-        )}
-      </main>
+        </div>
+      )}
+
+      <SendEmailModal 
+        isOpen={showEmailModal} 
+        onClose={() => setShowEmailModal(false)} 
+        invoiceId={invoice.id} 
+        invoiceNumber={invoice.number} 
+      />
     </div>
   )
 }

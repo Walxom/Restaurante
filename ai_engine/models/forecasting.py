@@ -102,7 +102,7 @@ class DemandForecaster:
             return
 
         df_items = pd.DataFrame(order_items)
-        df_items["orderDate"] = pd.to_datetime(df_items["orderDate"])
+        df_items["orderDate"] = pd.to_datetime(df_items["orderDate"], unit='ms')
         df_items["ds"] = df_items["orderDate"].dt.date
         df_items["ds"] = pd.to_datetime(df_items["ds"])
 
@@ -149,7 +149,7 @@ class DemandForecaster:
     def _train_prophet_models(self, products: list[dict], order_items: list[dict]):
         """Entrenamiento adicional con Prophet si esta disponible."""
         df_items = pd.DataFrame(order_items)
-        df_items["orderDate"] = pd.to_datetime(df_items["orderDate"])
+        df_items["orderDate"] = pd.to_datetime(df_items["orderDate"], unit='ms')
         product_map = {p["id"]: p["name"] for p in products}
 
         for pid in [

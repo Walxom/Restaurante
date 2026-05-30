@@ -21,7 +21,7 @@ class DataService:
                    o.createdAt, o.updatedAt, o.tableId, o.userId
             FROM orders o
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND o.createdAt >= datetime('now', ? || ' days')
+              AND o.createdAt >= (strftime('%s', 'now', ? || ' days') * 1000)
             ORDER BY o.createdAt ASC
         """, (f"-{days_back}",))
 
@@ -34,7 +34,7 @@ class DataService:
             FROM order_items oi
             JOIN orders o ON o.id = oi.orderId
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND o.createdAt >= datetime('now', ? || ' days')
+              AND o.createdAt >= (strftime('%s', 'now', ? || ' days') * 1000)
             ORDER BY o.createdAt ASC
         """, (f"-{days_back}",))
 
@@ -72,20 +72,34 @@ class DataService:
             JOIN orders o ON o.id = oi.orderId
             JOIN products p ON p.id = oi.productId
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND o.createdAt >= datetime('now', ? || ' days')
+              AND o.createdAt >= (strftime('%s', 'now', ? || ' days') * 1000)
             ORDER BY o.id
         """, (f"-{days_back}",))
 
     @staticmethod
     def get_daily_sales(days_back: int = 90) -> list[dict]:
         return fetch_all("""
-            SELECT date(o.createdAt) as date,
+            SELECT date(o.createdAt / 1000, 'unixepoch') as date,
                    COUNT(DISTINCT o.id) as order_count,
                    SUM(o.totalAmount) as total_revenue,
                    AVG(o.totalAmount) as avg_ticket
             FROM orders o
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND o.createdAt >= datetime('now', ? || ' days')
-            GROUP BY date(o.createdAt)
+              AND o.createdAt >= (strftime('%s', 'now', ? || ' days') * 1000)
+            GROUP BY date(o.createdAt / 1000, 'unixepoch')
             ORDER BY date ASC
         """, (f"-{days_back}",))
+
+    @staticmethod
+    def get_top_products(days_back: int = 30, limit: int = 5) -> list[dict]:
+        return fetch_all("""
+            SELECT p.name, SUM(oi.quantity) as total_sold
+            FROM order_items oi
+            JOIN orders o ON o.id = oi.orderId
+            JOIN products p ON p.id = oi.productId
+            WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
+              AND o.createdAt >= (strftime('%s', 'now', ? || ' days') * 1000)
+            GROUP BY p.id, p.name
+            ORDER BY total_sold DESC
+            LIMIT ?
+        """, (f"-{days_back}", limit))

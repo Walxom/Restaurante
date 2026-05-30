@@ -24,11 +24,14 @@ class ChatService:
             products = DataService.get_products()
             ingredients = DataService.get_ingredients()
             daily_sales = DataService.get_daily_sales(7)
+            top_products = DataService.get_top_products(30, 5)
 
             total_products = len(products)
             total_ingredients = len(ingredients)
             weekly_revenue = sum(s.get("total_revenue", 0) or 0 for s in daily_sales)
             weekly_orders = sum(s.get("order_count", 0) or 0 for s in daily_sales)
+            
+            top_products_text = ", ".join(f"{p['name']} ({p['total_sold']} uds)" for p in top_products) if top_products else "No hay datos recientes"
 
             context = (
                 f"Eres un asistente de inteligencia de negocios para la cevicheria peruana 'Fondo Marino'. "
@@ -36,6 +39,7 @@ class ChatService:
                 f"- Productos en menu: {total_products}\n"
                 f"- Insumos en inventario: {total_ingredients}\n"
                 f"- Ventas ultimos 7 dias: {weekly_orders} ordenes, S/ {weekly_revenue:.2f}\n"
+                f"- Platos mas vendidos (ultimos 30 dias): {top_products_text}\n"
                 f"- Hoy es: {datetime.now().strftime('%A %d de %B de %Y')}\n\n"
                 f"Responde preguntas sobre el negocio de forma util, profesional y directa en espanol. "
                 f"Usa datos concretos cuando sea posible. Si no sabes la respuesta, sugieres donde "

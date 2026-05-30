@@ -1,11 +1,13 @@
 "use client"
 
+import { useState } from "react"
+
 import { useRouter } from "next/navigation"
 import ForecastChart from "./ForecastChart"
 import InventoryAlertPanel from "./InventoryAlertPanel"
 import MarketBasketSuggestions from "./MarketBasketSuggestions"
 import AiChatPanel from "./AiChatPanel"
-import { useAiHealth } from "@/features/ai-analytics/hooks/useAiInsights"
+import { useAiHealth, triggerRetrainAll } from "@/features/ai-analytics/hooks/useAiInsights"
 import { Brain, Wifi, RefreshCw, Terminal, ArrowLeft } from "lucide-react"
 import { RoleGuard } from "@/components/auth/role-guard"
 import { Button } from "@/components/ui/button"
@@ -13,6 +15,19 @@ import { Button } from "@/components/ui/button"
 export default function AiDashboard() {
   const router = useRouter()
   const { isAiOnline, isLoading: healthLoading } = useAiHealth()
+  const [isRetraining, setIsRetraining] = useState(false)
+
+  const handleRetrain = async () => {
+    setIsRetraining(true)
+    try {
+      const res = await triggerRetrainAll()
+      alert(res.message || "Modelos reentrenados correctamente")
+    } catch (error: any) {
+      alert("Error al reentrenar: " + error.message)
+    } finally {
+      setIsRetraining(false)
+    }
+  }
 
   const renderContent = () => {
     if (healthLoading) {
@@ -73,9 +88,21 @@ export default function AiDashboard() {
 
     return (
       <div className="flex flex-col gap-8 sm:gap-10">
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[9px] font-black uppercase tracking-widest text-emerald-500 w-fit">
-          <Wifi className="w-3 h-3" />
-          AI Conectado - Datos en tiempo real
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[9px] font-black uppercase tracking-widest text-emerald-500 w-fit">
+            <Wifi className="w-3 h-3" />
+            AI Conectado - Datos en tiempo real
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            disabled={isRetraining}
+            onClick={handleRetrain}
+            className="h-8 rounded-full text-[9px] font-black uppercase tracking-widest bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary transition-all"
+          >
+            <RefreshCw className={`w-3 h-3 mr-2 ${isRetraining ? 'animate-spin' : ''}`} />
+            {isRetraining ? 'Entrenando...' : 'Reentrenar Modelos'}
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
