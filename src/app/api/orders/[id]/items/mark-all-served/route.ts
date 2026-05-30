@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { emitOrderItemUpdate } from "@/lib/socket-events"
+import { emitOrderItemUpdate, emitOrderStatusChange } from "@/lib/socket-events"
 
 // Función para convertir unidades a unidad base
 function convertToBaseUnit(quantity: number, unit: string): number {
@@ -188,11 +188,28 @@ export async function PATCH(
         updatedItems,
         allServed,
         orderNumber: order.orderNumber,
+        oldStatus: order.status,
         message: `${updatedItems.length} items marcados como servidos`
       }
     })
 
     console.log(`✅ Todos los items del pedido ${result.orderNumber} marcados como servidos`)
+
+    // Si el estado del pedido cambió a SERVED, emitir evento de cambio de estado de pedido
+    if (result.allServed && result.oldStatus !== 'SERVED') {
+      const updatedOrder = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          table: {
+            select: {
+              number: true,
+              capacity: true
+            }
+          }
+        }
+      })
+      emitOrderStatusChange(orderId, result.oldStatus, 'SERVED', updatedOrder)
+    }
 
     // Emitir evento Socket.IO para cada item actualizado
     result.updatedItems.forEach((item: any) => {

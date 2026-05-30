@@ -130,6 +130,7 @@ export default function MeseroPage() {
   const handleOrderStatusChanged = useCallback((data: any) => {
     console.log('Estado de pedido cambiado en dashboard mesero:', data)
     debouncedFetchDashboardData()
+    setWidgetRefreshTrigger(prev => prev + 1)
   }, [debouncedFetchDashboardData])
 
   const handleTableUpdated = useCallback((table: any) => {

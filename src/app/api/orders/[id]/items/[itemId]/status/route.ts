@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from "@/lib/prisma"
 import { TableStatus } from '@/types'
 import { convertToBaseUnit } from '@/features/inventory/utils/units'
-import { emitOrderItemUpdate, emitTableStatusChange } from '@/lib/socket-events'
+import { emitOrderItemUpdate, emitTableStatusChange, emitOrderStatusChange } from '@/lib/socket-events'
 
 
 
@@ -332,6 +332,22 @@ export async function PATCH(
       where: { id: orderId },
       data: { status: newOrderStatus }
     })
+
+    // Emitir evento de cambio de estado del pedido si cambió
+    if (orderItem.order.status !== newOrderStatus) {
+      const updatedOrder = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          table: {
+            select: {
+              number: true,
+              capacity: true
+            }
+          }
+        }
+      })
+      emitOrderStatusChange(orderId, orderItem.order.status, newOrderStatus, updatedOrder)
+    }
 
     // Actualizar estado de la mesa según el estado de los pedidos
     if (orderItem.order.tableId) {
