@@ -17,6 +17,7 @@ export function useCreateOrder() {
   const [showOrderModal, setShowOrderModal] = useState(false)
   const [createdOrder, setCreatedOrder] = useState<CreatedOrder | null>(null)
   const [printerError, setPrinterError] = useState<string | null>(null)
+  const [isPrintSkipped, setIsPrintSkipped] = useState(false)
   const [validationErrors, setValidationErrors] = useState<any[]>([])
   const { printOrder } = useThermalPrinter()
 
@@ -81,13 +82,15 @@ export function useCreateOrder() {
         
         // Impresión automática a cocina
         try {
-          await printOrder(order.id, {
+          const printResult = await printOrder(order.id, {
             tableNumber: orderType === 'MESA' ? selectedTable?.number?.toString() : orderType,
             waiterName: session?.user?.name || 'Sistema',
             isUrgent: false
           })
+          setIsPrintSkipped(!!printResult?.skipped)
         } catch (printError: unknown) {
           setPrinterError(printError instanceof Error ? printError.message : 'No se pudo imprimir en la impresora de cocina.')
+          setIsPrintSkipped(true)
         }
         
         setCreatedOrder(order)
@@ -112,6 +115,7 @@ export function useCreateOrder() {
     createdOrder,
     printerError,
     setPrinterError,
+    isPrintSkipped,
     createOrder
   }
 }

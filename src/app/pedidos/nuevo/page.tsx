@@ -39,7 +39,7 @@ export default function NewOrderPage() {
   const { tables, categories, products, isLoading, error, refreshData } = useOrderData()
   const { 
     isCreatingOrder, showOrderModal, setShowOrderModal, 
-    createdOrder, printerError, setPrinterError, createOrder 
+    createdOrder, printerError, setPrinterError, isPrintSkipped, createOrder 
   } = useCreateOrder()
 
   // Estados locales del formulario
@@ -254,8 +254,9 @@ export default function NewOrderPage() {
             orderNumber={createdOrder.orderNumber}
             orderId={createdOrder.id}
             orderType={orderType}
-            tableNumber={selectedTable?.number}
-            totalAmount={calculateTotal()}
+            tableNumber={createdOrder.table?.number}
+            totalAmount={Number(createdOrder.totalAmount)}
+            isPrintSkipped={isPrintSkipped}
           />
         )}
         <PrinterErrorModal open={!!printerError} errorMessage={printerError || ''} onClose={() => setPrinterError(null)} />

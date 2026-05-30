@@ -183,6 +183,11 @@ export interface Order {
 export interface CreatedOrder {
   id: string
   orderNumber: string
+  totalAmount?: number | string
+  table?: {
+    id: string
+    number: number
+  } | null
 }
 
 // --- TIPOS DE IMPRESORAS ---

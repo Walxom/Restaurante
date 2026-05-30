@@ -23,6 +23,7 @@ interface OrderCreatedModalProps {
   orderType: string
   tableNumber?: number
   totalAmount: number
+  isPrintSkipped?: boolean
 }
 
 export default function OrderCreatedModal({ 
@@ -32,7 +33,8 @@ export default function OrderCreatedModal({
   orderId,
   orderType,
   tableNumber,
-  totalAmount
+  totalAmount,
+  isPrintSkipped = false
 }: OrderCreatedModalProps) {
   const router = useRouter()
 
@@ -137,12 +139,21 @@ export default function OrderCreatedModal({
 
 
           {/* Mensaje de Cocina */}
-          <div className="flex items-center gap-3 bg-blue-500/5 px-4 py-3 rounded-2xl border border-blue-500/10">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-            <p className="text-[11px] font-bold text-blue-500/80 uppercase tracking-tight text-left">
-              Comanda enviada a cocina automáticamente
-            </p>
-          </div>
+          {isPrintSkipped ? (
+            <div className="flex items-center gap-3 bg-amber-500/5 px-4 py-3 rounded-2xl border border-amber-500/10">
+              <div className="w-2.5 h-2.5 bg-amber-500 rounded-full shadow-lg shadow-amber-500/50" />
+              <p className="text-[11px] font-black text-amber-500/90 uppercase tracking-wider text-left">
+                Impresión omitida (Servicio deshabilitado)
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 bg-blue-500/5 px-4 py-3 rounded-2xl border border-blue-500/10">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50" />
+              <p className="text-[11px] font-bold text-blue-500/80 uppercase tracking-tight text-left">
+                Comanda enviada a cocina automáticamente
+              </p>
+            </div>
+          )}
 
           {/* Botones de acción */}
           <div className="grid grid-cols-1 gap-3 pt-2">
