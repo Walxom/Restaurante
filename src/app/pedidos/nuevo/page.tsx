@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, ShoppingCart, Utensils, User, MapPin, FileText } from "lucide-react"
+import { ArrowLeft, ShoppingCart, Utensils, User, MapPin, FileText, Search } from "lucide-react"
 
 // Componentes
 import TableSelectorWithOccupied from "@/features/tables/components/TableSelectorWithOccupied"
@@ -45,6 +45,7 @@ export default function NewOrderPage() {
   // Estados locales del formulario
   const [selectedTable, setSelectedTable] = useState<Table | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string>("")
+  const [searchQuery, setSearchQuery] = useState("")
   const [orderType, setOrderType] = useState<OrderType>('MESA')
   const [notes, setNotes] = useState("")
   const [customerData, setCustomerData] = useState<CustomerData>({
@@ -103,9 +104,11 @@ export default function NewOrderPage() {
     }
   }
 
-  const filteredProducts = products.filter(product => 
-    selectedCategory ? product.categoryId === selectedCategory : true
-  )
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = selectedCategory ? product.categoryId === selectedCategory : true
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesCategory && matchesSearch
+  })
 
   if (error) {
     return (
@@ -196,14 +199,34 @@ export default function NewOrderPage() {
 
                 {/* Menú del Día */}
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
-                  <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-foreground mb-1 tracking-tight flex items-center gap-2">
-                        <Utensils className="w-5 h-5 text-emerald-500" />
-                        Menú del Día
-                      </h2>
+                  <div className="mb-6 space-y-6">
+                    <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-6">
+                      <div className="flex-shrink-0 pt-1">
+                        <h2 className="text-xl font-bold text-foreground mb-1 tracking-tight flex items-center gap-2">
+                          <Utensils className="w-5 h-5 text-emerald-500" />
+                          Menú del Día
+                        </h2>
+                      </div>
+                      <div className="w-full xl:w-auto overflow-x-auto pb-2 xl:pb-0 custom-scrollbar flex-1 xl:flex xl:justify-end">
+                        <CategoryTabs categories={categories} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
+                      </div>
                     </div>
-                    <CategoryTabs categories={categories} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
+                    
+                    <div className="relative w-full group">
+                      <Input
+                        type="text"
+                        placeholder="Buscar plato..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value)
+                          if (e.target.value.length > 0) {
+                            setSelectedCategory("")
+                          }
+                        }}
+                        className="h-12 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-2xl pl-12 focus:ring-emerald-500/20 font-medium text-sm transition-all"
+                      />
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
+                    </div>
                   </div>
                   <div className="p-2">
                     <ProductGrid products={filteredProducts} onAddToCart={addToCart} cartItems={cartItems} />
