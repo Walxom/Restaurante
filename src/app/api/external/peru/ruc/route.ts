@@ -65,7 +65,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       success: true,
       data: {
-        ruc: data.numero || numero,
+        ruc: data.numero_documento || numero,
         razonSocial: data.razon_social || '',
         nombreComercial: data.nombre_comercial || '',
         estado: data.estado || '',

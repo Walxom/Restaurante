@@ -65,11 +65,11 @@ export async function GET(req: Request) {
     return NextResponse.json({
       success: true,
       data: {
-        dni: data.numero || numero,
+        dni: data.document_number || numero,
         nombres: data.first_name || '',
         apellidoPaterno: data.first_last_name || '',
         apellidoMaterno: data.second_last_name || '',
-        nombreCompleto: `${data.first_name || ''} ${data.first_last_name || ''} ${data.second_last_name || ''}`.trim()
+        nombreCompleto: data.full_name || `${data.first_name || ''} ${data.first_last_name || ''} ${data.second_last_name || ''}`.trim()
       }
     })
   } catch (error: any) {

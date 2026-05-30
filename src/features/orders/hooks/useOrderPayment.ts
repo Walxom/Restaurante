@@ -62,7 +62,15 @@ export function useOrderPayment(order: Order | null, onPaymentSuccess: () => voi
           const invoice = await invoiceRes.json()
           receiptNumber = invoice.number
         } else {
-          throw new Error("Error al generar el comprobante")
+          const errText = await invoiceRes.text()
+          let errMsg = "Error al generar el comprobante"
+          try {
+            const errJson = JSON.parse(errText)
+            errMsg = errJson.error || errMsg
+          } catch (e) {
+            errMsg = errText || errMsg
+          }
+          throw new Error(errMsg)
         }
       }
 

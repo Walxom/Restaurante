@@ -43,7 +43,10 @@ export async function POST(req: Request) {
     const protocol = req.headers.get('x-forwarded-proto') || 'http'
     const fullUrl = `${protocol}://${baseUrl}${apiEndpoint}?numero=${numero}`
 
-    const response = await fetch(fullUrl)
+    const cookieHeader = req.headers.get('cookie')
+    const response = await fetch(fullUrl, {
+      headers: cookieHeader ? { cookie: cookieHeader } : {}
+    })
     const data = await response.json()
 
     if (!response.ok) {
