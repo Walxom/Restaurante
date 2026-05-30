@@ -188,32 +188,20 @@ export default function InventoryPage() {
 
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <TabsList className="bg-muted/50 backdrop-blur-sm p-1 rounded-2xl border border-border/50 h-12">
-                  <TabsTrigger value="inventory" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-[10px] font-black uppercase tracking-widest">
+                <TabsList className="bg-muted/50 backdrop-blur-sm p-1 rounded-2xl border border-border/50 h-12 w-full sm:w-auto overflow-x-auto custom-scrollbar">
+                  <TabsTrigger value="inventory" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
                     <Package className="w-4 h-4 mr-2" />
                     Existencias
                   </TabsTrigger>
-                  <TabsTrigger value="categories" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-[10px] font-black uppercase tracking-widest">
+                  <TabsTrigger value="categories" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
                     <Layers className="w-4 h-4 mr-2" />
                     Categorías
                   </TabsTrigger>
-                  <TabsTrigger value="deleted" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-[10px] font-black uppercase tracking-widest">
+                  <TabsTrigger value="deleted" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
                     <History className="w-4 h-4 mr-2" />
                     Papelera
                   </TabsTrigger>
                 </TabsList>
-
-                {activeTab === 'inventory' && (
-                  <InventoryFilters 
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    stockFilter={stockFilter}
-                    setStockFilter={setStockFilter}
-                    categoryFilter={categoryFilter}
-                    setCategoryFilter={setCategoryFilter}
-                    categories={categories}
-                  />
-                )}
 
                 {activeTab === 'categories' && (
                   <Button 
@@ -222,7 +210,7 @@ export default function InventoryPage() {
                       setShowCategoryModal(true)
                     }}
                     variant="outline"
-                    className="h-10 rounded-xl border-border/50 bg-background/50 backdrop-blur-sm font-black uppercase tracking-widest text-[10px] hover:bg-muted"
+                    className="h-10 rounded-xl border-border/50 bg-background/50 backdrop-blur-sm font-black uppercase tracking-widest text-[10px] hover:bg-muted whitespace-nowrap"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Nueva Categoría
@@ -230,7 +218,16 @@ export default function InventoryPage() {
                 )}
               </div>
 
-              <TabsContent value="inventory" className="m-0 focus-visible:ring-0">
+              <TabsContent value="inventory" className="m-0 focus-visible:ring-0 space-y-6">
+                <InventoryFilters 
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  stockFilter={stockFilter}
+                  setStockFilter={setStockFilter}
+                  categoryFilter={categoryFilter}
+                  setCategoryFilter={setCategoryFilter}
+                  categories={categories}
+                />
                 <IngredientTable 
                   ingredients={ingredients}
                   isLoading={isLoading}

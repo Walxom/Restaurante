@@ -4,7 +4,7 @@ export const recipeIngredientSchema = z.object({
   ingredientId: z.string().min(1, "ID de ingrediente requerido"),
   quantity: z.number().positive("La cantidad debe ser mayor a 0"),
   unit: z.string().min(1, "La unidad es requerida"),
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 export const recipeSchema = z.object({
