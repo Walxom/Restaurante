@@ -18,7 +18,7 @@ export default function InvoicesStats({ stats, formatCurrency }: InvoicesStatsPr
   ]
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 w-full">
       {statsConfig.map((stat) => (
         <div 
           key={stat.label} 
@@ -27,7 +27,7 @@ export default function InvoicesStats({ stats, formatCurrency }: InvoicesStatsPr
           <div className={`text-xl sm:text-2xl font-black tracking-tighter text-${stat.color}-500`}>
             {stat.value}
           </div>
-          <div className="text-[9px] sm:text-[10px] uppercase font-black text-muted-foreground tracking-widest opacity-60">
+          <div className="text-[9px] sm:text-[10px] uppercase font-black text-muted-foreground tracking-widest opacity-60 truncate w-full text-center">
             {stat.label}
             {stat.subValue && (
               <span className="block text-[8px] normal-case tracking-normal opacity-70">

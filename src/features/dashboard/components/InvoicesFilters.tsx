@@ -39,11 +39,11 @@ export default function InvoicesFilters({ filters, handleSearch, clearFilters }:
   } = filters
 
   return (
-    <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 shadow-sm overflow-hidden transition-all duration-300">
+    <div className="w-full bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 shadow-sm overflow-hidden transition-all duration-300">
       <div className="p-4 sm:p-6 border-b border-border/50 flex items-center justify-between bg-foreground/5">
-        <h2 className="text-sm font-black text-foreground uppercase tracking-widest flex items-center gap-2">
-          <Filter className="w-4 h-4 text-primary" />
-          Filtros de Búsqueda
+        <h2 className="text-sm font-black text-foreground uppercase tracking-widest flex items-center gap-2 min-w-0 w-full sm:w-auto">
+          <Filter className="w-4 h-4 text-primary shrink-0" />
+          <span className="truncate">Filtros de Búsqueda</span>
         </h2>
         {/* Aquí podrías añadir un indicador de filtros activos si quisieras */}
       </div>

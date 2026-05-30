@@ -264,33 +264,33 @@ export default function FacturaDetailsPage({
 
       {/* Modern Header */}
       <header className="sticky top-0 z-40 bg-background/60 backdrop-blur-2xl border-b border-border/50 shadow-sm supports-[backdrop-filter]:bg-background/40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 min-h-[5rem] py-4 sm:py-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+          <div className="flex items-center w-full sm:w-auto gap-3">
             <Button 
               onClick={() => router.push("/dashboard/facturacion")} 
               variant="ghost"
               size="icon"
-              className="rounded-full hover:bg-foreground/5"
+              className="rounded-full hover:bg-foreground/5 shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="h-8 w-px bg-border hidden sm:block mx-2"></div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+            <div className="h-8 w-px bg-border hidden sm:block mx-2 shrink-0"></div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight truncate">
                   {invoice.type}
                 </h1>
-                <Badge variant="outline" className="bg-background/50 backdrop-blur-md rounded-full font-mono border-border">
+                <Badge variant="outline" className="bg-background/50 backdrop-blur-md rounded-full font-mono border-border shrink-0">
                   {invoice.number}
                 </Badge>
               </div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mt-1 hidden sm:block">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mt-1 hidden sm:block truncate">
                 Detalles del Comprobante
               </p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-start sm:justify-end w-full sm:w-auto gap-3 overflow-x-auto pb-2 sm:pb-0 custom-scrollbar">
             {invoice.order && (() => {
               const mockOrder = createMockOrder({
                 id: invoice.order.id,
@@ -405,9 +405,9 @@ export default function FacturaDetailsPage({
                   </div>
                 </div>
                 
-                <div className="sm:text-right p-4 sm:p-0 bg-foreground/5 sm:bg-transparent rounded-2xl">
+                <div className="sm:text-right p-4 sm:p-0 bg-foreground/5 sm:bg-transparent rounded-2xl w-full sm:w-auto mt-4 sm:mt-0">
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Pagado</p>
-                  <div className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500 tracking-tighter">
+                  <div className="text-3xl sm:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500 tracking-tighter break-words">
                     {formatCurrency(invoice.total)}
                   </div>
                   <div className="flex items-center sm:justify-end gap-1.5 mt-2 text-sm font-medium text-muted-foreground">
@@ -453,10 +453,10 @@ export default function FacturaDetailsPage({
                 {invoice.customerAddress && (
                   <div className="md:col-span-2 space-y-1.5">
                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5" />
+                      <MapPin className="w-3.5 h-3.5 shrink-0" />
                       Dirección
                     </label>
-                    <p className="font-medium text-foreground bg-foreground/5 px-4 py-3 rounded-xl">
+                    <p className="font-medium text-foreground bg-foreground/5 px-4 py-3 rounded-xl break-words">
                       {invoice.customerAddress}
                     </p>
                   </div>
@@ -608,7 +608,7 @@ export default function FacturaDetailsPage({
                       <label className="text-[10px] font-black text-red-500/70 uppercase tracking-widest block mb-1">
                         Motivo Registrado
                       </label>
-                      <p className="text-red-700 dark:text-red-300 font-medium text-sm italic">
+                      <p className="text-red-700 dark:text-red-300 font-medium text-sm italic break-words">
                         "{invoice.cancelReason}"
                       </p>
                     </div>

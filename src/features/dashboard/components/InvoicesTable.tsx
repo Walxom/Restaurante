@@ -46,13 +46,13 @@ export default function InvoicesTable({
   const { currentPage, setCurrentPage, totalPages } = pagination
 
   return (
-    <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
-      <div className="p-4 sm:p-6 border-b border-border/50 flex justify-between items-center">
-        <h2 className="text-sm sm:text-base font-black text-foreground uppercase tracking-widest flex items-center gap-2">
-          <Package className="w-4 h-4 text-primary" />
-          Lista de Comprobantes
+    <div className="w-full bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
+      <div className="p-4 sm:p-6 border-b border-border/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+        <h2 className="text-sm sm:text-base font-black text-foreground uppercase tracking-widest flex items-center gap-2 min-w-0 w-full sm:w-auto">
+          <Package className="w-4 h-4 text-primary shrink-0" />
+          <span className="truncate">Lista de Comprobantes</span>
         </h2>
-        <span className="px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-xs font-black text-primary tracking-widest">
+        <span className="px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-[10px] sm:text-xs font-black text-primary tracking-widest shrink-0">
           {invoices.length} {withoutReceiptFilter ? 'Pendientes' : 'Registros'}
         </span>
       </div>
@@ -158,13 +158,12 @@ export default function InvoicesTable({
           </Table>
         </div>
 
-        {/* Paginación Premium */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-border/50 bg-foreground/5">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 px-6 py-4 border-t border-border/50 bg-foreground/5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest text-center">
               Página {currentPage} de {totalPages}
             </p>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 w-full sm:w-auto justify-center">
               <Button
                 variant="outline"
                 size="sm"

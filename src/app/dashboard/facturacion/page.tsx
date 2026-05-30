@@ -157,36 +157,36 @@ export default function FacturacionPage() {
 
   return (
     <RoleGuard allowedRoles={["JEFE"]}>
-      <div className="min-h-screen bg-background transition-colors duration-500">
+      <div className="min-h-screen bg-background transition-colors duration-500 overflow-x-hidden w-full">
         <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
-        <div className="relative z-10 flex flex-col">
+        <div className="relative z-10 flex flex-col w-full min-w-0">
       {/* Header minimalista */}
       <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 sm:gap-6">
+            <div className="flex items-center gap-2 sm:gap-6 min-w-0 w-full">
               <Button 
                 onClick={() => router.push("/dashboard")} 
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground hover:text-foreground hover:bg-foreground/5 rounded-xl transition-all"
+                className="text-muted-foreground hover:text-foreground hover:bg-foreground/5 rounded-xl transition-all shrink-0 px-2 sm:px-3"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline font-bold uppercase tracking-widest text-[10px]">Dashboard</span>
               </Button>
-              <div className="h-6 w-px bg-border/50 hidden sm:block"></div>
-              <h1 className="text-lg sm:text-xl font-black text-foreground uppercase tracking-tighter flex items-center gap-3">
-                <div className="p-2 bg-blue-500/10 rounded-xl">
-                  <FileText className="w-5 h-5 text-blue-500" />
+              <div className="h-6 w-px bg-border/50 hidden sm:block shrink-0"></div>
+              <h1 className="text-sm sm:text-xl font-black text-foreground uppercase tracking-tighter flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="p-1.5 sm:p-2 bg-blue-500/10 rounded-xl shrink-0">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                 </div>
-                Gestión de Comprobantes
+                <span className="truncate">Gestión de Comprobantes</span>
               </h1>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 overflow-x-hidden">
         {error && (
           <Card className="border-red-200">
             <CardContent className="pt-6">
@@ -197,14 +197,14 @@ export default function FacturacionPage() {
 
         {/* Alerta de Pedidos sin Boleta */}
         {pendingCount > 0 && (
-          <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 flex items-center justify-between animate-in slide-in-from-top duration-500">
-            <div className="flex items-center gap-4">
-              <div className="bg-orange-500/20 p-2 rounded-xl animate-pulse">
+          <div className="w-full bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in slide-in-from-top duration-500">
+            <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 w-full sm:w-auto">
+              <div className="bg-orange-500/20 p-2 rounded-xl animate-pulse shrink-0">
                 <ShieldAlert className="w-5 h-5 text-orange-500" />
               </div>
-              <div>
-                <h4 className="text-sm font-black text-orange-500 uppercase tracking-widest">Atención: Facturación Pendiente</h4>
-                <p className="text-xs text-orange-500/70 font-medium">Tienes <span className="font-black underline">{pendingCount}</span> pedidos terminados que aún no tienen un comprobante de pago.</p>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-sm font-black text-orange-500 uppercase tracking-widest leading-tight truncate">Atención: Facturación Pendiente</h4>
+                <p className="text-xs text-orange-500/70 font-medium break-words mt-1">Tienes <span className="font-black underline">{pendingCount}</span> pedidos terminados que aún no tienen un comprobante de pago.</p>
               </div>
             </div>
             <Button 
@@ -214,7 +214,7 @@ export default function FacturacionPage() {
                 filters.setWithoutReceiptFilter(true)
                 handleSearch()
               }}
-              className="border-orange-500/30 bg-orange-500/5 hover:bg-orange-500/10 text-orange-500 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2 transition-all"
+              className="border-orange-500/30 bg-orange-500/5 hover:bg-orange-500/10 text-orange-500 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2 transition-all w-full sm:w-auto shrink-0"
             >
               Gestionar Ahora
               <ArrowRight className="w-3 h-3" />
