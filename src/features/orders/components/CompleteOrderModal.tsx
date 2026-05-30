@@ -252,7 +252,13 @@ export default function CompleteOrderModal({
                       <Input
                         value={selectedType === 'boleta' ? customerData.document : customerData.ruc}
                         onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, '')
+                          let val = e.target.value.replace(/\D/g, '')
+                          if (selectedType === 'boleta') {
+                            val = val.slice(0, 8)
+                          } else if (selectedType === 'factura') {
+                            val = val.slice(0, 11)
+                          }
+                          
                           setCustomerData(prev => ({ 
                             ...prev, 
                             [selectedType === 'boleta' ? 'document' : 'ruc']: val 
@@ -260,6 +266,9 @@ export default function CompleteOrderModal({
                           setIsDniVerified(false)
                           setIsRucVerified(false)
                         }}
+                        maxLength={selectedType === 'boleta' ? 8 : 11}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder={selectedType === 'boleta' ? "8 dígitos" : "11 dígitos"}
                         className="h-14 rounded-2xl bg-foreground/5 border-border/50 pl-12 focus:ring-blue-500/20 font-bold"
                       />
@@ -298,7 +307,12 @@ export default function CompleteOrderModal({
               </Button>
               <Button
                 onClick={handleComplete}
-                disabled={!selectedType || (selectedType !== 'none' && !isDniVerified && !isRucVerified) || isProcessing}
+                disabled={
+                  !selectedType || 
+                  (selectedType === 'boleta' && !isDniVerified) || 
+                  (selectedType === 'factura' && !isRucVerified) || 
+                  isProcessing
+                }
                 className="flex-[2] h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-blue-600/20"
               >
                 {isProcessing ? "Procesando..." : "Confirmar Pago"}

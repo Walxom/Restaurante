@@ -78,7 +78,7 @@ export function useOrderPayment(order: Order | null, onPaymentSuccess: () => voi
       return receiptNumber
     } catch (err: any) {
       console.error(err)
-      alert(err.message)
+      alert(`El pedido fue completado, pero el comprobante falló: ${err.message}`)
       return null
     } finally {
       setIsProcessing(false)

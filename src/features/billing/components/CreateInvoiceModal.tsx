@@ -298,6 +298,8 @@ export default function CreateInvoiceModal({
                       setIsRucVerified(false)
                     }}
                     maxLength={11}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     className="flex-1"
                   />
                   <Button
@@ -357,6 +359,8 @@ export default function CreateInvoiceModal({
                     setCustomerData(prev => ({ ...prev, representanteDni: value }))
                   }}
                   maxLength={8}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                 />
               </div>
             </div>
