@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Ingredient, PaginationData } from "@/types"
+import { useOrdersSocket } from "@/hooks/useSocket"
 
 export function useInventory() {
   const { data: session } = useSession()
@@ -109,6 +110,22 @@ export function useInventory() {
   useEffect(() => {
     processIngredients()
   }, [processIngredients])
+
+  // Integración de Sockets para actualización en tiempo real
+  useOrdersSocket({
+    onOrderStatusChanged: (data) => {
+      // Si el pedido se marca como SERVED o COMPLETED (descuenta) o PENDING/CANCELLED (devuelve/deshace)
+      if (['SERVED', 'COMPLETED', 'CANCELLED', 'PENDING'].includes(data.status)) {
+        fetchAllIngredients()
+      }
+    },
+    onOrderItemUpdate: (data) => {
+      // Si un item cambia a SERVED (descuenta stock) o vuelve a PENDING (devuelve stock por deshacer)
+      if (data.action === 'updated' && ['SERVED', 'PENDING'].includes(data.itemData?.status)) {
+        fetchAllIngredients()
+      }
+    }
+  })
 
   // Reset page on filters change
   useEffect(() => {
