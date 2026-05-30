@@ -14,6 +14,7 @@ import {
 import * as React from "react";
 
 interface ReceiptEmailProps {
+  companyName?: string;
   customerName: string;
   invoiceNumber: string;
   invoiceType: string;
@@ -30,6 +31,7 @@ interface ReceiptEmailProps {
 }
 
 export const ReceiptEmail = ({
+  companyName = "Bendistaurante",
   customerName = "Cliente",
   invoiceNumber = "B001-00000001",
   invoiceType = "BOLETA",
@@ -41,11 +43,11 @@ export const ReceiptEmail = ({
 }: ReceiptEmailProps) => (
   <Html>
     <Head />
-    <Preview>Tu comprobante electrónico de Bendistaurante</Preview>
+    <Preview>Tu comprobante electrónico de {companyName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
-          <Heading style={heading}>Bendistaurante</Heading>
+          <Heading style={heading}>{companyName}</Heading>
           <Text style={headerText}>¡Gracias por tu preferencia!</Text>
         </Section>
         
@@ -56,7 +58,7 @@ export const ReceiptEmail = ({
           
           <Text style={text}>Hola <strong>{customerName}</strong>,</Text>
           <Text style={text}>
-            Adjuntamos el detalle de tu consumo correspondiente al comprobante <strong>{invoiceNumber}</strong> 
+            Adjuntamos el detalle de tu consumo correspondiente al comprobante <strong>{invoiceNumber}</strong>{" "}
             emitido el {date}.
           </Text>
 
@@ -104,7 +106,7 @@ export const ReceiptEmail = ({
         
         <Section style={footer}>
           <Text style={footerCopyright}>
-            © {new Date().getFullYear()} Bendistaurante. Todos los derechos reservados.
+            © {new Date().getFullYear()} {companyName}. Todos los derechos reservados.
           </Text>
         </Section>
       </Container>

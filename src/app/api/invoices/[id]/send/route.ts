@@ -32,6 +32,9 @@ export async function POST(
       }, { status: 500 })
     }
 
+    const config = await prisma.systemConfig.findFirst()
+    const companyName = config?.companyName || "Bendistaurante"
+
     const invoice = await prisma.invoice.findUnique({
       where: { id: resolvedParams.id },
       include: {
@@ -44,10 +47,11 @@ export async function POST(
     }
 
     const data = await resend.emails.send({
-      from: 'Bendistaurante <onboarding@resend.dev>', // Resend testing domain
+      from: `${companyName} <onboarding@resend.dev>`, // Resend testing domain
       to: [email],
-      subject: `Comprobante de Pago ${invoice.number} - Bendistaurante`,
+      subject: `Comprobante de Pago ${invoice.number} - ${companyName}`,
       react: ReceiptEmail({
+        companyName,
         customerName: invoice.customerName || "Cliente",
         invoiceNumber: invoice.number,
         invoiceType: invoice.type,
