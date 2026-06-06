@@ -14,7 +14,7 @@
     "lint": "eslint .",
     "db:generate": "pnpm prisma generate",
     "db:push": "pnpm prisma db push",
-    "db:seed": "pnpm tsx --env-file=.env prisma/seed.ts",
+    "db:seed": "pnpm tsx --env-file-if-exists=.env prisma/seed.ts",
     "db:setup": "pnpm prisma db push && pnpm db:seed",
     "db:backup": "powershell -ExecutionPolicy Bypass -File \"scripts/backup-db.ps1\"",
     "db:backup:usb": "powershell -ExecutionPolicy Bypass -File \"scripts/backup-db.ps1\" -DestinoExtra",
