@@ -4,8 +4,8 @@
  */
 
 import { EventEmitter } from 'events'
-import { ZJ8360NetworkDriver, KitchenOrderData, ZJ8360Config } from '../drivers/ZJ8360NetworkDriver'
-import { KitchenOrderFormatter, KitchenFormattingOptions } from '../formatters/KitchenOrderFormatter'
+import { ZJ8360NetworkDriver, type KitchenOrderData, type ZJ8360Config } from '../drivers/ZJ8360NetworkDriver'
+import { KitchenOrderFormatter, type KitchenFormattingOptions } from '../formatters/KitchenOrderFormatter'
 
 // Re-exportar interfaces para uso externo
 export type { KitchenOrderData, KitchenItem } from '../drivers/ZJ8360NetworkDriver'

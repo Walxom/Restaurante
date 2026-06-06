@@ -5,7 +5,7 @@
  * USO: Importar desde las API routes para separar lógica de negocio del transporte HTTP.
  */
 
-import { Prisma } from "@prisma/client"
+import { type Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────

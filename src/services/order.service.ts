@@ -7,7 +7,7 @@
  * NUNCA importar directamente desde componentes React (solo desde rutas de API o server actions).
  */
 
-import { Prisma } from "@prisma/client"
+import { type Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────

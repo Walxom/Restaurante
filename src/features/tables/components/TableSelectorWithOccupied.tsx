@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Users } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Table } from "@/types"
+import { type Table } from "@/types"
 
 interface TableSelectorWithOccupiedProps {
   tables: Table[]

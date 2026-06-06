@@ -11,7 +11,7 @@ import {
   suggestUnitCategory,
   INGREDIENT_TYPE_SUGGESTIONS 
 } from "@/features/inventory/utils/units"
-import { Ingredient, IngredientCategory } from "@/types"
+import { type Ingredient, type IngredientCategory } from "@/types"
 import { ModalShell } from "@/components/ui/modal-shell"
 import { SectionTitle } from "@/components/ui/section-title"
 import { PremiumInput } from "@/components/ui/premium-input"

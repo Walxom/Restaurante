@@ -3,7 +3,7 @@
  * PATCH /api/printers/[id]/status - Cambiar estado de impresora
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { PrinterConfigService } from '@/services/printer/printer-config';

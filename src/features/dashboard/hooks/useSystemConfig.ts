@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { SystemConfigData, fetchSystemConfigForClient, fetchPublicCompanyInfo } from '@/services/system.service'
+import { type SystemConfigData, fetchSystemConfigForClient, fetchPublicCompanyInfo } from '@/services/system.service'
 
 /**
  * Hook personalizado para obtener la configuración del sistema en el cliente

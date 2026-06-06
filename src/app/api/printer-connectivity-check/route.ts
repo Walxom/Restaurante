@@ -3,7 +3,7 @@
  * Solo verifica si el puerto TCP está abierto, SIN imprimir (ahorro de papel)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { createConnection } from 'net';
 
 interface ConnectivityCheckRequest {

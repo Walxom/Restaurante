@@ -16,7 +16,7 @@ import { useCompanyName, useSystemConfig } from "@/features/dashboard/hooks/useS
 import ActionCard from "@/features/dashboard/components/ActionCard"
 import { useDashboardStats } from "@/features/dashboard/hooks/useDashboardStats"
 import { NotificationDrawer } from "@/features/dashboard/components/NotificationDrawer"
-import QuickActionButton, { ActionColor } from "@/features/dashboard/components/QuickActionButton"
+import QuickActionButton, { type ActionColor } from "@/features/dashboard/components/QuickActionButton"
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
 import { StatCard } from "@/features/dashboard/components/StatCard"
 import { usePrinter } from "@/features/billing/hooks/usePrinter"

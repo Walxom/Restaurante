@@ -14,7 +14,7 @@ import {
   AlertCircle,
   CheckCircle2
 } from "lucide-react"
-import { OrderItem } from "@/types"
+import { type OrderItem } from "@/types"
 
 interface EditOrderCartProps {
   servedItems: OrderItem[]

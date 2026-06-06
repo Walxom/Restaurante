@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Package, Edit, Trash2 } from "lucide-react"
-import { Category } from "@/types"
+import { type Category } from "@/types"
 
 interface Props {
   categories: Category[]

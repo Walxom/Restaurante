@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { BarChart3, Clock, DollarSign, Award, CreditCard, ShoppingBag, UtensilsCrossed } from "lucide-react"
-import { SalesStats } from "../hooks/useSales"
+import { type SalesStats } from "../hooks/useSales"
 
 interface SalesAnalyticsPanelProps {
   stats: SalesStats

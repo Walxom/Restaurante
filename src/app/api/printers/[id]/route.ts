@@ -5,7 +5,7 @@
  * DELETE /api/printers/[id] - Eliminar impresora específica
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { PrinterConfigService } from '@/services/printer/printer-config';

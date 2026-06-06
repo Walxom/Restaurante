@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { PrinterType, PrinterConnectionType, PrinterStatus } from '@/types'
+import { type PrinterType, type PrinterConnectionType, type PrinterStatus } from '@/types'
 import { printerConfigSchema } from '@/features/billing/validations/printer-config'
 
 // Configuraciones por defecto

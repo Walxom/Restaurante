@@ -1,7 +1,7 @@
 "use client"
 
-import { ReactNode } from "react"
-import { X, LucideIcon } from "lucide-react"
+import { type ReactNode } from "react"
+import { X, type LucideIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 

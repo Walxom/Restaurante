@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { thermalPrintQueue } from '@/services/printer/server-thermal-printer'
 import { prisma } from "@/lib/prisma"
 import { validateRole } from '@/lib/auth-utils'

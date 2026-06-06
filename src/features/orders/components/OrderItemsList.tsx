@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Check, Clock, Undo2, MessageSquare, Tag } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { OrderItem } from "@/types"
+import { type OrderItem } from "@/types"
 
 interface OrderItemsListProps {
   orderId: string

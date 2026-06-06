@@ -1,6 +1,6 @@
 import { Utensils, Package, Truck } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { OrderType, Table } from "@/types"
+import { type OrderType, Table } from "@/types"
 
 interface OrderTypeSelectorProps {
   orderType: OrderType

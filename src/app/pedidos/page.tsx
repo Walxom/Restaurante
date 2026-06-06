@@ -14,7 +14,7 @@ import { RoleGuard } from "@/components/auth/role-guard"
 import { OrderCard } from "@/features/orders/components/OrderCard"
 import { OrderFilters } from "@/features/orders/components/OrderFilters"
 import { OrderPagination } from "@/features/orders/components/OrderPagination"
-import { Order } from "@/types"
+import { type Order } from "@/types"
 
 export default function UnifiedOrdersPage() {
   const { data: session } = useSession()

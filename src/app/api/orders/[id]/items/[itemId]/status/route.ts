@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { Prisma } from '@prisma/client'
+import { type Prisma } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { prisma } from "@/lib/prisma"
-import { TableStatus } from '@/types'
+import { type TableStatus } from '@/types'
 import { convertToBaseUnit } from '@/features/inventory/utils/units'
 import { emitOrderItemUpdate, emitTableStatusChange, emitOrderStatusChange } from '@/lib/socket-events'
 

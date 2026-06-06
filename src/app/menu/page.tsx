@@ -16,7 +16,7 @@ import ProductTable from "@/features/menu/components/ProductTable"
 import CategoryTable from "@/features/menu/components/CategoryTable"
 import { RoleGuard } from "@/components/auth/role-guard"
 import { AdminPageHeader } from "@/components/layout/PageHeader"
-import { Product, Category } from "@/types"
+import { type Product, type Category } from "@/types"
 
 export default function MenuPage() {
   const { data: session } = useSession()

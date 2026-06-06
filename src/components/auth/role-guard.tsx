@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { useEffect, ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 import { AppLoading } from "@/features/dashboard/components/AppLoading"
 
 interface RoleGuardProps {

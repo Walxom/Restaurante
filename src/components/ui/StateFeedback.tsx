@@ -1,6 +1,6 @@
 "use client"
 
-import { LucideIcon, RefreshCw, AlertCircle, Inbox } from "lucide-react"
+import { type LucideIcon, RefreshCw, AlertCircle, Inbox } from "lucide-react"
 import { Button } from "./button"
 import { cn } from "@/lib/utils"
 

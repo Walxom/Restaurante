@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Product, CartItem } from "@/types"
+import { type Product, type CartItem } from "@/types"
 import { ProductCard } from "@/features/orders/components/ProductCard"
 import { StateFeedback } from "@/components/ui/StateFeedback"
 

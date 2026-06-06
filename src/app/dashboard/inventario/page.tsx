@@ -20,7 +20,7 @@ import {
 import { useInventory } from "@/features/inventory/hooks/useInventory"
 import { useInventoryCategories } from "@/features/inventory/hooks/useInventoryCategories"
 import { useInventoryAlerts } from "@/features/inventory/hooks/useInventoryAlerts"
-import { Ingredient, IngredientCategory } from "@/types"
+import { type Ingredient, type IngredientCategory } from "@/types"
 
 // Components
 import { InventoryStats } from "./components/inventory-stats"

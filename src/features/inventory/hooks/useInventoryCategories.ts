@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 
-import { IngredientCategory } from "@/types"
+import { type IngredientCategory } from "@/types"
 
 export function useInventoryCategories() {
   const { data: session } = useSession()

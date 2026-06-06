@@ -4,7 +4,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { PrinterType, PrinterConnectionType, PrinterStatus } from '@/types';
+import { type PrinterType, type PrinterConnectionType, type PrinterStatus } from '@/types';
 
 export interface PrinterConfig {
   id: string;

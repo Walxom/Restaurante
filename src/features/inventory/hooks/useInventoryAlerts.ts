@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 
-import { AlertStats } from "@/types"
+import { type AlertStats } from "@/types"
 
 export function useInventoryAlerts() {
   const { data: session } = useSession()

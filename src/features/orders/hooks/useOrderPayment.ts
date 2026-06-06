@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Order } from "@/types"
+import { type Order } from "@/types"
 
 interface CustomerData {
   name?: string

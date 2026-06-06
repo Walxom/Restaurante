@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { CartItem, Product } from "@/types"
+import { type CartItem, type Product } from "@/types"
 
 const CART_STORAGE_KEY = "restaurant_cart_items"
 

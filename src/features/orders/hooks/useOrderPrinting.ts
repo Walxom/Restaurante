@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Order } from "@/types"
+import { type Order } from "@/types"
 
 export function useOrderPrinting(order: Order | null) {
   const [isPrintingKitchen, setIsPrintingKitchen] = useState(false)

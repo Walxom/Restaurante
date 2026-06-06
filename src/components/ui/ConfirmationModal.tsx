@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { LucideIcon, AlertTriangle, CheckCircle2, Info, LogOut } from "lucide-react"
+import { type LucideIcon, AlertTriangle, CheckCircle2, Info, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface ConfirmationModalProps {

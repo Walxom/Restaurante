@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { CartItem, CustomerData, OrderType, CreatedOrder, Table } from "@/types"
+import { type CartItem, type CustomerData, type OrderType, type CreatedOrder, type Table } from "@/types"
 import { useThermalPrinter } from "@/features/billing/components/PrintKitchenButton"
 import { createOrderSchema } from "@/features/orders/validations/order"
 

@@ -1,6 +1,6 @@
 "use client"
 
-import useSWR, { Key } from "swr"
+import useSWR, { type Key } from "swr"
 import type {
   ForecastResponse,
   InventoryResponse,

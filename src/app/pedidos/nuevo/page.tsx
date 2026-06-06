@@ -22,7 +22,7 @@ import { CategoryTabs } from "@/features/orders/components/CategoryTabs"
 import { useCart } from "@/features/orders/hooks/useCart"
 import { useOrderData } from "@/features/orders/hooks/useOrderData"
 import { useCreateOrder } from "@/features/orders/hooks/useCreateOrder"
-import { CustomerData, OrderType, Table } from "@/types"
+import { type CustomerData, type OrderType, type Table } from "@/types"
 
 import { OrderPageSkeleton } from "@/features/orders/components/OrderPageSkeleton"
 import { StateFeedback } from "@/components/ui/StateFeedback"

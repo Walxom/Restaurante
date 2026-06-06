@@ -1,6 +1,6 @@
 "use client"
 
-import { IngredientCategory } from "@/types"
+import { type IngredientCategory } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Edit, Trash2, FolderOpen, Layers } from "lucide-react"
 

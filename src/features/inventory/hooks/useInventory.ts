@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { Ingredient, PaginationData } from "@/types"
+import { type Ingredient, type PaginationData } from "@/types"
 import { useOrdersSocket } from "@/hooks/useSocket"
 
 export function useInventory() {

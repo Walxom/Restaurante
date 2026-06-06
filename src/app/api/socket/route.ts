@@ -1,7 +1,7 @@
-import { NextRequest } from 'next/server'
-import { Server as NetServer } from 'http'
+import { type NextRequest } from 'next/server'
+import { type Server as NetServer } from 'http'
 import { Server as SocketIOServer } from 'socket.io'
-import { Socket as NetSocket } from 'net'
+import { type Socket as NetSocket } from 'net'
 import { setSocketIO } from '@/lib/socket-server'
 
 interface SocketServer extends NetServer {

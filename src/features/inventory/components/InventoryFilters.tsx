@@ -1,7 +1,7 @@
 "use client"
 
 import { Search, Filter, ChevronDown, RotateCcw } from "lucide-react"
-import { IngredientCategory } from "@/types"
+import { type IngredientCategory } from "@/types"
 
 interface InventoryFiltersProps {
   searchTerm: string

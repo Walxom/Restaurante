@@ -6,7 +6,7 @@
  * NUNCA importar directamente desde componentes React.
  */
 
-import { Prisma } from "@prisma/client"
+import { type Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────

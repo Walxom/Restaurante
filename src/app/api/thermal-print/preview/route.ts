@@ -3,7 +3,7 @@
  * Siempre muestra la vista previa, independiente del estado del servicio
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { kitchenPrinter } from '@/services/printer/thermal-printer';
 import { prisma } from '@/lib/prisma';
 
