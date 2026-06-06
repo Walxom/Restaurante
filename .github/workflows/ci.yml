@@ -30,6 +30,11 @@ jobs:
       - name: Instalar dependencias
         run: pnpm install --frozen-lockfile
 
+      - name: Generar cliente Prisma
+        run: pnpm db:generate
+        env:
+          DATABASE_URL: file:./dev.db
+
       - name: Ejecutar ESLint
         run: pnpm lint
 
