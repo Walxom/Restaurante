@@ -11,9 +11,9 @@ import { useOrdersSocket } from "@/hooks/useSocket"
 import { RoleGuard } from "@/components/auth/role-guard"
 
 // New modular components
-import { OrderCard } from "@/components/orders/OrderCard"
-import { OrderFilters } from "@/components/orders/OrderFilters"
-import { OrderPagination } from "@/components/orders/OrderPagination"
+import { OrderCard } from "@/features/orders/components/OrderCard"
+import { OrderFilters } from "@/features/orders/components/OrderFilters"
+import { OrderPagination } from "@/features/orders/components/OrderPagination"
 import { Order } from "@/types"
 
 export default function UnifiedOrdersPage() {
@@ -41,7 +41,8 @@ export default function UnifiedOrdersPage() {
       const response = await fetch(`/api/orders?showAll=true&date=${todayStr}${statusParam}`)
 
       if (response.ok) {
-        setOrders(await response.json())
+        const { orders } = await response.json()
+        setOrders(orders)
         setCurrentPage(1)
       }
       // Actualizar contadores siempre para mantener la UI sincronizada
@@ -75,9 +76,9 @@ export default function UnifiedOrdersPage() {
         ])
 
         setOrderCounts({
-          active: activeData.length,
-          completed: completedData.length,
-          cancelled: cancelledData.length
+          active: activeData.pagination?.total ?? activeData.orders?.length ?? 0,
+          completed: completedData.pagination?.total ?? completedData.orders?.length ?? 0,
+          cancelled: cancelledData.pagination?.total ?? cancelledData.orders?.length ?? 0,
         })
       }
     } catch (error) {

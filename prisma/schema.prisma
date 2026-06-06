@@ -89,6 +89,9 @@ model Order {
   user                     User        @relation(fields: [userId], references: [id])
   table                    Table?      @relation(fields: [tableId], references: [id])
 
+  @@index([status, createdAt])
+  @@index([tableId])
+  @@index([userId])
   @@map("orders")
 }
 
@@ -106,6 +109,8 @@ model OrderItem {
   product   Product  @relation(fields: [productId], references: [id])
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
+  @@index([orderId])
+  @@index([productId])
   @@map("order_items")
 }
 
@@ -213,6 +218,8 @@ model Invoice {
   user            User          @relation(fields: [issuedBy], references: [id])
   order           Order?        @relation(fields: [orderId], references: [id])
 
+  @@index([issuedAt])
+  @@index([type, status])
   @@map("invoices")
 }
 

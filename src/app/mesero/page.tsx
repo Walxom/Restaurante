@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation"
 import { useSocket, useOrdersSocket } from "@/hooks/useSocket"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import PedidosPorServirWidget from "@/components/dashboard/PedidosPorServirWidget"
-import PedidosServidosWidget from "@/components/dashboard/PedidosServidosWidget"
+import PedidosPorServirWidget from "@/features/dashboard/components/PedidosPorServirWidget"
+import PedidosServidosWidget from "@/features/dashboard/components/PedidosServidosWidget"
 import { useCompanyName } from "@/features/dashboard/hooks/useSystemConfig"
 import { DashboardPageHeader } from "@/components/layout/DashboardPageHeader"
 import { 
@@ -64,9 +64,9 @@ export default function MeseroPage() {
   const fetchDashboardData = useCallback(async () => {
     try {
       // Obtener estadísticas de pedidos activos
-      const pendingOrdersResponse = await fetch('/api/orders?showAll=true')
+      const pendingOrdersResponse = await fetch('/api/orders?showAll=true&status=active')
       if (pendingOrdersResponse.ok) {
-        const allOrders = await pendingOrdersResponse.json()
+        const { orders: allOrders } = await pendingOrdersResponse.json()
         
         // Obtener todos los pedidos activos para estadísticas
         const activeOrders = allOrders.filter((order: Order) => 

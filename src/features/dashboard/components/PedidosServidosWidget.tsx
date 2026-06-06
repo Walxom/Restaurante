@@ -65,7 +65,7 @@ export default function PedidosServidosWidget({
         throw new Error('Error al cargar pedidos')
       }
       
-      const allOrders = await response.json()
+      const { orders: allOrders } = await response.json()
       
       // Filtrar solo pedidos servidos
       const servedOrders = allOrders.filter((order: Order) => 
