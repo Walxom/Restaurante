@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
         insight_service.ensure_trained()
         cache_vacio = (
             not insight_service.forecaster.models
-            and not insight_service.basket_analyzer.rules
+            or not insight_service.basket_analyzer.rules
         )
         if cache_vacio:
             print("[AI Engine] Cache vacio, entrenando modelos automaticamente...")

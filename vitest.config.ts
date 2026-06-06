@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config"
+import { defineConfig, configDefaults } from "vitest/config"
 import tsconfigPaths from "vite-tsconfig-paths"
 
 export default defineConfig({
@@ -6,6 +6,9 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
+    // Las pruebas E2E de Playwright viven en e2e/ y usan su propio runner (pnpm test:e2e).
+    // Se excluyen de Vitest para que no intente ejecutarlas como tests unitarios.
+    exclude: [...configDefaults.exclude, "e2e/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],

@@ -62,7 +62,10 @@ export default function LoginPage() {
         redirect: false,
       })
 
-      if (result?.error) {
+      if (result?.error === "Bloqueado") {
+        setError("Cuenta bloqueada temporalmente. Demasiados intentos fallidos. Intente en 15 minutos.")
+        triggerShake()
+      } else if (result?.error) {
         // Mensaje genérico para seguridad (OWASP: Evitar enumeración de usuarios)
         setError("Credenciales inválidas")
         triggerShake()

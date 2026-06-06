@@ -65,3 +65,9 @@ scripts/
 
 .agents/
 PUNTOS_T2/.obsidian
+backups/
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/

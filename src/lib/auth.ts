@@ -5,8 +5,9 @@ import bcrypt from "bcryptjs"
 
 const MAX_INTENTOS = 3
 const BLOQUEO_MS = 15 * 60 * 1000
+const VENTANA_MS = 30 * 60 * 1000
 
-const intentosFallidos = new Map<string, { count: number; bloqueadoHasta: number }>()
+const intentosFallidos = new Map<string, { count: number; bloqueadoHasta: number; primerFallo: number }>()
 
 function estaBloqueado(username: string): boolean {
   const entrada = intentosFallidos.get(username)
@@ -17,10 +18,14 @@ function estaBloqueado(username: string): boolean {
 }
 
 function registrarFallo(username: string): void {
-  const entrada = intentosFallidos.get(username) ?? { count: 0, bloqueadoHasta: 0 }
+  const ahora = Date.now()
+  const existente = intentosFallidos.get(username)
+  const entrada = (!existente || ahora - existente.primerFallo > VENTANA_MS)
+    ? { count: 0, bloqueadoHasta: 0, primerFallo: ahora }
+    : existente
   entrada.count += 1
   if (entrada.count >= MAX_INTENTOS) {
-    entrada.bloqueadoHasta = Date.now() + BLOQUEO_MS
+    entrada.bloqueadoHasta = ahora + BLOQUEO_MS
   }
   intentosFallidos.set(username, entrada)
 }
@@ -43,7 +48,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (estaBloqueado(credentials.username)) {
-          return null
+          throw new Error("Bloqueado")
         }
 
         const user = await prisma.user.findUnique({

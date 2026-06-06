@@ -21,7 +21,7 @@ class DataService:
                    o.createdAt, o.updatedAt, o.tableId, o.userId
             FROM orders o
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND o.createdAt >= datetime('now', ? || ' days')
+              AND datetime(o.createdAt) >= datetime('now', ? || ' days')
             ORDER BY o.createdAt ASC
         """, (f"-{days_back}",))
 
@@ -34,7 +34,7 @@ class DataService:
             FROM order_items oi
             JOIN orders o ON o.id = oi.orderId
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND o.createdAt >= datetime('now', ? || ' days')
+              AND datetime(o.createdAt) >= datetime('now', ? || ' days')
             ORDER BY o.createdAt ASC
         """, (f"-{days_back}",))
 
@@ -72,7 +72,7 @@ class DataService:
             JOIN orders o ON o.id = oi.orderId
             JOIN products p ON p.id = oi.productId
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND o.createdAt >= datetime('now', ? || ' days')
+              AND datetime(o.createdAt) >= datetime('now', ? || ' days')
             ORDER BY o.id
         """, (f"-{days_back}",))
 
@@ -85,7 +85,7 @@ class DataService:
                    AVG(o.totalAmount) as avg_ticket
             FROM orders o
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND o.createdAt >= datetime('now', ? || ' days')
+              AND datetime(o.createdAt) >= datetime('now', ? || ' days')
             GROUP BY date(o.createdAt)
             ORDER BY date ASC
         """, (f"-{days_back}",))
@@ -98,7 +98,7 @@ class DataService:
             JOIN orders o ON o.id = oi.orderId
             JOIN products p ON p.id = oi.productId
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND o.createdAt >= datetime('now', ? || ' days')
+              AND datetime(o.createdAt) >= datetime('now', ? || ' days')
             GROUP BY p.id, p.name
             ORDER BY total_sold DESC
             LIMIT ?

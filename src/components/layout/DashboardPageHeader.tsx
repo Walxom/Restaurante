@@ -72,6 +72,11 @@ export function DashboardPageHeader({
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label={
+                    alertsCount > 0
+                      ? `Notificaciones: ${alertsCount} alerta${alertsCount === 1 ? "" : "s"}`
+                      : "Notificaciones"
+                  }
                   className="w-10 h-10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all active:scale-95"
                   onClick={onNotificationsClick}
                 >

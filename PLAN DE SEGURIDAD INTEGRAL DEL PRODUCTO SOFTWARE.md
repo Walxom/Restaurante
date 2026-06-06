@@ -80,14 +80,14 @@ El alcance del proceso de desarrollo incluye las prácticas de codificación seg
 | Autenticación JWT con NextAuth v4 | Tokens de sesión firmados criptográficamente con `NEXTAUTH_SECRET`, cookies `HttpOnly` y `SameSite: Lax` | `src/lib/auth.ts`, `NEXTAUTH_SECRET` en `.env` | ✅ Implementado |
 | Hash de contraseñas bcryptjs (12 rondas) | Contraseñas almacenadas con hash irreversible y sal aleatoria, imposibles de descifrar por diccionario | `src/lib/auth.ts` — `bcrypt.compare()` | ✅ Implementado |
 | Control de acceso por roles (RBAC) | Middleware que restringe rutas por rol; `validateRole()` como segunda capa en API routes sensibles | `src/middleware.ts`, `src/lib/auth-utils.ts` | ✅ Implementado |
-| Protección contra fuerza bruta | Bloqueo temporal (15 min) del usuario tras 3 intentos fallidos consecutivos de login | `src/lib/auth.ts` — `intentosFallidos` Map | ✅ Implementado |
+| Protección contra fuerza bruta | Bloqueo temporal (15 min) del usuario tras 3 intentos fallidos dentro de una ventana de 30 minutos. Entradas antiguas se resetean automáticamente. El login muestra mensaje específico al usuario bloqueado. | `src/lib/auth.ts` — `intentosFallidos` Map, `VENTANA_MS = 30 min`, `BLOQUEO_MS = 15 min` | ✅ Implementado |
 | Prevención de inyección SQL | Prisma ORM genera prepared statements parametrizados; prohibido `$queryRawUnsafe` | Toda la capa de servicios `src/services/` | ✅ Implementado |
 | Validación de entradas con Zod | Todos los endpoints de API validan el body de la petición contra un schema Zod antes de procesarlo | `src/features/*/validations/` | ✅ Implementado |
 | CORS LAN restrictivo | El servidor solo acepta peticiones de `localhost`, `127.0.0.1` y rangos privados RFC-1918 | `server.js` — función `isAllowedOrigin()` | ✅ Implementado |
 | Integridad de datos SQLite (WAL) | Mode Write-Ahead Logging previene corrupción ante cortes de energía y permite concurrencia segura | `src/lib/prisma.ts` — PRAGMA journal_mode=WAL | ✅ Implementado |
 | Transacciones atómicas ACID | Operaciones financieras críticas (numeración de comprobantes, descuento de inventario) se ejecutan en `$transaction` | `src/services/billing.service.ts` | ✅ Implementado |
-| Gestión de dependencias vulnerable | `pnpm audit` periódico + overrides forzados en `package.json` para dependencias con CVE conocidos | `package.json` — sección `overrides` | 🟡 Parcial |
-| Copias de seguridad programadas | Script automático de backup caliente del archivo `dev.db` hacia directorio cifrado y USB externo | Script programador de tareas del SO | 🟡 Pendiente |
+| Gestión de dependencias vulnerable | `pnpm audit` sin vulnerabilidades: overrides en `pnpm.overrides` fuerzan `serialize-javascript>=7.0.3`, `postcss>=8.5.10`, `uuid>=11.1.1`, `ws>=8.20.1` | `package.json` — sección `pnpm.overrides` | ✅ Implementado |
+| Copias de seguridad programadas | Script `scripts/backup-db.ps1`: copia `dev.db` con timestamp, rotación de últimos 7 backups, soporte opcional a unidad USB. Ejecutar con `pnpm db:backup`. | `scripts/backup-db.ps1`, comando `db:backup` en `package.json` | ✅ Implementado |
 
 
 ## 6. Proceso de desarrollo seguro
@@ -196,9 +196,13 @@ A nivel de **auditoría periódica formal**, se realiza una revisión integral d
 | 5 | Configurar CORS LAN en servidor | Implementar `isAllowedOrigin()` en `server.js` para restringir orígenes a la red privada LAN | Integrante 4 | 2026-05-01 | 2026-05-05 | ✅ Completado |
 | 6 | Forzar versiones seguras de dependencias | Agregar sección `overrides` en `package.json` para `serialize-javascript`, `uuid`, `postcss` | Integrante 1 | 2026-05-10 | 2026-05-12 | ✅ Completado |
 | 7 | Elaborar informe OWASP Top 10 | Documentar evaluación de los 10 riesgos en `docs/calidad y pruebas de software/informe_owasp.md` | Integrante 3 | 2026-06-01 | 2026-06-07 | ✅ Completado |
-| 8 | Implementar estrategia de backups automáticos | Crear script de backup caliente del archivo `dev.db` con rotación diaria y copia a USB | Integrante 4 | 2026-07-01 | 2026-07-15 | 🔄 Pendiente |
-| 9 | Realizar auditoría formal de seguridad (semestre 2) | Re-ejecutar análisis OWASP, auditar dependencias y actualizar presente plan | Integrante 1 | 2026-12-01 | 2026-12-07 | 🔄 Programado |
-| 10 | Capacitación al propietario en gestión de accesos | Sesión in situ para instruir al JEFE en gestión de contraseñas y reconocimiento de incidentes | Integrante 1 | Fecha de despliegue | Fecha de despliegue | 🔄 Pendiente |
+| 8 | Corregir filtro de fechas en motor IA | Bug crítico: `datetime('now', ...)` retornaba formato con espacio mientras Prisma almacena ISO con `T`, por lo que todos los filtros temporales devolvían registros sin límite de fecha. Fix: `datetime(o.createdAt) >= datetime('now', ...)` normaliza ambos lados. Afectaba a `data_service.py` (5 queries) y los modelos ML. | Integrante 1 | 2026-06-06 | 2026-06-06 | ✅ Completado |
+| 9 | Corregir lógica `cache_vacio` en arranque IA | Bug: condición `and` requería que AMBOS cachés (forecaster y basket) estuvieran vacíos. Si el forecaster tenía caché pero el basket analyzer no, `train_all()` nunca se ejecutaba. Fix: cambiar `and` por `or`. | Integrante 1 | 2026-06-06 | 2026-06-06 | ✅ Completado |
+| 10 | Corregir campo `customerRuc` en boletas | Bug de integridad de datos: `IssueReceiptButton.tsx` enviaba el DNI del cliente como `customerRuc` al emitir boletas, creando inconsistencia con `facturacion/page.tsx` que enviaba `undefined`. Fix: enviar `undefined` para tipos distintos de FACTURA en ambas rutas. | Integrante 1 | 2026-06-06 | 2026-06-06 | ✅ Completado |
+| 11 | Mejorar mensaje de cuenta bloqueada | UX: el login mostraba "Credenciales inválidas" para bloqueo por fuerza bruta, igual que para contraseña incorrecta. Fix: `auth.ts` lanza `Error("Bloqueado")`, el login distingue el código y muestra mensaje específico de bloqueo temporal con indicación de tiempo de espera. | Integrante 1 | 2026-06-06 | 2026-06-06 | ✅ Completado |
+| 12 | Implementar estrategia de backups automáticos | Script `scripts/backup-db.ps1`: copia timestampeada de `dev.db`, rotación de últimos 7 backups, soporte USB opcional con `-DestinoExtra`. Comando `pnpm db:backup`. | Integrante 4 | 2026-06-06 | 2026-06-06 | ✅ Completado |
+| 13 | Realizar auditoría formal de seguridad (semestre 2) | Re-ejecutar análisis OWASP, auditar dependencias y actualizar presente plan | Integrante 1 | 2026-12-01 | 2026-12-07 | 🔄 Programado |
+| 14 | Capacitación al propietario en gestión de accesos | Sesión in situ para instruir al JEFE en gestión de contraseñas y reconocimiento de incidentes | Integrante 1 | Fecha de despliegue | Fecha de despliegue | 🔄 Pendiente |
 
 
 ## 15. Referencias

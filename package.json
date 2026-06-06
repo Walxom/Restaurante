@@ -16,9 +16,13 @@
     "db:push": "pnpm prisma db push",
     "db:seed": "pnpm tsx --env-file=.env prisma/seed.ts",
     "db:setup": "pnpm prisma db push && pnpm db:seed",
+    "db:backup": "powershell -ExecutionPolicy Bypass -File \"scripts/backup-db.ps1\"",
+    "db:backup:usb": "powershell -ExecutionPolicy Bypass -File \"scripts/backup-db.ps1\" -DestinoExtra",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "ai:setup": "node ai_engine/scripts/setup_env.js",
     "ai:generate": ".\\ai_engine\\.venv\\Scripts\\python.exe -m ai_engine.scripts.generate_synthetic_data",
     "ai:start": ".\\ai_engine\\.venv\\Scripts\\uvicorn.exe ai_engine.main:app --reload --host 0.0.0.0 --port 8000",
@@ -67,15 +71,18 @@
       "prisma",
       "sharp",
       "unrs-resolver"
-    ]
-  },
-  "overrides": {
-    "serialize-javascript": "^7.0.5",
-    "postcss": "^8.5.1",
-    "uuid": "^14.0.0"
+    ],
+    "overrides": {
+      "serialize-javascript": ">=7.0.3",
+      "postcss": ">=8.5.10",
+      "uuid": ">=11.1.1",
+      "ws": ">=8.20.1"
+    }
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@eslint/eslintrc": "^3.3.5",
+    "@playwright/test": "^1.49.1",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",

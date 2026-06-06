@@ -44,7 +44,56 @@ jobs:
           path: coverage/
           retention-days: 7
 
-  # ─── Job 2: Compilación de producción ────────────────────────────────────────
+  # ─── Job 2: Pruebas E2E / aceptación + accesibilidad (Playwright + axe-core) ──
+  e2e:
+    name: E2E + Accesibilidad (Playwright)
+    runs-on: ubuntu-latest
+    needs: quality
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Generar cliente Prisma y sembrar base de datos
+        run: pnpm db:setup
+        env:
+          DATABASE_URL: file:./dev.db
+
+      - name: Instalar navegador Chromium para Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Ejecutar pruebas E2E y de accesibilidad
+        run: pnpm test:e2e
+        env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-secret-placeholder' }}
+          NEXTAUTH_URL: http://localhost:3001
+          DATABASE_URL: file:./dev.db
+
+      - name: Publicar reporte de Playwright como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  # ─── Job 3: Compilación de producción ────────────────────────────────────────
   build:
     name: Build de producción
     runs-on: ubuntu-latest
