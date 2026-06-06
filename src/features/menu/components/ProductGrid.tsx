@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Product, CartItem } from "@/types"
-import { ProductCard } from "@/components/orders/ProductCard"
+import { ProductCard } from "@/features/orders/components/ProductCard"
 import { StateFeedback } from "@/components/ui/StateFeedback"
 
 interface ProductGridProps {

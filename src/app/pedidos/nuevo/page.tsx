@@ -14,9 +14,9 @@ import OrderCart from "@/features/orders/components/OrderCart"
 import OrderCreatedModal from "@/features/orders/components/OrderCreatedModal"
 import PrinterErrorModal from "@/features/billing/components/PrinterErrorModal"
 import { RoleGuard } from "@/components/auth/role-guard"
-import { OrderTypeSelector } from "@/components/orders/OrderTypeSelector"
-import { CustomerForm } from "@/components/orders/CustomerForm"
-import { CategoryTabs } from "@/components/orders/CategoryTabs"
+import { OrderTypeSelector } from "@/features/orders/components/OrderTypeSelector"
+import { CustomerForm } from "@/features/orders/components/CustomerForm"
+import { CategoryTabs } from "@/features/orders/components/CategoryTabs"
 
 // Hooks y Tipos
 import { useCart } from "@/features/orders/hooks/useCart"
@@ -24,7 +24,7 @@ import { useOrderData } from "@/features/orders/hooks/useOrderData"
 import { useCreateOrder } from "@/features/orders/hooks/useCreateOrder"
 import { CustomerData, OrderType, Table } from "@/types"
 
-import { OrderPageSkeleton } from "@/components/orders/OrderPageSkeleton"
+import { OrderPageSkeleton } from "@/features/orders/components/OrderPageSkeleton"
 import { StateFeedback } from "@/components/ui/StateFeedback"
 
 // Forzar renderizado dinámico (esta página requiere autenticación y localStorage)

@@ -27,7 +27,7 @@ import { useOrderPayment } from "@/features/orders/hooks/useOrderPayment"
 import { useOrderPrinting } from "@/features/orders/hooks/useOrderPrinting"
 
 import { RoleGuard } from "@/components/auth/role-guard"
-import { AppLoading } from "@/components/dashboard/AppLoading"
+import { AppLoading } from "@/features/dashboard/components/AppLoading"
 import { getOrderTypeLabel } from "@/features/orders/utils/order-utils"
 
 export default function OrderDetailPage() {
