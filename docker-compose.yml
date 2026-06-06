@@ -1,0 +1,28 @@
+services:
+  bendistaurante:
+    build:
+      context: .
+      target: runner
+    container_name: bendistaurante-pos
+    ports:
+      - "3001:3001"
+    volumes:
+      # Volumen persistente para la BD SQLite (sobrevive reinicios del contenedor)
+      - sqlite_data:/data
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: file:/data/prod.db
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3001}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/public/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  sqlite_data:
+    driver: local

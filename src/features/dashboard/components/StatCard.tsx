@@ -1,81 +1,86 @@
-import React from 'react';
-import { type LucideIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React from 'react'
+import { type LucideIcon } from 'lucide-react'
 
 interface StatCardProps {
-  label: string;
-  value: string | number;
-  subValue?: string;
-  icon: LucideIcon;
-  color: 'blue' | 'orange' | 'green' | 'purple' | 'teal';
-  loading?: boolean;
+  label: string
+  value: string | number
+  subValue?: string
+  icon: LucideIcon
+  color: 'blue' | 'orange' | 'green' | 'purple' | 'teal'
+  loading?: boolean
 }
 
-const colorThemes = {
-  blue: {
-    bg: 'bg-blue-100 dark:bg-blue-500/20',
-    text: 'text-blue-600 dark:text-blue-400',
-  },
-  orange: {
-    bg: 'bg-orange-100 dark:bg-orange-500/20',
-    text: 'text-orange-600 dark:text-orange-400',
-  },
-  green: {
-    bg: 'bg-green-100 dark:bg-green-500/20',
-    text: 'text-green-600 dark:text-green-400',
-  },
-  purple: {
-    bg: 'bg-purple-100 dark:bg-purple-500/20',
-    text: 'text-purple-600 dark:text-purple-400',
-  },
-  teal: {
-    bg: 'bg-teal-100 dark:bg-teal-500/20',
-    text: 'text-teal-600 dark:text-teal-400',
-  }
-};
+// Colores de acento — saturados, legibles tanto en light como dark
+const palette: Record<StatCardProps['color'], string> = {
+  blue:   'oklch(0.55 0.18 230)',
+  orange: 'oklch(0.62 0.20 40)',
+  green:  'oklch(0.55 0.18 155)',
+  purple: 'oklch(0.58 0.20 295)',
+  teal:   'oklch(0.55 0.17 185)',
+}
 
-export const StatCard = ({
-  label,
-  value,
-  subValue,
-  icon: Icon,
-  color,
-  loading = false
-}: StatCardProps) => {
-  const theme = colorThemes[color];
+export const StatCard = ({ label, value, subValue, icon: Icon, color, loading = false }: StatCardProps) => {
+  const accent = palette[color]
 
   return (
-    <div className="bg-card/40 backdrop-blur-md rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-border/50 hover:border-border hover:shadow-xl transition-all duration-300 group">
-      <div className="flex items-center justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] sm:text-xs font-bold text-foreground/60 uppercase tracking-widest mb-1.5">
-            {label}
-          </p>
-          <div className="flex flex-col">
-            <p className="text-xl sm:text-2xl font-bold text-foreground truncate">
-              {loading ? (
-                <span className="inline-block w-12 h-6 bg-muted animate-pulse rounded" />
-              ) : (
-                value
-              )}
-            </p>
+    <div className="ocean-stat-card relative rounded-2xl overflow-hidden cursor-default">
+      {/* Barra de acento izquierda */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl"
+        style={{
+          background: `linear-gradient(to bottom, ${accent}, ${accent}66)`,
+          boxShadow: `0 0 14px ${accent}44`,
+        }}
+      />
+
+      {/* Orb de resplandor — esquina superior derecha */}
+      <div
+        className="absolute top-0 right-0 w-36 h-36 pointer-events-none -translate-y-12 translate-x-10"
+        style={{ background: `radial-gradient(circle at center, ${accent}14, transparent 65%)` }}
+      />
+
+      <div className="p-5 pl-[22px]">
+        {/* Etiqueta */}
+        <p
+          className="text-[10px] font-bold uppercase mb-3 text-muted-foreground"
+          style={{ letterSpacing: '0.18em' }}
+        >
+          {label}
+        </p>
+
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            {loading ? (
+              <div className="h-8 w-20 rounded-lg animate-pulse bg-muted" />
+            ) : (
+              <p
+                className="text-3xl font-black leading-none truncate text-foreground"
+                style={{
+                  fontFamily: 'var(--font-geist-mono, monospace)',
+                  letterSpacing: '-0.03em',
+                }}
+              >
+                {value}
+              </p>
+            )}
             {subValue && !loading && (
-              <p className="text-[10px] sm:text-xs text-foreground/50 font-medium mt-1 truncate">
+              <p className="text-xs mt-1.5 truncate text-muted-foreground">
                 {subValue}
               </p>
             )}
           </div>
-        </div>
-        
-        <div className={cn(
-          "w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-sm",
-          theme.bg
-        )}>
-          <Icon className={cn("w-5 h-5 sm:w-6 sm:h-6", theme.text)} />
+
+          {/* Ícono con fondo de acento */}
+          <div
+            className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center"
+            style={{ background: `${accent}18` }}
+          >
+            <Icon className="w-5 h-5" style={{ color: accent }} />
+          </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default StatCard;
+export default StatCard

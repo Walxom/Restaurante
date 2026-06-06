@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import TableModal from "@/features/tables/components/TableModal"
 import StatusChangeModal from "@/features/tables/components/StatusChangeModal"
 import { AdminPageHeader } from "@/components/layout/PageHeader"
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import { cn } from "@/lib/utils"
 import { Plus, Users, Settings } from "lucide-react"
 
@@ -112,22 +113,11 @@ export default function MesasPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-blue-600/20"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
-          </div>
-          <p className="text-muted-foreground font-medium animate-pulse">Organizando el plano...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner fullPage message="Organizando el plano..." />
   }
 
   return (
-    <div className="min-h-screen bg-background transition-colors duration-500">
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/20 dark:from-slate-950 dark:via-blue-950/10 dark:to-slate-950 pointer-events-none" />
+    <div className="min-h-screen transition-colors duration-500">
       <div className="relative z-10 flex flex-col">
       {/* Header minimalista */}
       <AdminPageHeader

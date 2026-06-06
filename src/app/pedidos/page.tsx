@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import CompleteOrderModal from "@/features/orders/components/CompleteOrderModal"
 import ConfirmDialog from "@/components/ConfirmDialog"
-import { Plus, ArrowLeft, FileText } from "lucide-react"
+import { Plus, FileText } from "lucide-react"
+import { AdminPageHeader } from "@/components/layout/PageHeader"
 import { useOrdersSocket } from "@/hooks/useSocket"
 import { RoleGuard } from "@/components/auth/role-guard"
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 
 // New modular components
 import { OrderCard } from "@/features/orders/components/OrderCard"
@@ -137,63 +139,30 @@ export default function UnifiedOrdersPage() {
   const currentOrders = orders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center animate-in fade-in duration-300">
-        <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-          </div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60 animate-pulse">Sincronizando pedidos...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner fullPage message="Sincronizando pedidos..." />
   }
 
   return (
     <RoleGuard allowedRoles={["MESERO", "JEFE"]}>
       <div className="min-h-screen bg-background transition-colors duration-500">
-        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
-
         <div className="relative z-10 flex flex-col">
-          <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50 transition-all duration-300">
-            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-                <Button 
-                  onClick={() => router.push(session?.user?.role === "MESERO" ? "/mesero" : "/dashboard")} 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-9 w-9 shrink-0 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all duration-300"
-                  aria-label="Volver al panel"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="hidden sm:flex h-10 w-10 shrink-0 rounded-2xl bg-primary/10 items-center justify-center border border-primary/20">
-                    <FileText className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <h1 className="text-xs sm:text-sm md:text-base font-black text-foreground uppercase tracking-widest truncate">
-                      <span className="inline sm:hidden">Pedidos</span>
-                      <span className="hidden sm:inline">Gestión de Pedidos</span>
-                    </h1>
-                    <p className="hidden md:block text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 truncate">
-                      Sincronización y control en tiempo real
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <Button 
-                onClick={() => router.push("/pedidos/nuevo")} 
-                size="sm" 
-                className="h-9 px-3 sm:px-4 bg-primary hover:bg-primary/95 text-primary-foreground rounded-xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300"
-              >
-                <Plus className="w-3.5 h-3.5 sm:mr-2" />
-                <span className="hidden sm:inline">Nuevo Pedido</span>
-                <span className="sm:hidden">Nuevo</span>
-              </Button>
-            </div>
-          </header>
+          <AdminPageHeader
+            title="Gestión de Pedidos"
+            subtitle="Sincronización y control en tiempo real"
+            icon={FileText}
+            maxWidth="max-w-[1600px]"
+            onBack={() => router.push(session?.user?.role === "MESERO" ? "/mesero" : "/dashboard")}
+          >
+            <Button
+              onClick={() => router.push("/pedidos/nuevo")}
+              size="sm"
+              className="h-9 px-3 sm:px-4 bg-primary hover:bg-primary/95 text-primary-foreground rounded-xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300"
+            >
+              <Plus className="w-3.5 h-3.5 sm:mr-2" />
+              <span className="hidden sm:inline">Nuevo Pedido</span>
+              <span className="sm:hidden">Nuevo</span>
+            </Button>
+          </AdminPageHeader>
 
           <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <OrderFilters filter={filter} setFilter={setFilter} orderCounts={orderCounts} />

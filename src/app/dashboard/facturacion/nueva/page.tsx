@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
+import { AdminPageHeader } from "@/components/layout/PageHeader"
 
 interface Order {
   id: string
@@ -208,27 +209,20 @@ export default function NuevaFacturaPage() {
   const totals = calculateTotals()
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Nuevo Comprobante
-              </h1>
-              <p className="text-gray-600">
-                Generar boleta o factura desde pedido completado
-              </p>
-            </div>
-            <Button 
-              onClick={() => router.push("/dashboard/facturacion")}
-              variant="outline"
-            >
-              Cancelar
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background">
+      <AdminPageHeader
+        title="Nuevo Comprobante"
+        subtitle="Generar boleta o factura desde pedido completado"
+        backTo="/dashboard/facturacion"
+      >
+        <Button
+          onClick={() => router.push("/dashboard/facturacion")}
+          variant="outline"
+          className="rounded-xl font-bold uppercase tracking-widest text-[10px] h-9"
+        >
+          Cancelar
+        </Button>
+      </AdminPageHeader>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

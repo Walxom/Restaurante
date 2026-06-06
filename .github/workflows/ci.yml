@@ -1,0 +1,86 @@
+name: CI — Lint · Test · Coverage · Build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─── Job 1: Calidad de código y pruebas unitarias ────────────────────────────
+  quality:
+    name: Lint + Pruebas + Cobertura
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Ejecutar ESLint
+        run: pnpm lint
+
+      - name: Ejecutar pruebas unitarias con cobertura
+        run: pnpm test:coverage
+
+      - name: Publicar reporte de cobertura como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  # ─── Job 2: Compilación de producción ────────────────────────────────────────
+  build:
+    name: Build de producción
+    runs-on: ubuntu-latest
+    needs: quality
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Generar cliente Prisma
+        run: pnpm db:generate
+
+      - name: Compilar aplicación Next.js
+        run: pnpm build
+        env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-secret-placeholder' }}
+          NEXTAUTH_URL: http://localhost:3001
+          DATABASE_URL: file:./dev.db
+
+      - name: Publicar artefacto de build
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-build
+          path: .next/
+          retention-days: 3

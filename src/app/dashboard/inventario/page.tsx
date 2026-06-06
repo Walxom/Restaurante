@@ -5,16 +5,16 @@ import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  Package, 
-  AlertTriangle, 
-  FolderOpen, 
-  Plus, 
-  ArrowLeft, 
+import {
+  Package,
+  AlertTriangle,
+  FolderOpen,
+  Plus,
   Layers,
   History,
   LayoutDashboard
 } from "lucide-react"
+import { AdminPageHeader } from "@/components/layout/PageHeader"
 
 // Hooks
 import { useInventory } from "@/features/inventory/hooks/useInventory"
@@ -137,48 +137,20 @@ export default function InventoryPage() {
   return (
     <RoleGuard allowedRoles={["JEFE"]}>
       <div className="min-h-screen bg-background transition-colors duration-500">
-        {/* Fondo decorativo coherente */}
-        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
-        
         <div className="relative z-10 flex flex-col">
-          {/* Header de Inventario */}
-          <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-16">
-                <div className="flex items-center gap-4">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => router.push("/dashboard")}
-                    className="h-9 w-9 rounded-xl hover:bg-muted"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </Button>
-                  <div>
-                    <h1 className="text-sm font-black text-foreground uppercase tracking-widest leading-none mb-1">
-                      Inventario Maestro
-                    </h1>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
-                      Gestión de insumos y almacén
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button 
-                    onClick={() => {
-                      setSelectedIngredient(null)
-                      setShowIngredientModal(true)
-                    }}
-                    className="h-10 px-4 bg-foreground text-background hover:opacity-90 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 shadow-lg shadow-black/5"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nuevo Insumo
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </header>
+          <AdminPageHeader
+            title="Inventario Maestro"
+            subtitle="Gestión de insumos y almacén"
+            backTo="/dashboard"
+          >
+            <Button
+              onClick={() => { setSelectedIngredient(null); setShowIngredientModal(true) }}
+              className="h-10 px-4 bg-foreground text-background hover:opacity-90 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 shadow-lg shadow-black/5"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo Insumo
+            </Button>
+          </AdminPageHeader>
 
           <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
             {/* Estadísticas de Inventario */}

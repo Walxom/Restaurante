@@ -15,8 +15,8 @@ Package manager is **pnpm**. Node app runs on port **3001**; AI engine on **8000
 
 ```bash
 # Web app (Next.js + Socket.IO via custom server.js)
-pnpm dev                    # dev server with Turbopack
-pnpm dev:next               # plain `next dev` (no Socket.IO custom server)
+pnpm dev                    # custom server.js (Socket.IO) + Turbopack — the normal dev command
+pnpm dev:next               # plain `next dev --turbopack` — NO Socket.IO (realtime won't work)
 pnpm build                  # production build
 pnpm start                  # production, custom server
 pnpm lint                   # eslint . (ignored during builds — see next.config.ts)

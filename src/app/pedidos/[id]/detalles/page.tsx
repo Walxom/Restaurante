@@ -8,18 +8,18 @@ import OrderItemsList from "@/features/orders/components/OrderItemsList"
 import CompleteOrderModal from "@/features/orders/components/CompleteOrderModal"
 import ThermalPrintButton from "@/features/billing/components/ThermalPrintButton"
 import ConfirmDialog from "@/components/ConfirmDialog"
-import { 
-  ArrowLeft, 
-  Clock, 
-  User, 
-  MapPin, 
-  Phone, 
-  CreditCard, 
-  FileText, 
-  Plus, 
-  Search, 
-  Printer 
+import {
+  Clock,
+  User,
+  MapPin,
+  Phone,
+  CreditCard,
+  FileText,
+  Plus,
+  Search,
+  Printer
 } from "lucide-react"
+import { AdminPageHeader } from "@/components/layout/PageHeader"
 
 // Hooks Personalizados
 import { useOrderDetail } from "@/features/orders/hooks/useOrderDetail"
@@ -111,53 +111,35 @@ export default function OrderDetailPage() {
   return (
     <RoleGuard allowedRoles={["MESERO", "JEFE"]}>
       <div className="min-h-screen bg-background transition-colors duration-500">
-        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
-
         <div className="relative z-10 flex flex-col">
-          <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50 transition-all duration-300">
-            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-                <Button 
-                  onClick={() => router.push("/pedidos")} 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-9 w-9 shrink-0 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all duration-300"
-                  aria-label="Volver al panel"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="hidden sm:flex h-10 w-10 shrink-0 rounded-2xl bg-primary/10 items-center justify-center border border-primary/20">
-                    <FileText className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <h1 className="text-xs sm:text-sm md:text-base font-black text-foreground uppercase tracking-widest truncate">
-                      Pedido #{order.orderNumber}
-                    </h1>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${getStatusColor(order.status)}`}>
-                        {getStatusText(order.status)}
-                      </span>
-                      <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
-                        {getOrderTypeLabel(order.type, order.table?.number)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+          <AdminPageHeader
+            title={`Pedido #${order.orderNumber}`}
+            subtitle={
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${getStatusColor(order.status)}`}>
+                  {getStatusText(order.status)}
+                </span>
+                <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
+                  {getOrderTypeLabel(order.type, order.table?.number)}
+                </span>
               </div>
-              {['PENDING', 'CONFIRMED', 'SERVED'].includes(order.status) && (
-                <Button
-                  onClick={() => router.push(`/pedidos/${order.id}/edit`)}
-                  size="sm"
-                  className="h-9 px-3 sm:px-4 bg-primary hover:bg-primary/95 text-primary-foreground rounded-xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300"
-                >
-                  <Plus className="w-3.5 h-3.5 sm:mr-2" />
-                  <span className="hidden sm:inline">Modificar Pedido</span>
-                  <span className="sm:hidden">Modificar</span>
-                </Button>
-              )}
-            </div>
-          </header>
+            }
+            icon={FileText}
+            maxWidth="max-w-[1600px]"
+            backTo="/pedidos"
+          >
+            {['PENDING', 'CONFIRMED', 'SERVED'].includes(order.status) && (
+              <Button
+                onClick={() => router.push(`/pedidos/${order.id}/edit`)}
+                size="sm"
+                className="h-9 px-3 sm:px-4 bg-primary hover:bg-primary/95 text-primary-foreground rounded-xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300"
+              >
+                <Plus className="w-3.5 h-3.5 sm:mr-2" />
+                <span className="hidden sm:inline">Modificar Pedido</span>
+                <span className="sm:hidden">Modificar</span>
+              </Button>
+            )}
+          </AdminPageHeader>
 
       <main className="max-w-[1600px] mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

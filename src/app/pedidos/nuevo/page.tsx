@@ -5,7 +5,8 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, ShoppingCart, Utensils, User, MapPin, FileText, Search } from "lucide-react"
+import { ShoppingCart, Utensils, User, MapPin, FileText, Search } from "lucide-react"
+import { AdminPageHeader } from "@/components/layout/PageHeader"
 
 // Componentes
 import TableSelectorWithOccupied from "@/features/tables/components/TableSelectorWithOccupied"
@@ -131,38 +132,27 @@ export default function NewOrderPage() {
 
   return (
     <RoleGuard allowedRoles={["MESERO", "JEFE"]}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-        <div className="fixed inset-0 bg-linear-to-br from-blue-500/[0.02] via-transparent to-indigo-500/[0.02] pointer-events-none" />
-        
+      <div className="min-h-screen bg-background transition-colors duration-500">
         <div className="relative z-10 flex flex-col">
-          <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
-            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 sm:gap-4">
-                  <Button onClick={() => router.push("/pedidos")} variant="ghost" size="sm" className="rounded-xl hover:bg-accent group">
-                    <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                    <span className="hidden sm:inline font-medium">Volver a Pedidos</span>
-                  </Button>
-                  <div className="h-6 w-px bg-border/50 hidden sm:block"></div>
-                  <h1 className="text-xl font-bold text-foreground tracking-tight">Nuevo Pedido</h1>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button onClick={() => router.push("/pedidos")} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hidden sm:flex font-medium">
-                    Descartar
-                  </Button>
-                  <Button 
-                    onClick={handleCreateOrder}
-                    disabled={isCreatingOrder || cartItems.length === 0}
-                    size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-600/20 active:scale-95 transition-all font-medium h-10 px-4"
-                  >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    <span>{isCreatingOrder ? "Creando..." : `Confirmar (S/ ${calculateTotal().toFixed(2)})`}</span>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </header>
+          <AdminPageHeader
+            title="Nuevo Pedido"
+            maxWidth="max-w-[1600px]"
+            backTo="/pedidos"
+          >
+            <Button onClick={() => router.push("/pedidos")} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hidden sm:flex font-bold uppercase tracking-widest text-[10px] rounded-xl">
+              Descartar
+            </Button>
+            <Button
+              onClick={handleCreateOrder}
+              disabled={isCreatingOrder || cartItems.length === 0}
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-600/20 active:scale-95 transition-all font-black uppercase tracking-widest text-[10px] h-9 px-4"
+            >
+              <ShoppingCart className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">{isCreatingOrder ? "Creando..." : `Confirmar (S/ ${calculateTotal().toFixed(2)})`}</span>
+              <span className="sm:hidden">{isCreatingOrder ? "..." : "Confirmar"}</span>
+            </Button>
+          </AdminPageHeader>
 
           <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
