@@ -165,7 +165,7 @@ export default function CreateInvoiceModal({
 
   const handleOrderSelect = (order: Order) => {
     setSelectedOrder(order)
-    setPaymentData(prev => ({ ...prev, amountPaid: order.totalAmount }))
+    setPaymentData(prev => ({ ...prev, amountPaid: Number(order.totalAmount) }))
     setStep('customer')
   }
 

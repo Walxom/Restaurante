@@ -106,10 +106,9 @@ export default function FacturacionPage() {
             type: receiptType.toUpperCase(),
             orderId: selectedOrder.id,
             customerName: customerData?.name || 'Cliente',
-            customerDocument: customerData?.document || '',
-            customerRuc: receiptType === 'factura' ? customerData?.ruc : customerData?.document,
+            customerRuc: receiptType === 'factura' ? customerData?.ruc : undefined,
             paymentMethod,
-            amountPaid: selectedOrder.totalAmount
+            amountPaid: Number(selectedOrder.totalAmount)
           })
         })
 

@@ -91,7 +91,7 @@ export default function IssueReceiptButton({ order, onReceiptIssued, compact = f
           customerName: customerData.name,
           customerRuc: receiptType === 'factura' ? customerData.ruc : customerData.document,
           paymentMethod: 'EFECTIVO',
-          amountPaid: order.totalAmount
+          amountPaid: Number(order.totalAmount)
         })
       })
 

@@ -48,7 +48,6 @@ export default function EditOrderPage() {
   if (orderNotFound || !order) {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen bg-background relative overflow-hidden">
-        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
         <div className="text-center space-y-6 z-10 p-8 bg-card/30 backdrop-blur-md rounded-3xl border border-border/50 shadow-xl max-w-sm">
           <Search className="w-16 h-16 text-muted-foreground mx-auto opacity-20 animate-pulse" />
           <h2 className="text-lg font-black text-rose-600 uppercase tracking-widest">Pedido no encontrado</h2>
@@ -64,8 +63,6 @@ export default function EditOrderPage() {
   return (
     <RoleGuard allowedRoles={["MESERO", "JEFE"]}>
       <div className="min-h-screen bg-background relative overflow-hidden transition-colors duration-500 pb-12">
-        {/* Background dynamic gradients */}
-        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col min-h-screen">
           <EditOrderHeader

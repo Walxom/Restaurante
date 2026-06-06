@@ -185,10 +185,8 @@ export default function MenuPage() {
   return (
     <RoleGuard allowedRoles={["JEFE"]}>
       <div className="min-h-screen bg-background transition-colors duration-500">
-        <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
-        
         <div className="relative z-10 flex flex-col">
-          <AdminPageHeader 
+          <AdminPageHeader
             title="Gestión de Menú"
             subtitle="Administra categorías y productos"
             backTo="/dashboard"
