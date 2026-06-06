@@ -28,9 +28,16 @@ chat_service = ChatService()
 async def lifespan(app: FastAPI):
     try:
         insight_service.ensure_trained()
-        print("[AI Engine] Modelos cargados exitosamente.")
+        cache_vacio = (
+            not insight_service.forecaster.models
+            and not insight_service.basket_analyzer.rules
+        )
+        if cache_vacio:
+            print("[AI Engine] Cache vacio, entrenando modelos automaticamente...")
+            insight_service.train_all()
+        print("[AI Engine] Modelos listos.")
     except Exception as e:
-        print(f"[AI Engine] Advertencia: No se pudieron cargar modelos iniciales: {e}")
+        print(f"[AI Engine] Advertencia al cargar modelos: {e}")
     yield
 
 

@@ -99,7 +99,7 @@ def random_order_number(existing: set) -> str:
 
 def random_invoice_number(existing: set, prefix="B001") -> str:
     while True:
-        num = f"{prefix}-{random.randint(1, 999):05d}"
+        num = f"{prefix}-{random.randint(1, 99999):05d}"
         if num not in existing:
             existing.add(num)
             return num
@@ -330,7 +330,7 @@ def main():
 
                 created_orders += 1
 
-            if (d - dates[0]).days % 15 == 0:
+            if (d - dates[0]).days % 15 == 0 or d == dates[-1]:
                 print(f"  Generado: {d.isoformat()} ({volume} ordenes)")
 
         conn.execute("COMMIT;")

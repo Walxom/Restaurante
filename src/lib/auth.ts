@@ -3,6 +3,32 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
+const MAX_INTENTOS = 3
+const BLOQUEO_MS = 15 * 60 * 1000
+
+const intentosFallidos = new Map<string, { count: number; bloqueadoHasta: number }>()
+
+function estaBloqueado(username: string): boolean {
+  const entrada = intentosFallidos.get(username)
+  if (!entrada) return false
+  if (entrada.bloqueadoHasta > Date.now()) return true
+  intentosFallidos.delete(username)
+  return false
+}
+
+function registrarFallo(username: string): void {
+  const entrada = intentosFallidos.get(username) ?? { count: 0, bloqueadoHasta: 0 }
+  entrada.count += 1
+  if (entrada.count >= MAX_INTENTOS) {
+    entrada.bloqueadoHasta = Date.now() + BLOQUEO_MS
+  }
+  intentosFallidos.set(username, entrada)
+}
+
+function limpiarIntentos(username: string): void {
+  intentosFallidos.delete(username)
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -16,6 +42,10 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
+        if (estaBloqueado(credentials.username)) {
+          return null
+        }
+
         const user = await prisma.user.findUnique({
           where: {
             username: credentials.username
@@ -23,6 +53,7 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user || !user.isActive) {
+          registrarFallo(credentials.username)
           return null
         }
 
@@ -32,8 +63,11 @@ export const authOptions: NextAuthOptions = {
         )
 
         if (!isPasswordValid) {
+          registrarFallo(credentials.username)
           return null
         }
+
+        limpiarIntentos(credentials.username)
 
         return {
           id: user.id,

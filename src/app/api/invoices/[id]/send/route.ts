@@ -5,15 +5,13 @@ import { prisma } from "@/lib/prisma"
 import { Resend } from 'resend'
 import { ReceiptEmail } from '@/emails/ReceiptEmail'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const resolvedParams = await params
-    
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user) {
@@ -27,10 +25,12 @@ export async function POST(
     }
 
     if (!process.env.RESEND_API_KEY) {
-      return NextResponse.json({ 
-        error: "Servicio de correo no configurado. Falta RESEND_API_KEY en el servidor." 
+      return NextResponse.json({
+        error: "Servicio de correo no configurado. Falta RESEND_API_KEY en el servidor."
       }, { status: 500 })
     }
+
+    const resend = new Resend(process.env.RESEND_API_KEY)
 
     const config = await prisma.systemConfig.findFirst()
     const companyName = config?.companyName || "Bendistaurante"
