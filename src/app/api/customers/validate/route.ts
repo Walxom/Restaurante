@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
+import { validateRole } from '@/lib/auth-utils'
 
 export async function POST(req: Request) {
+  const auth = await validateRole(['JEFE', 'MESERO'])
+  if (!auth.isValid) return auth.response
+
   try {
     const { tipo, numero } = await req.json()
 
