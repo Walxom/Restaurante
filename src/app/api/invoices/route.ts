@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { Prisma } from "@prisma/client"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { createInvoiceSchema } from "@/features/billing/validations/invoice"
 
 // GET /api/invoices - Listar facturas con filtros
 export async function GET(request: NextRequest) {
@@ -22,16 +24,17 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get("endDate")
     const search = searchParams.get("search")
 
-    const where: Record<string, unknown> = {}
+    const where: Prisma.InvoiceWhereInput = {}
 
     if (type) where.type = type
     if (status) where.status = status
     if (paymentMethod) where.paymentMethod = paymentMethod
 
     if (startDate || endDate) {
-      where.issuedAt = {}
-      if (startDate) (where.issuedAt as Record<string, unknown>).gte = new Date(startDate)
-      if (endDate) (where.issuedAt as Record<string, unknown>).lte = new Date(endDate + "T23:59:59.999Z")
+      where.issuedAt = {
+        ...(startDate ? { gte: new Date(startDate) } : {}),
+        ...(endDate ? { lte: new Date(endDate + "T23:59:59.999Z") } : {}),
+      }
     }
 
     if (search) {
@@ -90,37 +93,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const {
-      orderId,
-      type, // BOLETA | FACTURA
-      customerName,
-      customerRuc,
-      customerAddress,
-      paymentMethod,
-      amountPaid,
-      autoPrint = false // Opción para imprimir automáticamente
-    } = body
+    const parsed = createInvoiceSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Datos inválidos", details: parsed.error.issues },
+        { status: 400 }
+      )
+    }
+    const { orderId, type, customerName, customerRuc, customerAddress, paymentMethod, amountPaid, autoPrint } = parsed.data
 
-    // Validaciones de permisos por tipo de comprobante
+    // Autorización por tipo de comprobante (estructura del body ya validada por Zod)
     if (type === "FACTURA" && session.user.role !== "JEFE") {
       return NextResponse.json(
         { error: "Solo los jefes pueden crear facturas" },
         { status: 403 }
-      )
-    }
-
-    // Validaciones básicas
-    if (!orderId || !type || !paymentMethod) {
-      return NextResponse.json(
-        { error: "Datos requeridos faltantes" },
-        { status: 400 }
-      )
-    }
-
-    if (type === "FACTURA" && (!customerRuc || customerRuc.length !== 11)) {
-      return NextResponse.json(
-        { error: "RUC requerido y debe tener 11 dígitos para facturas" },
-        { status: 400 }
       )
     }
 
@@ -160,24 +146,32 @@ export async function POST(request: NextRequest) {
     const subtotal = total / (1 + IGV_RATE) // Calcular subtotal sin IGV
     const igv = total - subtotal
 
-    // Validar monto pagado
-    const amountPaidNum = Number(amountPaid)
-    if (amountPaidNum < total) {
+    // Validar que el monto pagado cubre el total del pedido
+    if (amountPaid < total) {
       return NextResponse.json(
         { error: "El monto pagado es menor al total de la factura" },
         { status: 400 }
       )
     }
 
-    const change = amountPaidNum - total
+    const change = amountPaid - total
 
-    // Generar número correlativo
-    const invoiceNumber = await generateInvoiceNumber(type)
+    // Crear factura con transacción atómica.
+    // El correlativo se genera DENTRO de la tx con increment:1 para evitar
+    // que dos cajeros simultáneos obtengan el mismo número de comprobante.
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const field = type === "BOLETA" ? "lastBoletaNumber" : "lastFacturaNumber"
+      const cfg = await tx.systemConfig.findFirstOrThrow()
+      const updated = await tx.systemConfig.update({
+        where: { id: cfg.id },
+        data: { [field]: { increment: 1 } },
+      })
+      const nextNumber =
+        type === "BOLETA" ? updated.lastBoletaNumber : updated.lastFacturaNumber
+      const series = type === "BOLETA" ? "B001" : "F001"
+      const invoiceNumber = `${series}-${String(nextNumber).padStart(8, "0")}`
 
-    // Crear factura con transacción
-    const result = await prisma.$transaction(async (tx) => {
-      // Crear la factura
-      const invoice = await tx.invoice.create({
+      return tx.invoice.create({
         data: {
           number: invoiceNumber,
           type,
@@ -189,11 +183,11 @@ export async function POST(request: NextRequest) {
           igv,
           total,
           paymentMethod,
-          amountPaid: amountPaidNum,
+          amountPaid: amountPaid,
           change,
           issuedBy: session.user.id,
           items: {
-            create: order.orderItems.map(item => ({
+            create: order.orderItems.map((item) => ({
               description: item.product.name,
               quantity: item.quantity,
               unitPrice: item.unitPrice,
@@ -211,20 +205,6 @@ export async function POST(request: NextRequest) {
           }
         }
       })
-
-      // Actualizar contador en SystemConfig
-      const config = await tx.systemConfig.findFirst()
-      if (config) {
-        await tx.systemConfig.update({
-          where: { id: config.id },
-          data: {
-            [type === "BOLETA" ? "lastBoletaNumber" : "lastFacturaNumber"]: 
-              getCurrentNumber(invoiceNumber)
-          }
-        })
-      }
-
-      return invoice
     })
 
     // Imprimir automáticamente si se solicita
@@ -274,21 +254,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Función auxiliar para generar número correlativo
-async function generateInvoiceNumber(type: "BOLETA" | "FACTURA"): Promise<string> {
-  const config = await prisma.systemConfig.findFirst()
-  const currentNumber = type === "BOLETA" 
-    ? (config?.lastBoletaNumber || 0)
-    : (config?.lastFacturaNumber || 0)
-
-  const nextNumber = currentNumber + 1
-  const series = type === "BOLETA" ? "B001" : "F001"
-
-  return `${series}-${nextNumber.toString().padStart(8, "0")}`
-}
-
-// Función auxiliar para extraer número del correlativo
-function getCurrentNumber(invoiceNumber: string): number {
-  const parts = invoiceNumber.split("-")
-  return parseInt(parts[1])
-}
