@@ -1,6 +1,6 @@
 "use client"
 
-import { Sale } from "@/features/dashboard/hooks/useSales"
+import { type Sale } from "@/features/dashboard/hooks/useSales"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { X, Receipt, User, Clock, MapPin, ShoppingBag, CreditCard } from "lucide-react"

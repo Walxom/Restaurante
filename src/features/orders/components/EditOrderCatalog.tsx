@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Plus, Search, ShoppingCart, Tag } from "lucide-react"
-import { Product } from "@/types"
+import { type Product } from "@/types"
 import { cn } from "@/lib/utils"
 
 interface EditOrderCatalogProps {

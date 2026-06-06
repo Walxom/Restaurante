@@ -1,8 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { thermalPrintQueue } from '@/services/printer/server-thermal-printer'
 import { prisma } from "@/lib/prisma"
+import { validateRole } from '@/lib/auth-utils'
 
 export async function POST(request: NextRequest) {
+  const auth = await validateRole(['JEFE'])
+  if (!auth.isValid) return auth.response
+
   try {
     // Inicializar el servicio de procesamiento de cola
     await thermalPrintQueue.startProcessing()

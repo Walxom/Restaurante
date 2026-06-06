@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { validateRUC } from '@/features/billing/validations/documents'
+import { validateRole } from '@/lib/auth-utils'
 
 export async function GET(req: Request) {
+  const auth = await validateRole(['JEFE', 'MESERO'])
+  if (!auth.isValid) return auth.response
+
   const { searchParams } = new URL(req.url)
   const numero = searchParams.get('numero')
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { Ingredient, PaginationData } from "@/types"
+import { type Ingredient, type PaginationData } from "@/types"
 import { useOrdersSocket } from "@/hooks/useSocket"
 
 export function useInventory() {
@@ -55,7 +55,7 @@ export function useInventory() {
 
   // Filtering Logic (Client Side)
   const processIngredients = useCallback(() => {
-    let filtered = allIngredients.filter(ingredient => {
+    const filtered = allIngredients.filter(ingredient => {
       const matchesSearch = !searchTerm || ingredient.name.toLowerCase().includes(searchTerm.toLowerCase())
       
       const stockPercentage = ingredient.currentStock / ingredient.minStock

@@ -12,11 +12,11 @@ import { Plus, Search, Edit, Trash2, RotateCcw, Package, Grid3X3, List, Table } 
 import CategoryModal from "@/features/menu/components/CategoryModal"
 import ProductModal from "@/features/menu/components/ProductModal"
 import ConfirmDialog from "@/components/ConfirmDialog"
-import ProductTable from "@/components/menu/ProductTable"
-import CategoryTable from "@/components/menu/CategoryTable"
+import ProductTable from "@/features/menu/components/ProductTable"
+import CategoryTable from "@/features/menu/components/CategoryTable"
 import { RoleGuard } from "@/components/auth/role-guard"
 import { AdminPageHeader } from "@/components/layout/PageHeader"
-import { Product, Category } from "@/types"
+import { type Product, type Category } from "@/types"
 
 export default function MenuPage() {
   const { data: session } = useSession()

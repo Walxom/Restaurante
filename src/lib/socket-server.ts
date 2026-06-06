@@ -1,33 +1,29 @@
-import { Server as SocketIOServer } from 'socket.io'
+import type { Server as SocketIOServer } from 'socket.io'
 
-// Función para establecer la instancia de Socket.IO (llamada desde server.js)
+const globalForSocket = globalThis as unknown as { io: SocketIOServer | undefined }
+
 export function setSocketIO(server: SocketIOServer) {
-  (global as any).io = server
+  globalForSocket.io = server
 }
 
-// Función para obtener la instancia de Socket.IO
 export function getSocketIO(): SocketIOServer | null {
-  return (global as any).io || null
+  return globalForSocket.io ?? null
 }
 
-// Función para emitir eventos a una sala específica
-export function emitToRoom(room: string, event: string, data: any) {
+export function emitToRoom(room: string, event: string, data: unknown) {
   const io = getSocketIO()
   if (io) {
     io.to(room).emit(event, data)
-    console.log(`📡 Evento '${event}' emitido a sala '${room}':`, data)
-  } else {
+  } else if (process.env.NODE_ENV !== 'production') {
     console.warn(`⚠️ Socket.IO no disponible. Evento '${event}' no emitido a sala '${room}'`)
   }
 }
 
-// Función para emitir eventos a todos los clientes conectados
-export function emitToAll(event: string, data: any) {
+export function emitToAll(event: string, data: unknown) {
   const io = getSocketIO()
   if (io) {
     io.emit(event, data)
-    console.log(`📡 Evento '${event}' emitido a todos:`, data)
-  } else {
+  } else if (process.env.NODE_ENV !== 'production') {
     console.warn(`⚠️ Socket.IO no disponible. Evento '${event}' no emitido`)
   }
 }

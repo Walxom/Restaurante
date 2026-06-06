@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Users } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Table } from "@/types"
+import { type Table } from "@/types"
 
 interface TableSelectorWithOccupiedProps {
   tables: Table[]
@@ -29,7 +29,7 @@ export default function TableSelectorWithOccupied({
     try {
       const response = await fetch(`/api/orders?tableId=${table.id}`)
       if (response.ok) {
-        const allOrders = await response.json()
+        const { orders: allOrders } = await response.json()
         const activeOrders = allOrders.filter((order: any) =>
           !['CANCELLED', 'COMPLETED'].includes(order.status)
         )

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useOrdersSocket } from "@/hooks/useSocket"
-import { Order, OrderStatus } from "@/types"
+import { type Order, type OrderStatus } from "@/types"
 import { getStatusColor as getStatusColorUtil, getStatusText as getStatusTextUtil } from "@/features/orders/utils/order-utils"
 
 export function useOrderDetail(orderId: string) {

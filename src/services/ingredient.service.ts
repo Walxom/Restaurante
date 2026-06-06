@@ -134,13 +134,13 @@ export async function findMany(filters: IngredientFilters) {
   // Aplicar filtros de stock en memoria si son complejos (relación current/min)
   let resultIngredients = ingredients
   if (stockFilter && !['all', 'empty'].includes(stockFilter)) {
-    resultIngredients = ingredients.filter(i => {
+    resultIngredients = ingredients.filter((i: { currentStock: number; minStock: number }) => {
       const { status } = calculateStockStatus(i.currentStock, i.minStock)
       return status === stockFilter
     })
   }
 
-  const processed = resultIngredients.map(i => ({
+  const processed = resultIngredients.map((i: { currentStock: number; minStock: number }) => ({
     ...i,
     ...calculateStockStatus(i.currentStock, i.minStock)
   }))
@@ -269,10 +269,13 @@ export async function remove(id: string) {
 
   if (!ingredient) throw new Error("Ingrediente no encontrado")
 
-  const activeProducts = ingredient.recipeIngredients.filter(ri => ri.recipe.product.isActive)
+  type RecipeIngredientWithProduct = { recipe: { product: { isActive: boolean; name: string } } }
+  const activeProducts = ingredient.recipeIngredients.filter(
+    (ri: RecipeIngredientWithProduct) => ri.recipe.product.isActive
+  )
 
   if (activeProducts.length > 0) {
-    const names = activeProducts.map(ri => ri.recipe.product.name).join(", ")
+    const names = activeProducts.map((ri: RecipeIngredientWithProduct) => ri.recipe.product.name).join(", ")
     throw new Error(`No se puede eliminar: está en uso en productos activos (${names})`)
   }
 

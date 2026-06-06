@@ -72,8 +72,8 @@ export function useInvoices() {
         const response = await fetch(`/api/orders?${params}`)
         if (!response.ok) throw new Error("Error al cargar pedidos sin boleta")
         
-        const data = await response.json()
-        
+        const { orders: data } = await response.json()
+
         // Filtrar localmente por búsqueda si es aplicable
         let filteredOrders = data
         if (search) {
@@ -158,10 +158,8 @@ export function useInvoices() {
       // Obtener todos los pedidos completados sin factura para el conteo real
       fetch(`/api/orders?status=COMPLETED&withoutInvoice=true&showAll=true`)
         .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            setPendingCount(data.length)
-          }
+        .then(({ orders, pagination }) => {
+          setPendingCount(pagination?.total ?? orders?.length ?? 0)
         })
         .catch(err => console.error("Error loading pending count:", err))
     }

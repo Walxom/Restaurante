@@ -1,6 +1,6 @@
 "use client"
 
-import { ReactNode } from "react"
+import { type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { ChefHat, Bell, BellRing, LogOut } from "lucide-react"
 import { signOut } from "next-auth/react"

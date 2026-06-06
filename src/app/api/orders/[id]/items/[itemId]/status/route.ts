@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { type Prisma } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { prisma } from "@/lib/prisma"
-import { TableStatus } from '@/types'
+import { type TableStatus } from '@/types'
 import { convertToBaseUnit } from '@/features/inventory/utils/units'
 import { emitOrderItemUpdate, emitTableStatusChange, emitOrderStatusChange } from '@/lib/socket-events'
 
@@ -241,7 +242,7 @@ export async function PATCH(
     }
 
     // Realizar el cambio de estado con manejo de stock en una transacción
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       let updatedItem
 
       // Manejar el stock según el cambio de estado
@@ -324,7 +325,7 @@ export async function PATCH(
     })
 
     // Verificar si todos los items restantes están servidos
-    const allServed = allItems.every(item => item.status === 'SERVED')
+    const allServed = allItems.every((item: { id: string; status: string; [key: string]: unknown }) => item.status === 'SERVED')
 
     // Actualizar el estado del pedido manteniendo la lógica correcta
     const newOrderStatus = allServed ? 'SERVED' : 'CONFIRMED'
@@ -362,14 +363,14 @@ export async function PATCH(
       })
 
       // Verificar si todos los items de todos los pedidos activos están servidos
-      const allOrdersServed = tableOrders.every(order => {
+      const allOrdersServed = tableOrders.every((order: { id: string; orderItems: { id: string; status: string; [key: string]: unknown }[]; [key: string]: unknown }) => {
         // Para el pedido actual, obtener el estado actualizado de los items
         if (order.id === orderId) {
           // Usar los items actualizados que obtuvimos anteriormente
-          return allItems.every(item => item.status === 'SERVED')
+          return allItems.every((item: { id: string; status: string; [key: string]: unknown }) => item.status === 'SERVED')
         }
         // Para otros pedidos, verificar que todos sus items estén servidos
-        return order.orderItems.every(item => item.status === 'SERVED')
+        return order.orderItems.every((item: { id: string; status: string; [key: string]: unknown }) => item.status === 'SERVED')
       })
 
       // Determinar el nuevo estado de la mesa

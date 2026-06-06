@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from "@/lib/prisma"
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Formatear respuesta
-    const formattedOrders = orders.map(order => ({
+    const formattedOrders = orders.map((order) => ({
       id: order.id,
       orderNumber: order.orderNumber,
       totalAmount: order.totalAmount,

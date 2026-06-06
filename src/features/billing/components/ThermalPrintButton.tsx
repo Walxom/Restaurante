@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Printer, FileText, Receipt, Users } from "lucide-react"
 import { ReprintDialog } from "@/features/billing/components/ReprintDialog"
-import { Order } from "@/types"
+import { type Order } from "@/types"
 
 interface ThermalPrintButtonProps {
   order: Order

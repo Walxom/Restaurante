@@ -3,7 +3,7 @@
  * Configuración unificada para impresoras Bluetooth y TCP/IP
  */
 
-import { DualPrintConfig } from '../services/DualPrintService'
+import { type DualPrintConfig } from '../services/DualPrintService'
 
 /**
  * Configuración por defecto del sistema dual

@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { type Prisma } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { prisma } from "@/lib/prisma"
 
@@ -255,7 +256,7 @@ export async function PATCH(
     }
 
     // Actualizar el item en una transacción
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Actualizar el item
       const updatedItem = await tx.orderItem.update({
         where: { id: itemId },
@@ -371,7 +372,7 @@ export async function DELETE(
     }
 
     // Eliminar el item y actualizar total
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Eliminar el item
       await tx.orderItem.delete({
         where: { id: itemId }

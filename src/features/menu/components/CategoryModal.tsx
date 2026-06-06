@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Category } from "@/types"
+import { type Category } from "@/types"
 import { ModalShell } from "@/components/ui/modal-shell"
 import { PremiumInput } from "@/components/ui/premium-input"
 import { SectionTitle } from "@/components/ui/section-title"

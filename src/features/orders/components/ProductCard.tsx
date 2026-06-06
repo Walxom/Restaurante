@@ -1,6 +1,6 @@
 "use client"
 
-import { Product } from "@/types"
+import { type Product } from "@/types"
 import { Plus, Minus, MoreHorizontal, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

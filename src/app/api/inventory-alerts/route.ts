@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -101,21 +101,21 @@ export async function GET(request: NextRequest) {
     })
 
     // Calcular estadísticas de alertas (sin filtros)
-    const allIngredientsWithStatus = allIngredients.map(ingredient => {
+    const allIngredientsWithStatus = allIngredients.map((ingredient) => {
       const stockStatus = calculateStockStatus(ingredient.currentStock, ingredient.minStock)
       return {
         ...ingredient,
         ...stockStatus
       }
-    }).filter(ingredient => 
+    }).filter((ingredient) => 
       ingredient.status === 'empty' || ingredient.status === 'critical' || ingredient.status === 'low'
     )
 
     const alertStats = {
       total: allIngredientsWithStatus.length,
-      empty: allIngredientsWithStatus.filter(i => i.status === 'empty').length,
-      critical: allIngredientsWithStatus.filter(i => i.status === 'critical').length,
-      low: allIngredientsWithStatus.filter(i => i.status === 'low').length
+      empty: allIngredientsWithStatus.filter((i) => i.status === 'empty').length,
+      critical: allIngredientsWithStatus.filter((i) => i.status === 'critical').length,
+      low: allIngredientsWithStatus.filter((i) => i.status === 'low').length
     }
 
     // Si solo se solicitan estadísticas, devolverlas inmediatamente
@@ -141,14 +141,14 @@ export async function GET(request: NextRequest) {
 
     // Filtrar ingredientes que tienen alertas y calcular estado
     const ingredientsWithAlerts = ingredients
-      .map(ingredient => {
+      .map((ingredient) => {
         const stockStatus = calculateStockStatus(ingredient.currentStock, ingredient.minStock)
         return {
           ...ingredient,
           ...stockStatus
         }
       })
-      .filter(ingredient => {
+      .filter((ingredient) => {
         // Solo incluir ingredientes con alertas
         if (alertType === 'all') {
           return ingredient.status === 'empty' || ingredient.status === 'critical' || ingredient.status === 'low'
@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
       } else if (sortBy === 'name') {
         comparison = a.name.localeCompare(b.name)
       } else if (sortBy === 'stockPercentage') {
-        comparison = a.stockPercentage - b.stockPercentage
+        comparison = (Number(a.stockPercentage) || 0) - (Number(b.stockPercentage) || 0)
       }
       
       return sortOrder === 'desc' ? -comparison : comparison

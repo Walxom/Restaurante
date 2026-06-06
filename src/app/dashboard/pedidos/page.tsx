@@ -50,10 +50,10 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch("/api/orders?showAll=true")
+      const response = await fetch("/api/orders?showAll=true&status=active")
       if (response.ok) {
-        const data = await response.json()
-        setOrders(data)
+        const { orders } = await response.json()
+        setOrders(orders)
       }
     } catch (error) {
       console.error("Error al cargar pedidos:", error)

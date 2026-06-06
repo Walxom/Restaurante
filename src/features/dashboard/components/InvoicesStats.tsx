@@ -1,6 +1,6 @@
 "use client"
 
-import { InvoiceStats } from "@/features/billing/hooks/useInvoices"
+import { type InvoiceStats } from "@/features/billing/hooks/useInvoices"
 
 interface InvoicesStatsProps {
   stats: InvoiceStats | null

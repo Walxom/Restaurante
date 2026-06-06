@@ -1,6 +1,6 @@
 "use client"
 
-import { Invoice } from "@/features/billing/hooks/useInvoices"
+import { type Invoice } from "@/features/billing/hooks/useInvoices"
 import { 
   Table, 
   TableBody, 
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { FileText, Package, Eye } from "lucide-react"
-import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime"
+import { type AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime"
 import { cn } from "@/lib/utils"
 
 interface InvoicesTableProps {

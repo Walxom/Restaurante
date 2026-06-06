@@ -1,4 +1,4 @@
-import { Order, OrderStatus, OrderType, OrderItem } from "@/types";
+import { type Order, type OrderStatus, type OrderType, type OrderItem } from "@/types";
 
 /**
  * Convierte un objeto parcial o mock en un objeto Order válido para componentes de UI

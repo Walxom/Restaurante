@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { LucideIcon } from 'lucide-react';
+import { type LucideIcon } from 'lucide-react';
 
 interface ActionCardProps {
   title: string;

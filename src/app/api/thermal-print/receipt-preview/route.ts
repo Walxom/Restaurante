@@ -3,7 +3,7 @@
  * Genera vista previa del comprobante de pago para el cliente
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSystemConfig } from '@/services/system.service';
 import { PrinterConfigService } from '@/services/printer/printer-config';
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       customerName: body.customerName || order.customerName || 'Cliente General',
       customerRuc: documentType === 'FACTURA' ? (body.customerRuc || '00000000000') : undefined,
       paymentMethod: body.paymentMethod || 'EFECTIVO',
-      items: order.orderItems.map(item => ({
+      items: order.orderItems.map((item) => ({
         productName: item.product.name,
         quantity: item.quantity,
         unitPrice: Number(item.unitPrice),

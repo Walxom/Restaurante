@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { type Prisma } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createOrderSchema } from '@/features/orders/validations/order'
@@ -29,10 +30,11 @@ export async function GET(request: NextRequest) {
     const tableId = searchParams.get('tableId')
     const showAll = searchParams.get('showAll') === 'true'
     const withoutInvoice = searchParams.get('withoutInvoice') === 'true'
-    const date = searchParams.get('date') // Nuevo parámetro para filtrar por fecha
+    const date = searchParams.get('date')
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+    const limit = Math.max(1, Math.min(500, parseInt(searchParams.get('limit') || '200')))
 
-    // Construir filtros
-    const where: Record<string, unknown> = {}
+    const where: Prisma.OrderWhereInput = {}
     
     // Filtro por fecha (solo para pedidos completados y cancelados)
     if (date && status !== 'active' && status !== 'ACTIVE') {
@@ -82,53 +84,35 @@ export async function GET(request: NextRequest) {
       where.tableId = tableId
     }
 
-    const orders = await prisma.order.findMany({
-      where,
-      include: {
-        table: {
-          select: {
-            number: true,
-            capacity: true
+    const include = {
+      table: { select: { number: true, capacity: true } },
+      user: { select: { name: true, username: true } },
+      orderItems: {
+        include: {
+          product: {
+            select: { name: true, price: true, category: { select: { name: true } } }
           }
         },
-        user: {
-          select: {
-            name: true,
-            username: true
-          }
-        },
-        orderItems: {
-          include: {
-            product: {
-              select: {
-                name: true,
-                price: true,
-                category: {
-                  select: {
-                    name: true
-                  }
-                }
-              }
-            }
-          },
-          orderBy: {
-            createdAt: 'asc'
-          }
-        },
-        invoice: {
-          select: {
-            id: true,
-            type: true,
-            number: true
-          }
-        }
+        orderBy: { createdAt: 'asc' as const }
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
+      invoice: { select: { id: true, type: true, number: true } }
+    }
 
-    return NextResponse.json(orders)
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        include,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.order.count({ where }),
+    ])
+
+    return NextResponse.json({
+      orders,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    })
   } catch (error) {
     console.error('Error al obtener pedidos:', error)
     return NextResponse.json(
@@ -220,7 +204,7 @@ export async function POST(request: NextRequest) {
     // Calcular totales
     let totalAmount = 0
     const orderItemsData = items.map((item: { productId: string; quantity: number; notes?: string | null }) => {
-      const product = products.find(p => p.id === item.productId)
+      const product = products.find((p: { id: string }) => p.id === item.productId)
       if (!product) {
         throw new Error(`Producto ${item.productId} no encontrado`)
       }
@@ -257,7 +241,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Crear el pedido con sus items en una transacción
-    const order = await prisma.$transaction(async (tx) => {
+    const order = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Crear el pedido directamente en estado CONFIRMED
       const newOrder = await tx.order.create({
         data: {

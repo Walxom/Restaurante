@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Plus, Minus, Save, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { Product, OrderItem, Order } from "@/types"
+import { type Product, type OrderItem, type Order } from "@/types"
 
 interface EditOrderModalProps {
   isOpen: boolean

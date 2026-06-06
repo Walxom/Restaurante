@@ -6,6 +6,7 @@
  * NUNCA importar directamente desde componentes React.
  */
 
+import { type Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -91,7 +92,11 @@ export async function getTodayStats() {
     }),
   ])
 
-  const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.total), 0)
+  const totalRevenue = invoices.reduce(
+    (sum, inv) =>
+      sum + Number(inv.total),
+    0
+  )
   const averageTicket = invoices.length ? totalRevenue / invoices.length : 0
 
   return {
@@ -100,11 +105,13 @@ export async function getTodayStats() {
       totalRevenue,
       averageTicket,
     },
-    byPaymentMethod: byPaymentMethod.map((g) => ({
-      method: g.paymentMethod,
-      count: g._count.id,
-      total: Number(g._sum.total ?? 0),
-    })),
+    byPaymentMethod: byPaymentMethod.map(
+      (g) => ({
+        method: g.paymentMethod,
+        count: g._count.id,
+        total: Number(g._sum.total ?? 0),
+      })
+    ),
   }
 }
 
@@ -116,14 +123,13 @@ export async function getTodayStats() {
  * Genera número secuencial del tipo correcto.
  */
 export async function create(dto: CreateInvoiceDto) {
-  // Obtener configuración de impuestos si no se proveyó
+  // taxRate es estático (config del admin) — leerlo fuera de tx es aceptable
   let taxRate = dto.taxRate
   if (taxRate === undefined) {
     const config = await prisma.systemConfig.findFirst()
     taxRate = config ? Number(config.taxRate) : 0.18
   }
 
-  // Calcular montos
   const subtotalItems = dto.items.reduce(
     (sum, item) => sum + item.unitPrice * item.quantity,
     0
@@ -132,24 +138,21 @@ export async function create(dto: CreateInvoiceDto) {
   const total = subtotalItems + igv
   const change = dto.amountPaid - total
 
-  // Generar número secuencial
-  const config = await prisma.systemConfig.findFirst()
-  const lastNumber =
-    dto.type === "BOLETA"
-      ? (config?.lastBoletaNumber ?? 0) + 1
-      : (config?.lastFacturaNumber ?? 0) + 1
-
-  const prefix = dto.type === "BOLETA" ? "B001" : "F001"
-  const number = `${prefix}-${String(lastNumber).padStart(8, "0")}`
-
-  return prisma.$transaction(async (tx) => {
-    // Actualizar número secuencial en configuración
-    await tx.systemConfig.updateMany({
-      data:
-        dto.type === "BOLETA"
-          ? { lastBoletaNumber: lastNumber }
-          : { lastFacturaNumber: lastNumber },
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    // Incremento atómico dentro de la transacción: la lectura y la escritura
+    // del correlativo son una sola operación SQL, eliminando la race condition
+    // donde dos cajeros simultáneos generarían el mismo número de comprobante.
+    const field =
+      dto.type === "BOLETA" ? "lastBoletaNumber" : "lastFacturaNumber"
+    const cfg = await tx.systemConfig.findFirstOrThrow()
+    const updated = await tx.systemConfig.update({
+      where: { id: cfg.id },
+      data: { [field]: { increment: 1 } },
     })
+    const nextNumber =
+      dto.type === "BOLETA" ? updated.lastBoletaNumber : updated.lastFacturaNumber
+    const prefix = dto.type === "BOLETA" ? "B001" : "F001"
+    const number = `${prefix}-${String(nextNumber).padStart(8, "0")}`
 
     return tx.invoice.create({
       data: {

@@ -81,9 +81,9 @@ export const useDashboardStats = () => {
       const data = await response.json();
 
       // Obtener pedidos activos para calcular activeOrders y totalSales
-      const ordersResponse = await fetch('/api/orders?showAll=true');
+      const ordersResponse = await fetch('/api/orders?showAll=true&status=active');
       if (ordersResponse.ok) {
-        const allOrders = await ordersResponse.json();
+        const { orders: allOrders } = await ordersResponse.json();
 
         // Filtrar pedidos activos (PENDING, CONFIRMED, SERVED)
         const activeOrders = allOrders.filter((order: Order) =>

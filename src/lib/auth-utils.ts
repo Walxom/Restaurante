@@ -1,16 +1,14 @@
 import { getServerSession } from "next-auth/next"
+import type { Session } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { NextResponse } from "next/server"
 
-/**
- * Obtiene la sesión actual en el lado del servidor
- */
 export async function getSession() {
   return await getServerSession(authOptions)
 }
 
-export type AuthResult = 
-  | { isValid: true; session: any }
+export type AuthResult =
+  | { isValid: true; session: Session }
   | { isValid: false; response: NextResponse }
 
 /**

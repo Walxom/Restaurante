@@ -3,7 +3,7 @@
  * Especializado en tickets de preparación para cocina
  */
 
-import { KitchenOrderData, KitchenItem } from '../drivers/ZJ8360NetworkDriver'
+import { type KitchenOrderData, type KitchenItem } from '../drivers/ZJ8360NetworkDriver'
 
 export interface KitchenFormattingOptions {
   showTimestamp: boolean

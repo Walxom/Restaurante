@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from "@/lib/prisma"
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Agregar información sobre si el producto tiene historial de pedidos
-    const productsWithHistory = deletedProducts.map(product => ({
+    const productsWithHistory = deletedProducts.map((product: { orderItems: { length: number }; [key: string]: unknown }) => ({
       ...product,
       hasOrderHistory: product.orderItems.length > 0,
       orderCount: product.orderItems.length

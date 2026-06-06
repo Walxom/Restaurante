@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Clock, FileText, MapPin, User, ShoppingCart } from "lucide-react"
-import { Order } from "@/types"
+import { type Order } from "@/types"
 import { getStatusColor, getStatusText, getOrderTypeLabel } from "@/features/orders/utils/order-utils"
 
 interface EditOrderHeaderProps {

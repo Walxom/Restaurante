@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { IngredientCategory } from "@/types"
+import { type IngredientCategory } from "@/types"
 
 interface IngredientCategoryModalProps {
   isOpen: boolean

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Category, Product } from "@/types"
+import { type Category, type Product } from "@/types"
 
 export default function useMenuData() {
   const [categories, setCategories] = useState<Category[]>([])

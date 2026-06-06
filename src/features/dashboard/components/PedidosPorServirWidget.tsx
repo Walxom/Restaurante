@@ -56,12 +56,12 @@ export default function PedidosPorServirWidget({
       setLoading(true)
       setError(null)
       
-      const response = await fetch('/api/orders?showAll=true')
+      const response = await fetch('/api/orders?showAll=true&status=active')
       if (!response.ok) {
         throw new Error('Error al cargar pedidos')
       }
-      
-      const allOrders = await response.json()
+
+      const { orders: allOrders } = await response.json()
       
       // Filtrar pedidos que necesitan ser servidos
       const pendingOrders = allOrders.filter((order: Order) => 

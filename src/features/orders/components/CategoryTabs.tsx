@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils"
-import { Category } from "@/types"
+import { type Category } from "@/types"
 
 interface CategoryTabsProps {
   categories: Category[]

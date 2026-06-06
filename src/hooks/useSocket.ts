@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { io, Socket } from 'socket.io-client'
-import { Order, OrderStatus } from '@/types'
+import { io, type Socket } from 'socket.io-client'
+import { type Order, type OrderStatus } from '@/types'
 
 interface UseSocketOptions {
   autoConnect?: boolean

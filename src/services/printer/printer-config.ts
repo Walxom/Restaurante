@@ -4,7 +4,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { PrinterType, PrinterConnectionType, PrinterStatus } from '@/types';
+import { type PrinterType, type PrinterConnectionType, type PrinterStatus } from '@/types';
 
 export interface PrinterConfig {
   id: string;
@@ -62,7 +62,8 @@ export class PrinterConfigService {
       ]
     });
 
-    return printers.map(printer => this.mapPrinterToConfig(printer));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return printers.map((printer: any) => this.mapPrinterToConfig(printer));
   }
 
   /**

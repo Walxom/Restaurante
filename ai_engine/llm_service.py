@@ -29,7 +29,11 @@ class LLMService:
 
         self.client = None
         self._gemini_model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
-        self._narrative_cache: dict[str, dict] = {}
+        self._restaurant_name = os.getenv("RESTAURANT_NAME", "Fondo Marino")
+        # TTL configurable en segundos (default: 30 min). Evita que los insights
+        # queden obsoletos indefinidamente entre re-entrenos del modelo.
+        self._cache_ttl = int(os.getenv("GEMINI_CACHE_TTL_SECONDS", "1800"))
+        self._narrative_cache: dict[str, tuple[dict, float]] = {}
 
         if self.api_key:
             try:
@@ -215,11 +219,25 @@ class LLMService:
         raw = json.dumps(ml_data, sort_keys=True, ensure_ascii=False)
         return hashlib.md5(raw.encode()).hexdigest()
 
+    def _cache_get(self, key: str) -> dict | None:
+        entry = self._narrative_cache.get(key)
+        if entry is None:
+            return None
+        result, ts = entry
+        if time.time() - ts > self._cache_ttl:
+            del self._narrative_cache[key]
+            return None
+        return result
+
+    def _cache_set(self, key: str, result: dict) -> None:
+        self._narrative_cache[key] = (result, time.time())
+
     def generate_insight(self, ml_data: dict, prompt_ml: dict = None) -> dict:
         insight_type = ml_data.get("tipo", "forecast")
         api_data = prompt_ml if prompt_ml is not None else ml_data
         ckey = self._cache_key(ml_data)
-        cached = self._narrative_cache.get(ckey)
+
+        cached = self._cache_get(ckey)
         if cached is not None:
             return cached
 
@@ -232,14 +250,14 @@ class LLMService:
                 "timestamp": datetime.now().isoformat(),
                 "reason": "circuit_open"
             }
-            self._narrative_cache[ckey] = result
+            self._cache_set(ckey, result)
             return result
 
         if self.client and self.api_key:
             try:
                 template = self._select_template(insight_type, ml_data)
                 system_prompt = (
-                    "Eres un asistente de inteligencia de negocios para una cevicheria peruana llamada 'Fondo Marino'. "
+                    f"Eres un asistente de inteligencia de negocios para un restaurante peruano llamado '{self._restaurant_name}'. "
                     "Recibes datos de ventas y debes generar un parrafo fluido, completo y bien redactado "
                     "con recomendaciones UTILES y CONCRETAS en espanol. No te cortes a medio camino: "
                     "escribe el parrafo completo aunque sean 4-6 oraciones. "
@@ -257,7 +275,7 @@ class LLMService:
                     "tipo": insight_type,
                     "timestamp": datetime.now().isoformat()
                 }
-                self._narrative_cache[ckey] = result
+                self._cache_set(ckey, result)
                 return result
 
             except Exception as e:
@@ -277,5 +295,5 @@ class LLMService:
             "timestamp": datetime.now().isoformat(),
             "reason": "no_llm_available"
         }
-        self._narrative_cache[ckey] = result
+        self._cache_set(ckey, result)
         return result

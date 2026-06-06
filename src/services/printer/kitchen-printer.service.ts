@@ -51,7 +51,7 @@ export async function printOrderChanges(
       })
 
       for (const item of newItemsOnly) {
-        const product = products.find(p => p.id === item.productId)
+        const product = products.find((p: { id: string; name: string }) => p.id === item.productId)
         if (product) {
           addedItems.push({
             productName: product.name,

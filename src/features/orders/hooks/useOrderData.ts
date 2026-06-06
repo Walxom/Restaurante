@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { Table, Category, Product } from "@/types"
+import { type Table, type Category, type Product } from "@/types"
 
 export function useOrderData() {
   const [tables, setTables] = useState<Table[]>([])

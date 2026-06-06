@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { X, Layers, ArrowRight, Info, AlertTriangle, CheckCircle, FileX, Plus, Minus, Hash, Package } from "lucide-react"
-import { Ingredient } from "@/types"
+import { type Ingredient } from "@/types"
 
 interface BulkStockAdjustModalProps {
   isOpen: boolean

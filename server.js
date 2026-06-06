@@ -2,20 +2,24 @@ const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
 const { Server } = require('socket.io')
+const os = require('os')
 
 const dev = process.env.NODE_ENV !== 'production'
-const hostname = 'localhost'
+// En dev escuchamos solo en localhost; en producción en todas las interfaces (LAN)
+const hostname = dev ? 'localhost' : '0.0.0.0'
 const port = process.env.PORT || 3001
 
-// En dev activamos Turbopack para compilaciones hasta 10x más rápidas
-const app = next({
-  dev,
-  hostname,
-  port,
-  // Turbopack solo aplica en desarrollo; en producción se ignora esta opción
-  turbopack: dev,
-})
+function getPrivateIP() {
+  const interfaces = os.networkInterfaces()
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) return iface.address
+    }
+  }
+  return 'localhost'
+}
 
+const app = next({ dev, hostname, port, turbopack: dev })
 const handle = app.getRequestHandler()
 
 app.prepare().then(() => {
@@ -30,40 +34,41 @@ app.prepare().then(() => {
     }
   })
 
-  // Crear servidor Socket.IO
+  // CORS restringido: orígenes explícitos en ALLOWED_ORIGINS + rangos IPv4 privados (LAN)
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean)
+
+  const isAllowedOrigin = (origin) => {
+    if (!origin) return true // peticiones sin Origin (mismo host, curl, apps nativas)
+    if (allowedOrigins.includes(origin)) return true
+    return /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/.test(
+      origin
+    )
+  }
+
   const io = new Server(httpServer, {
     cors: {
-      origin: dev ? 'http://localhost:3001' : process.env.NEXTAUTH_URL,
-      methods: ['GET', 'POST']
-    }
+      origin: (origin, callback) => callback(null, isAllowedOrigin(origin)),
+      methods: ['GET', 'POST'],
+      credentials: true,
+    },
   })
 
-  // Manejar conexiones Socket.IO
   io.on('connection', (socket) => {
-    // Solo logueamos conexiones en desarrollo para no saturar la consola
-    if (dev) {
-      console.log('🔌 Cliente conectado:', socket.id)
-    }
+    if (dev) console.log('🔌 Cliente conectado:', socket.id)
 
-    // Unir automáticamente a la sala de pedidos
     socket.join('orders')
 
-    socket.on('join_room', (room) => {
-      socket.join(room)
-    })
-
-    socket.on('leave_room', (room) => {
-      socket.leave(room)
-    })
+    socket.on('join_room', (room) => socket.join(room))
+    socket.on('leave_room', (room) => socket.leave(room))
 
     socket.on('disconnect', () => {
-      if (dev) {
-        console.log('❌ Cliente desconectado:', socket.id)
-      }
+      if (dev) console.log('❌ Cliente desconectado:', socket.id)
     })
   })
 
-  // Hacer que io esté disponible globalmente
   global.io = io
 
   httpServer
@@ -71,24 +76,26 @@ app.prepare().then(() => {
       console.error(err)
       process.exit(1)
     })
-    .listen(port, async () => {
-      const turboMsg = dev ? ' ⚡ (Turbopack)' : ''
-      console.log(`🚀 Servidor listo en http://${hostname}:${port}${turboMsg}`)
-      console.log(`🔌 Socket.IO listo en puerto ${port}`)
+    .listen(port, hostname, () => {
+      if (dev) {
+        console.log(`🚀 Servidor listo en http://${hostname}:${port} ⚡ (Turbopack)`)
+        console.log(`🔌 Socket.IO listo en puerto ${port}`)
+      } else {
+        const privateIP = getPrivateIP()
+        console.log(`🚀 Servidor listo en:`)
+        console.log(`   • Local:       http://localhost:${port}`)
+        console.log(`   • Red privada: http://${privateIP}:${port}`)
+        console.log(`🔌 Socket.IO listo en puerto ${port}`)
+      }
     })
 })
 
-// Función helper para emitir eventos
 function emitToRoom(room, event, data) {
-  if (global.io) {
-    global.io.to(room).emit(event, data)
-  }
+  if (global.io) global.io.to(room).emit(event, data)
 }
 
 function emitToAll(event, data) {
-  if (global.io) {
-    global.io.emit(event, data)
-  }
+  if (global.io) global.io.emit(event, data)
 }
 
 module.exports = { emitToRoom, emitToAll }

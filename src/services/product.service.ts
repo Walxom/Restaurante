@@ -5,6 +5,7 @@
  * USO: Importar desde las API routes para separar lógica de negocio del transporte HTTP.
  */
 
+import { type Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -135,7 +136,7 @@ export async function create(dto: CreateProductDto) {
     where: { name, categoryId: dto.categoryId, isActive: false }
   })
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     let product;
 
     if (inactive) {
@@ -215,7 +216,7 @@ export async function update(id: string, dto: UpdateProductDto) {
     }
   }
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const { recipe, ...productData } = dto
 
     const product = await tx.product.update({
@@ -276,7 +277,7 @@ export async function remove(id: string) {
     })
   } else {
     // Hard delete
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.recipe.deleteMany({ where: { productId: id } })
       return tx.product.delete({ where: { id } })
     })

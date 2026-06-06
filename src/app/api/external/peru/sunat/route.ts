@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-
-// Endpoint para futuras integraciones con SUNAT
-// Por ejemplo: consulta de comprobantes, validación de facturas, etc.
+import { validateRole } from '@/lib/auth-utils'
 
 export async function GET(req: Request) {
+  const auth = await validateRole(['JEFE', 'MESERO'])
+  if (!auth.isValid) return auth.response
+
   const { searchParams } = new URL(req.url)
   const tipo = searchParams.get('tipo')
   const numero = searchParams.get('numero')

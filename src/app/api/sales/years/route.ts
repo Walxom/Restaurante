@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
     })
 
     // Extraer años únicos
-    const years = [...new Set(orders.map(order => order.createdAt.getFullYear()))]
-      .sort((a, b) => b - a) // Ordenar de más reciente a más antiguo
+    const years = [...new Set(orders.map((order: { createdAt: Date }) => order.createdAt.getFullYear()))]
+      .sort((a, b) => (a as number) - (b as number)) // Ordenar de más reciente a más antiguo
 
     return NextResponse.json({ years })
   } catch (error) {

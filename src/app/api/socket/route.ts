@@ -1,7 +1,7 @@
-import { NextRequest } from 'next/server'
-import { Server as NetServer } from 'http'
+import { type NextRequest } from 'next/server'
+import { type Server as NetServer } from 'http'
 import { Server as SocketIOServer } from 'socket.io'
-import { Socket as NetSocket } from 'net'
+import { type Socket as NetSocket } from 'net'
 import { setSocketIO } from '@/lib/socket-server'
 
 interface SocketServer extends NetServer {
@@ -17,8 +17,7 @@ interface NextApiResponseWithSocket extends Response {
 }
 
 export async function GET(req: NextRequest) {
-  // @ts-ignore
-  const res = new Response() as NextApiResponseWithSocket
+  const res = new Response() as unknown as NextApiResponseWithSocket
   
   if (!res.socket.server.io) {
     console.log('Inicializando servidor Socket.IO...')

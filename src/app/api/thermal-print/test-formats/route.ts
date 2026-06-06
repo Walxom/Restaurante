@@ -1,7 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { thermalPrintQueue } from '@/services/printer/server-thermal-printer'
+import { validateRole } from '@/lib/auth-utils'
 
 export async function POST(request: NextRequest) {
+  const auth = await validateRole(['JEFE'])
+  if (!auth.isValid) return auth.response
+
   try {
     const body = await request.json()
     const { formatType, testData, userId } = body
@@ -24,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Generar contenido según el tipo de formato
     let content = ''
     let documentType = formatType
-    let orderNumber = testData.orderNumber || 'TEST-' + Date.now()
+    const orderNumber = testData.orderNumber || 'TEST-' + Date.now()
 
     switch (formatType) {
       case 'BOLETA':

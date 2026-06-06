@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { Order, Product, OrderItem } from "@/types"
+import { type Order, type Product, type OrderItem } from "@/types"
 
 interface DialogState {
   isOpen: boolean
