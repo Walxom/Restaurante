@@ -63,8 +63,8 @@ export async function GET(
 
     // Separar productos activos e inactivos
     const activeProducts = ingredient.recipeIngredients
-      .filter(ri => ri.recipe.product.isActive)
-      .map(ri => ({
+      .filter((ri: { quantity: number; unit: string; notes?: string | null; recipe: { product: { isActive: boolean; id: string; name: string; category?: { name: string } | null; isAvailable: boolean } } }) => ri.recipe.product.isActive)
+      .map((ri: { quantity: number; unit: string; notes?: string | null; recipe: { product: { isActive: boolean; id: string; name: string; category?: { name: string } | null; isAvailable: boolean } } }) => ({
         id: ri.recipe.product.id,
         name: ri.recipe.product.name,
         category: ri.recipe.product.category?.name || 'Sin categoría',
@@ -75,8 +75,8 @@ export async function GET(
       }))
 
     const inactiveProducts = ingredient.recipeIngredients
-      .filter(ri => !ri.recipe.product.isActive)
-      .map(ri => ({
+      .filter((ri: { quantity: number; unit: string; notes?: string | null; recipe: { product: { isActive: boolean; id: string; name: string; category?: { name: string } | null; isAvailable: boolean } } }) => !ri.recipe.product.isActive)
+      .map((ri: { quantity: number; unit: string; notes?: string | null; recipe: { product: { isActive: boolean; id: string; name: string; category?: { name: string } | null; isAvailable: boolean } } }) => ({
         id: ri.recipe.product.id,
         name: ri.recipe.product.name,
         category: ri.recipe.product.category?.name || 'Sin categoría',

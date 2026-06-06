@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
             issuedAt: new Date(),
             customerName: body.customerName || order.customerName || 'Cliente',
             paymentMethod: body.paymentMethod || 'EFECTIVO',
-            items: order.orderItems.map(oi => ({
+            items: order.orderItems.map((oi) => ({
                 productName: oi.product.name,
                 quantity: oi.quantity,
                 unitPrice: Number(oi.unitPrice),

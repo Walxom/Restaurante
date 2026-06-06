@@ -157,7 +157,7 @@ export async function GET() {
       fiscal?: ReturnType<typeof formatPrinterForAPI>; 
       kitchen?: ReturnType<typeof formatPrinterForAPI> 
     } = {}
-    printers.forEach(printer => {
+    printers.forEach((printer: { type: string; [key: string]: unknown }) => {
       if (printer.type === 'FISCAL') {
         configs.fiscal = formatPrinterForAPI(printer as any)
       } else if (printer.type === 'KITCHEN') {

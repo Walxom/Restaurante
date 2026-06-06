@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         const data: PreviewData = {
             issuedAt: new Date().toISOString(),
             customerName: body.customerName || order.customerName || 'Cliente',
-            items: order.orderItems.map(oi => ({
+            items: order.orderItems.map((oi) => ({
                 productName: oi.product.name,
                 quantity: oi.quantity,
                 total: Number(oi.subtotal)

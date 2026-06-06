@@ -56,7 +56,7 @@ export async function POST(
         invoiceNumber: invoice.number,
         invoiceType: invoice.type,
         date: new Date(invoice.issuedAt).toLocaleDateString("es-PE"),
-        items: invoice.items.map(item => ({
+        items: invoice.items.map((item) => ({
           description: item.description,
           quantity: item.quantity,
           unitPrice: Number(item.unitPrice),

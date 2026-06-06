@@ -203,16 +203,16 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(totalOrders / limit)
 
     // Calcular estadísticas con TODAS las ventas del período, no solo las de la página actual
-    const completedSales = allSalesForStats.filter(sale => sale.status === "COMPLETED")
-    const cancelledSales = allSalesForStats.filter(sale => sale.status === "CANCELLED")
+    const completedSales = allSalesForStats.filter((sale) => sale.status === "COMPLETED")
+    const cancelledSales = allSalesForStats.filter((sale) => sale.status === "CANCELLED")
 
     const totalSales = completedSales.reduce((sum, order) => sum + Number(order.totalAmount), 0)
     const totalCancelled = cancelledSales.length
     const averageTicket = completedSales.length > 0 ? totalSales / completedSales.length : 0
 
     // Consultar nombres de productos y meseros en paralelo para resolver IDs
-    const productIds = topProductsRaw.map(p => p.productId)
-    const userIds = topWaitersRaw.map(w => w.userId)
+    const productIds = topProductsRaw.map((p) => p.productId)
+    const userIds = topWaitersRaw.map((w) => w.userId)
 
     const [products, users] = await Promise.all([
       prisma.product.findMany({
@@ -226,8 +226,8 @@ export async function GET(request: NextRequest) {
     ])
 
     // Resolver Top Products
-    const topProducts = topProductsRaw.map(item => {
-      const prod = products.find(p => p.id === item.productId)
+    const topProducts = topProductsRaw.map((item) => {
+      const prod = products.find((p) => p.id === item.productId)
       return {
         name: prod?.name || "Producto desconocido",
         quantity: item._sum.quantity || 0,
@@ -236,8 +236,8 @@ export async function GET(request: NextRequest) {
     })
 
     // Resolver Top Waiters
-    const topWaiters = topWaitersRaw.map(item => {
-      const user = users.find(u => u.id === item.userId)
+    const topWaiters = topWaitersRaw.map((item) => {
+      const user = users.find((u) => u.id === item.userId)
       return {
         name: user?.name || "Usuario desconocido",
         orders: item._count.id || 0,
@@ -246,7 +246,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Resolver Payment Methods
-    const paymentMethods = paymentMethodsRaw.map(item => ({
+    const paymentMethods = paymentMethodsRaw.map((item) => ({
       method: item.paymentMethod,
       count: item._count.id || 0,
       revenue: Number(item._sum.total || 0)

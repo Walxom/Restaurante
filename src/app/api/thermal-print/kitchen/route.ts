@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       tableNumber: body.tableNumber || order.table?.number.toString() || order.tableId || 'N/A',
       waiterName: body.waiterName || order.user?.name || 'Sistema',
       customerName: body.customerName || order.customerName || undefined,
-      items: order.orderItems.map(item => ({
+      items: order.orderItems.map((item) => ({
         id: item.id,
         productName: item.product.name,
         quantity: item.quantity,

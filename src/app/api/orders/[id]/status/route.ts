@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { Prisma } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { prisma } from "@/lib/prisma"
 import { convertToBaseUnit } from '@/features/inventory/utils/units'
@@ -303,7 +304,7 @@ export async function PATCH(
     }
 
     // Realizar el cambio de estado con lógica adicional
-    const updatedOrder = await prisma.$transaction(async (tx) => {
+    const updatedOrder = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Si se está marcando como SERVED, también marcar todos los items como SERVED
       if (status === 'SERVED') {
         // Obtener todos los items del pedido que no estén ya servidos
@@ -422,7 +423,7 @@ export async function PATCH(
               }
             })
 
-            const allOrdersServed = allOrdersInTable.every(orderInTable =>
+            const allOrdersServed = allOrdersInTable.every((orderInTable: { id: string; status: string }) =>
               orderInTable.id === id ?
                 status === 'SERVED' :
                 orderInTable.status === 'SERVED'

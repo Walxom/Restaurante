@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { Prisma } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { prisma } from "@/lib/prisma"
 
@@ -56,7 +57,7 @@ export async function PATCH(request: NextRequest) {
     })
 
     if (ingredients.length !== ingredientIds.length) {
-      const foundIds = ingredients.map(ing => ing.id)
+      const foundIds = ingredients.map((ing: { id: string }) => ing.id)
       const missingIds = ingredientIds.filter(id => !foundIds.includes(id))
       return NextResponse.json(
         { error: `Ingredientes no encontrados o inactivos: ${missingIds.join(', ')}` },
@@ -116,7 +117,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Ejecutar todas las actualizaciones en una transacción
-    const updatedIngredients = await prisma.$transaction(async (tx) => {
+    const updatedIngredients = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const results = []
 
       for (const update of updates) {

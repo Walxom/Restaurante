@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Formatear respuesta
-    const formattedOrders = orders.map(order => ({
+    const formattedOrders = orders.map((order) => ({
       id: order.id,
       orderNumber: order.orderNumber,
       totalAmount: order.totalAmount,

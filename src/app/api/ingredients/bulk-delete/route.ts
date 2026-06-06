@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { Prisma } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { prisma } from "@/lib/prisma"
 
@@ -49,7 +50,7 @@ export async function DELETE(request: NextRequest) {
     })
 
     if (ingredients.length !== ingredientIds.length) {
-      const foundIds = ingredients.map(ing => ing.id)
+      const foundIds = ingredients.map((ing: { id: string }) => ing.id)
       const missingIds = ingredientIds.filter(id => !foundIds.includes(id))
       return NextResponse.json(
         { error: `Ingredientes no encontrados: ${missingIds.join(', ')}` },
@@ -58,14 +59,14 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verificar si algún ingrediente está siendo usado en recetas
-    const ingredientsInUse = ingredients.filter(ingredient => 
+    const ingredientsInUse = ingredients.filter((ingredient: { recipeIngredients: { length: number } }) => 
       ingredient.recipeIngredients.length > 0
     )
 
     if (ingredientsInUse.length > 0) {
-      const inUseDetails = ingredientsInUse.map(ingredient => ({
+      const inUseDetails = ingredientsInUse.map((ingredient: { name: string; recipeIngredients: Array<{ recipe: { product?: { name: string } | null } }> }) => ({
         name: ingredient.name,
-        products: ingredient.recipeIngredients.map(ri => ri.recipe.product?.name).filter(Boolean)
+        products: ingredient.recipeIngredients.map((ri: { recipe: { product?: { name: string } | null } }) => ri.recipe.product?.name).filter(Boolean)
       }))
 
       return NextResponse.json({
@@ -76,7 +77,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Ejecutar eliminación en transacción
-    const deletedIngredients = await prisma.$transaction(async (tx) => {
+    const deletedIngredients = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const results = []
 
       for (const ingredient of ingredients) {
@@ -91,14 +92,14 @@ export async function DELETE(request: NextRequest) {
 
     // Log de las eliminaciones
     console.log(`Eliminación masiva de ingredientes realizada por ${session.user.name}:`)
-    deletedIngredients.forEach(ingredient => {
+    deletedIngredients.forEach((ingredient: { name: string; id: string }) => {
       console.log(`  - Eliminado: ${ingredient.name} (ID: ${ingredient.id})`)
     })
 
     return NextResponse.json({
       success: true,
       message: `${deletedIngredients.length} ingredientes eliminados correctamente`,
-      deletedIngredients: deletedIngredients.map(ingredient => ({
+      deletedIngredients: deletedIngredients.map((ingredient: { id: string; name: string }) => ({
         id: ingredient.id,
         name: ingredient.name,
         deletedAt: new Date().toISOString(),

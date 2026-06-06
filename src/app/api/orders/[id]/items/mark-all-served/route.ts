@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { Prisma } from "@prisma/client"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { emitOrderItemUpdate, emitOrderStatusChange } from "@/lib/socket-events"
@@ -102,7 +103,7 @@ export async function PATCH(
     const orderId = params.id
 
     // Marcar todos los items pendientes como servidos en una transacción atómica
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Verificar que el pedido existe y obtener items pendientes dentro de la transacción
       const order = await tx.order.findUnique({
         where: { id: orderId },
@@ -154,7 +155,7 @@ export async function PATCH(
         where: { orderId: orderId }
       })
 
-      const allServed = allItems.every(item => item.status === 'SERVED')
+      const allServed = allItems.every((item: { id: string; status: string; [key: string]: unknown }) => item.status === 'SERVED')
 
       // Si todos los items están servidos, actualizar el estado del pedido
       if (allServed) {

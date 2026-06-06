@@ -62,7 +62,8 @@ export class PrinterConfigService {
       ]
     });
 
-    return printers.map(printer => this.mapPrinterToConfig(printer));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return printers.map((printer: any) => this.mapPrinterToConfig(printer));
   }
 
   /**

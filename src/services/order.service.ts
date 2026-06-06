@@ -7,6 +7,7 @@
  * NUNCA importar directamente desde componentes React (solo desde rutas de API o server actions).
  */
 
+import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -51,6 +52,9 @@ export interface UpdateOrderDto {
   customerDni?: string | null
   items?: UpdateOrderItemDto[]
 }
+
+// Forma mínima de fila de producto que necesitan los callbacks de este servicio
+type ProductRow = { id: string; price: number | string }
 
 // ─── Selects reutilizables ───────────────────────────────────────────────────
 
@@ -244,7 +248,7 @@ export async function cancel(id: string) {
     throw new Error(`El pedido ya está ${order.status}`)
   }
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const cancelled = await tx.order.update({
       where: { id },
       data: { status: "CANCELLED" },
@@ -296,12 +300,18 @@ export async function update(id: string, dto: UpdateOrderDto) {
     throw new Error(`Pedido con ID "${id}" no encontrado`)
   }
 
-  const updateData: Record<string, any> = {}
+  const updateData: {
+    notes?: string | null
+    customerName?: string | null
+    customerDni?: string | null
+    totalAmount?: number
+    status?: string
+  } = {}
   if (dto.notes !== undefined) updateData.notes = dto.notes
   if (dto.customerName !== undefined) updateData.customerName = dto.customerName
   if (dto.customerDni !== undefined) updateData.customerDni = dto.customerDni
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // Si se proporcionan items, procesar cambios
     if (dto.items && Array.isArray(dto.items)) {
       const items = dto.items
@@ -331,6 +341,7 @@ export async function update(id: string, dto: UpdateOrderDto) {
       const keepItemIds = dtoExistingItems.map((i) => i.id!)
 
       // Eliminar items que no están en el DTO (excepto los ya servidos)
+      type DbItem = { id: string; status: string }
       const itemsToDelete = existingItemsInDb.filter(
         (dbItem) => !keepItemIds.includes(dbItem.id) && dbItem.status !== "SERVED"
       )

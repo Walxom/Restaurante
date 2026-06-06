@@ -54,7 +54,7 @@ export async function GET() {
     let totalValue = 0
     const alerts: Array<Record<string, unknown>> = []
 
-    ingredients.forEach(ingredient => {
+    ingredients.forEach((ingredient: { id: string; name: string; currentStock: number; minStock: number; unit: string; cost?: number | null }) => {
       const stockPercentage = ingredient.currentStock / ingredient.minStock
 
       // Clasificar por estado
@@ -104,7 +104,7 @@ export async function GET() {
     })
 
     // Calcular nivel promedio de stock
-    const averageStockLevel = ingredients.reduce((acc, ingredient) => {
+    const averageStockLevel = ingredients.reduce((acc: number, ingredient: { id: string; name: string; currentStock: number; minStock: number; unit: string; cost?: number | null }) => {
       return acc + (ingredient.currentStock / ingredient.minStock)
     }, 0) / ingredients.length
 

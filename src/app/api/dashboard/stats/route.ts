@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       FUERA_DE_SERVICIO: 0
     }
 
-    mesasStats.forEach(stat => {
+    mesasStats.forEach((stat: { status: string; _count: { id: number } }) => {
       mesasCount[stat.status as keyof typeof mesasCount] = stat._count.id
     })
 

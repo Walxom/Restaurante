@@ -115,17 +115,17 @@ export async function GET(request: NextRequest) {
           ? Number(totalRevenue._sum.total || 0) / totalInvoices 
           : 0
       },
-      byType: invoicesByType.map(item => ({
+      byType: invoicesByType.map((item) => ({
         type: item.type,
         count: item._count.type,
         revenue: Number(item._sum.total || 0)
       })),
-      byPaymentMethod: invoicesByPaymentMethod.map(item => ({
+      byPaymentMethod: invoicesByPaymentMethod.map((item) => ({
         method: item.paymentMethod,
         count: item._count.paymentMethod,
         revenue: Number(item._sum.total || 0)
       })),
-      topProducts: topProducts.map(item => ({
+      topProducts: topProducts.map((item) => ({
         product: item.description,
         quantity: item._sum.quantity || 0,
         revenue: Number(item._sum.total || 0)
@@ -163,7 +163,7 @@ async function getRevenueByDay(startDate: Date, endDate: Date) {
   // Agrupar por día
   const groupedByDay: Record<string, number> = {}
 
-  invoices.forEach(invoice => {
+  invoices.forEach((invoice) => {
     const day = invoice.issuedAt.toISOString().split('T')[0]
     groupedByDay[day] = (groupedByDay[day] || 0) + Number(invoice.total)
   })
