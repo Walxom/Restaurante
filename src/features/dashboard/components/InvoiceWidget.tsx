@@ -226,9 +226,6 @@ function InvoiceWidget() {
 export default dynamic(() => Promise.resolve(InvoiceWidget), {
   ssr: false,
   loading: () => {
-    const { FileText } = require('lucide-react')
-    const { Card, CardHeader, CardTitle, CardContent } = require('@/components/ui/card')
-    
     return (
       <div className="bg-card/40 backdrop-blur-md rounded-xl sm:rounded-2xl border border-border/50 overflow-hidden shadow-sm animate-pulse">
         <div className="p-4 sm:p-6 border-b border-border/50 flex justify-between items-center">

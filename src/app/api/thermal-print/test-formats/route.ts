@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Generar contenido según el tipo de formato
     let content = ''
     let documentType = formatType
-    let orderNumber = testData.orderNumber || 'TEST-' + Date.now()
+    const orderNumber = testData.orderNumber || 'TEST-' + Date.now()
 
     switch (formatType) {
       case 'BOLETA':

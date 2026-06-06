@@ -17,8 +17,7 @@ interface NextApiResponseWithSocket extends Response {
 }
 
 export async function GET(req: NextRequest) {
-  // @ts-ignore
-  const res = new Response() as NextApiResponseWithSocket
+  const res = new Response() as unknown as NextApiResponseWithSocket
   
   if (!res.socket.server.io) {
     console.log('Inicializando servidor Socket.IO...')

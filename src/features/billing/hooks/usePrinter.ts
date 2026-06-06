@@ -35,7 +35,7 @@ export function usePrinter(pollingInterval = 15000) {
         fetch('/api/thermal-print/status')
       ])
 
-      let newState: Partial<PrinterState> = {
+      const newState: Partial<PrinterState> = {
         lastChecked: new Date()
       }
 

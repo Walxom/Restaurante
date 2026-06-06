@@ -4,6 +4,7 @@
  */
 
 import * as net from 'net'
+import * as os from 'os'
 
 export interface NetworkHealth {
   ip: string
@@ -165,7 +166,6 @@ export function isValidPort(port: number): boolean {
  * Obtener información de red local
  */
 export function getLocalNetworkInfo() {
-  const os = require('os')
   const interfaces = os.networkInterfaces()
   const networks: Array<{ name: string; ip: string; subnet: string }> = []
   

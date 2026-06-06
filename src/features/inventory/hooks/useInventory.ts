@@ -55,7 +55,7 @@ export function useInventory() {
 
   // Filtering Logic (Client Side)
   const processIngredients = useCallback(() => {
-    let filtered = allIngredients.filter(ingredient => {
+    const filtered = allIngredients.filter(ingredient => {
       const matchesSearch = !searchTerm || ingredient.name.toLowerCase().includes(searchTerm.toLowerCase())
       
       const stockPercentage = ingredient.currentStock / ingredient.minStock
