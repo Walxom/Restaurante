@@ -23,7 +23,7 @@ export async function GET(
     if (!session?.user || session.user.role !== 'JEFE') {
       return NextResponse.json(
         { error: 'No autorizado' },
-        { status: 401 }
+        { status: 403 }
       )
     }
 
@@ -79,7 +79,7 @@ export async function PATCH(
     if (!session?.user || session.user.role !== 'JEFE') {
       return NextResponse.json(
         { error: 'No autorizado' },
-        { status: 401 }
+        { status: 403 }
       )
     }
 
@@ -155,7 +155,7 @@ export async function DELETE(
     if (!session?.user || session.user.role !== 'JEFE') {
       return NextResponse.json(
         { error: 'No autorizado' },
-        { status: 401 }
+        { status: 403 }
       )
     }
 

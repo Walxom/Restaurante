@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     if (!session || session.user.role !== "JEFE") {
       return NextResponse.json(
         { error: "No autorizado" },
-        { status: 401 }
+        { status: 403 }
       )
     }
 

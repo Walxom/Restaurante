@@ -14,7 +14,7 @@ export async function GET(
     const session = await getServerSession(authOptions)
     
     if (!session?.user || session.user.role !== "JEFE") {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
     const { id } = await context.params
@@ -64,7 +64,7 @@ export async function PATCH(
     const session = await getServerSession(authOptions)
     
     if (!session?.user || session.user.role !== "JEFE") {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
     const { id } = await context.params

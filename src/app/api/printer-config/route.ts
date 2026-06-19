@@ -145,7 +145,7 @@ export async function GET() {
     if (!session || session.user.role !== 'JEFE') {
       return NextResponse.json(
         { error: 'No autorizado' },
-        { status: 401 }
+        { status: 403 }
       )
     }
 
@@ -182,7 +182,7 @@ export async function PUT(request: NextRequest) {
     if (!session || session.user.role !== 'JEFE') {
       return NextResponse.json(
         { error: 'No autorizado' },
-        { status: 401 }
+        { status: 403 }
       )
     }
 

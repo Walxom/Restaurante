@@ -121,7 +121,7 @@ export async function PATCH(
       if (session.user.role !== "JEFE") {
         return NextResponse.json(
           { error: "No autorizado para editar configuración de mesa" },
-          { status: 401 }
+          { status: 403 }
         )
       }
 
@@ -177,7 +177,7 @@ export async function DELETE(
     if (!session || session.user.role !== "JEFE") {
       return NextResponse.json(
         { error: "No autorizado" },
-        { status: 401 }
+        { status: 403 }
       )
     }
 
