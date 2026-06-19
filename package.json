@@ -81,11 +81,12 @@
       "vite": ">=8.0.16",
       "js-yaml": ">=4.2.0",
       "esbuild": ">=0.28.1",
-      "@babel/core": ">=7.29.6"
+      "@babel/core": "^7.29.6"
     }
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
+    "@babel/core": "^7.29.6",
     "@eslint/eslintrc": "^3.3.5",
     "@playwright/test": "^1.49.1",
     "@tailwindcss/postcss": "^4",
