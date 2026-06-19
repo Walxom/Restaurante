@@ -106,7 +106,8 @@ export default function UnifiedOrdersPage() {
   const processCompleteOrder = async (
     receiptType: 'none' | 'boleta' | 'factura',
     customerData?: { name: string; document: string; ruc?: string },
-    paymentMethod?: string
+    paymentMethod?: string,
+    amountPaid?: number
   ): Promise<string> => {
     if (!orderToComplete) return ""
 
@@ -122,10 +123,12 @@ export default function UnifiedOrdersPage() {
     }
 
     // 2) Si se pidió comprobante, crear la factura/boleta. El backend genera
-    //    el correlativo de forma atómica. amountPaid = total (pago exacto).
+    //    el correlativo de forma atómica y calcula el vuelto a partir de
+    //    amountPaid (el monto que ingresó el cajero en el modal).
     let receiptNumber = ""
     if (receiptType !== 'none') {
       const total = Number(orderToComplete.totalAmount)
+      const paid = typeof amountPaid === 'number' && amountPaid >= total ? amountPaid : total
       const invoiceRes = await fetch('/api/invoices', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -135,7 +138,7 @@ export default function UnifiedOrdersPage() {
           customerName: customerData?.name || undefined,
           customerRuc: receiptType === 'factura' ? customerData?.ruc : undefined,
           paymentMethod: paymentMethod || 'EFECTIVO',
-          amountPaid: total,
+          amountPaid: paid,
         })
       })
       if (!invoiceRes.ok) {

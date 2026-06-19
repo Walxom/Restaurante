@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,6 +35,22 @@ export default function CompleteOrderModal({
   const [isRucVerified, setIsRucVerified] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [receiptNumber, setReceiptNumber] = useState('')
+  const [amountPaid, setAmountPaid] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  const total = typeof totalAmount === 'string' ? parseFloat(totalAmount) : totalAmount
+  const amountPaidNum = parseFloat(amountPaid)
+  const isAmountValid = !isNaN(amountPaidNum) && amountPaidNum >= total
+  const change = isAmountValid ? amountPaidNum - total : 0
+
+  // Prefijar el monto recibido con el total al abrir (editable por el cajero
+  // para calcular el vuelto). No se asume pago exacto: el cajero puede subirlo.
+  useEffect(() => {
+    if (isOpen) {
+      setAmountPaid(String(total))
+      setError(null)
+    }
+  }, [isOpen, total])
 
   const handleVerifyDNI = async () => {
     if (customerData.document.length !== 8) return
@@ -80,17 +96,22 @@ export default function CompleteOrderModal({
 
   const handleComplete = async () => {
     if (!selectedType) return
+    if (!isAmountValid) {
+      setError('El monto recibido no puede ser menor al total')
+      return
+    }
     setIsProcessing(true)
+    setError(null)
     try {
       const receiptNum = await onComplete(selectedType, {
         name: customerData.name,
         document: customerData.document,
         ruc: selectedType === 'factura' ? customerData.ruc : undefined
-      }, paymentMethod)
+      }, paymentMethod, amountPaidNum)
       setReceiptNumber(receiptNum || '')
       setShowSuccess(true)
-    } catch (error) {
-      console.error(error)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al procesar la venta')
     } finally {
       setIsProcessing(false)
     }
@@ -103,6 +124,7 @@ export default function CompleteOrderModal({
     setIsDniVerified(false)
     setIsRucVerified(false)
     setShowSuccess(false)
+    setError(null)
     onClose()
   }
 
@@ -214,6 +236,32 @@ export default function CompleteOrderModal({
               </div>
             </div>
 
+            {/* Monto Recibido + Vuelto */}
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">Monto Recibido</Label>
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                inputMode="decimal"
+                value={amountPaid}
+                onChange={(e) => setAmountPaid(e.target.value)}
+                placeholder={`Mínimo S/ ${total.toFixed(2)}`}
+                className="h-14 rounded-2xl bg-foreground/5 border-border/50 px-4 font-bold text-lg"
+              />
+              {amountPaid !== '' && !isAmountValid && (
+                <p className="text-[11px] font-bold text-rose-500 ml-2 uppercase tracking-widest">
+                  El monto no puede ser menor al total
+                </p>
+              )}
+              {isAmountValid && (
+                <div className="flex justify-between items-center bg-foreground/5 rounded-2xl px-4 py-3 border border-border/50">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Vuelto</span>
+                  <span className="text-lg font-black text-emerald-500">S/ {change.toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+
             {/* Selection Grid */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">Tipo de Comprobante</Label>
@@ -307,6 +355,13 @@ export default function CompleteOrderModal({
               </div>
             )}
 
+            {/* Error */}
+            {error && (
+              <div role="alert" className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4">
+                <p className="text-sm font-bold text-rose-500">{error}</p>
+              </div>
+            )}
+
             {/* Footer Actions */}
             <div className="flex gap-3 pt-4">
               <Button
@@ -319,9 +374,10 @@ export default function CompleteOrderModal({
               <Button
                 onClick={handleComplete}
                 disabled={
-                  !selectedType || 
-                  (selectedType === 'boleta' && !isDniVerified) || 
-                  (selectedType === 'factura' && !isRucVerified) || 
+                  !selectedType ||
+                  !isAmountValid ||
+                  (selectedType === 'boleta' && !isDniVerified) ||
+                  (selectedType === 'factura' && !isRucVerified) ||
                   isProcessing
                 }
                 className="flex-[2] h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-blue-600/20"
@@ -343,7 +399,7 @@ interface CompleteOrderModalProps {
     name: string
     document: string
     ruc?: string
-  }, paymentMethod?: string) => Promise<string>
+  }, paymentMethod?: string, amountPaid?: number) => Promise<string>
   orderNumber: string
   totalAmount: number
 }
