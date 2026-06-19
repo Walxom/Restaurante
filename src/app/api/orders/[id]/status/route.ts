@@ -317,14 +317,11 @@ export async function PATCH(
 
         // Marcar cada item como servido y manejar el stock
         for (const item of pendingItems) {
-          // Primero deducir el stock para este item
-          try {
-            await deductStockForItem(item.id, tx)
-            console.log(`✅ Stock deducido para item ${item.id} al marcar pedido como servido`)
-          } catch (error) {
-            console.error(`❌ Error al deducir stock para item ${item.id}:`, error)
-            // Continuar con otros items aunque uno falle
-          }
+          // Deducir el stock primero. Si falla (p.ej. stock insuficiente),
+          // la excepción aborta TODA la transacción: el item no se marca
+          // SERVED y el inventario no queda inconsistente (antes el error se
+          // tragaba y el item se servía igual, dejando stock sin registrar).
+          await deductStockForItem(item.id, tx)
 
           // Luego actualizar el estado del item
           await tx.orderItem.update({
@@ -451,6 +448,13 @@ export async function PATCH(
     return NextResponse.json(updatedOrder)
   } catch (error) {
     console.error('Error al cambiar estado del pedido:', error)
+    // Errores de inventario (stock insuficiente / ingrediente faltante) son
+    // de validación de negocio: devolverlos como 400 con su mensaje para que
+    // el mesero entienda por qué no se pudo servir el pedido.
+    const message = error instanceof Error ? error.message : ''
+    if (message.includes('Stock insuficiente') || message.includes('Ingrediente no encontrado')) {
+      return NextResponse.json({ error: message }, { status: 400 })
+    }
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

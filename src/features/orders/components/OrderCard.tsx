@@ -1,6 +1,6 @@
 "use client"
 
-import { Eye, Clock, User, Pencil } from "lucide-react"
+import { Eye, Clock, User, Pencil, CheckCircle2, Ban } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { getStatusColor, getStatusText, getOrderTypeInfo } from "@/features/orders/utils/order-utils"
@@ -9,9 +9,11 @@ interface OrderCardProps {
   order: any
   onClick: () => void
   onEdit?: (id: string) => void
+  onComplete?: (order: any) => void
+  onCancel?: (id: string) => void
 }
 
-export function OrderCard({ order, onClick, onEdit }: OrderCardProps) {
+export function OrderCard({ order, onClick, onEdit, onComplete, onCancel }: OrderCardProps) {
   const typeInfo = getOrderTypeInfo(order.type, order.table?.number)
 
   return (
@@ -42,6 +44,30 @@ export function OrderCard({ order, onClick, onEdit }: OrderCardProps) {
                     title="Editar pedido"
                   >
                     <Pencil className="h-4 w-4 text-blue-500" />
+                  </button>
+                )}
+                {onComplete && order.status === 'SERVED' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onComplete(order)
+                    }}
+                    className="p-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-emerald-200 dark:hover:bg-emerald-800/50 transition-colors"
+                    title="Finalizar venta"
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  </button>
+                )}
+                {onCancel && ['PENDING', 'CONFIRMED'].includes(order.status) && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onCancel(order.id)
+                    }}
+                    className="p-1.5 bg-rose-100 dark:bg-rose-900/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-200 dark:hover:bg-rose-800/50 transition-colors"
+                    title="Cancelar pedido"
+                  >
+                    <Ban className="h-4 w-4 text-rose-500" />
                   </button>
                 )}
               </div>

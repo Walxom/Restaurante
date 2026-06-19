@@ -104,35 +104,74 @@ export default function UnifiedOrdersPage() {
   })
 
   const processCompleteOrder = async (
-    receiptType: 'none' | 'boleta' | 'factura', 
-    customerData?: { name: string; document: string; ruc?: string }
+    receiptType: 'none' | 'boleta' | 'factura',
+    customerData?: { name: string; document: string; ruc?: string },
+    paymentMethod?: string
   ): Promise<string> => {
     if (!orderToComplete) return ""
-    const response = await fetch(`/api/orders/${orderToComplete.id}/status`, {
+
+    // 1) Marcar el pedido como COMPLETED (requisito previo para facturar).
+    const statusRes = await fetch(`/api/orders/${orderToComplete.id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        status: 'COMPLETED',
-        receiptType,
-        customerData 
-      })
+      body: JSON.stringify({ status: 'COMPLETED' })
     })
-    if (response.ok) {
-      fetchOrders()
-      return "ok"
+    if (!statusRes.ok) {
+      const err = await statusRes.json().catch(() => ({}))
+      throw new Error(err.error || "No se pudo completar el pedido")
     }
-    return ""
+
+    // 2) Si se pidió comprobante, crear la factura/boleta. El backend genera
+    //    el correlativo de forma atómica. amountPaid = total (pago exacto).
+    let receiptNumber = ""
+    if (receiptType !== 'none') {
+      const total = Number(orderToComplete.totalAmount)
+      const invoiceRes = await fetch('/api/invoices', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: orderToComplete.id,
+          type: receiptType === 'boleta' ? 'BOLETA' : 'FACTURA',
+          customerName: customerData?.name || undefined,
+          customerRuc: receiptType === 'factura' ? customerData?.ruc : undefined,
+          paymentMethod: paymentMethod || 'EFECTIVO',
+          amountPaid: total,
+        })
+      })
+      if (!invoiceRes.ok) {
+        const err = await invoiceRes.json().catch(() => ({}))
+        throw new Error(err.error || "El pedido se completó pero falló la emisión del comprobante")
+      }
+      const invoice = await invoiceRes.json()
+      receiptNumber = invoice.number || ""
+    }
+
+    fetchOrders()
+    return receiptNumber
   }
+
+  const [isCancelling, setIsCancelling] = useState(false)
 
   const confirmCancelOrder = async () => {
     if (!orderToCancel) return
-    await fetch(`/api/orders/${orderToCancel}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: 'CANCELLED' })
-    })
-    setShowCancelConfirm(false)
-    fetchOrders()
+    setIsCancelling(true)
+    try {
+      const res = await fetch(`/api/orders/${orderToCancel}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: 'CANCELLED' })
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        console.error("Error al cancelar pedido:", err.error)
+        return
+      }
+      setShowCancelConfirm(false)
+      setOrderToCancel(null)
+      fetchOrders()
+    } finally {
+      setIsCancelling(false)
+    }
   }
 
   const totalPages = Math.ceil(orders.length / itemsPerPage)
@@ -179,11 +218,19 @@ export default function UnifiedOrdersPage() {
               <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
                   {currentOrders.map((order) => (
-                    <OrderCard 
-                      key={order.id} 
-                      order={order} 
-                      onClick={() => router.push(`/pedidos/${order.id}/detalles`)} 
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      onClick={() => router.push(`/pedidos/${order.id}/detalles`)}
                       onEdit={(id) => router.push(`/pedidos/${id}/edit`)}
+                      onComplete={(o) => {
+                        setOrderToComplete(o)
+                        setShowCompleteModal(true)
+                      }}
+                      onCancel={(id) => {
+                        setOrderToCancel(id)
+                        setShowCancelConfirm(true)
+                      }}
                     />
                   ))}
                 </div>
@@ -219,6 +266,7 @@ export default function UnifiedOrdersPage() {
           confirmText="Sí, cancelar"
           cancelText="No, mantener"
           variant="destructive"
+          isLoading={isCancelling}
         />
       </div>
     </RoleGuard>

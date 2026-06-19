@@ -8,6 +8,17 @@ import { Label } from '@/components/ui/label'
 import { Receipt, FileText, X, Search, Check, ShieldCheck, Sparkles, Coins, CreditCard, Smartphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+// Clases Tailwind COMPLETAS por color. Tailwind v4 escanea strings literales;
+// las clases interpoladas (`bg-${color}-500/10`) NO se generan, por eso el
+// estado seleccionado quedaba sin estilos. Mapear a literales lo soluciona.
+const COLOR_CLASSES: Record<string, { active: string; icon: string }> = {
+  emerald: { active: 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/5', icon: 'text-emerald-500' },
+  blue: { active: 'bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/5', icon: 'text-blue-500' },
+  purple: { active: 'bg-purple-500/10 border-purple-500/50 shadow-lg shadow-purple-500/5', icon: 'text-purple-500' },
+  sky: { active: 'bg-sky-500/10 border-sky-500/50 shadow-lg shadow-sky-500/5', icon: 'text-sky-500' },
+  slate: { active: 'bg-slate-500/10 border-slate-500/50 shadow-lg shadow-slate-500/5', icon: 'text-slate-500' },
+}
+
 export default function CompleteOrderModal({
   isOpen,
   onClose,
@@ -183,14 +194,14 @@ export default function CompleteOrderModal({
                     onClick={() => setPaymentMethod(method.id as any)}
                     className={cn(
                       "flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 gap-2 text-center cursor-pointer",
-                      paymentMethod === method.id 
-                        ? `bg-${method.color}-500/10 border-${method.color}-500/50 shadow-lg shadow-${method.color}-500/5`
+                      paymentMethod === method.id
+                        ? COLOR_CLASSES[method.color].active
                         : "bg-foreground/5 border-border/50 hover:border-foreground/20"
                     )}
                   >
                     <method.icon className={cn(
                       "w-5 h-5 transition-colors",
-                      paymentMethod === method.id ? `text-${method.color}-500` : "text-muted-foreground"
+                      paymentMethod === method.id ? COLOR_CLASSES[method.color].icon : "text-muted-foreground"
                     )} />
                     <span className={cn(
                       "text-[10px] font-black uppercase tracking-tight",
@@ -217,14 +228,14 @@ export default function CompleteOrderModal({
                     onClick={() => setSelectedType(type.id as any)}
                     className={cn(
                       "flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 text-left",
-                      selectedType === type.id 
-                        ? `bg-${type.color}-500/10 border-${type.color}-500/50 shadow-lg shadow-${type.color}-500/5`
+                      selectedType === type.id
+                        ? COLOR_CLASSES[type.color].active
                         : "bg-foreground/5 border-border/50 hover:border-foreground/20"
                     )}
                   >
                     <div className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                      selectedType === type.id ? `text-${type.color}-500` : "text-muted-foreground"
+                      selectedType === type.id ? COLOR_CLASSES[type.color].icon : "text-muted-foreground"
                     )}>
                       <type.icon className="w-5 h-5" />
                     </div>
