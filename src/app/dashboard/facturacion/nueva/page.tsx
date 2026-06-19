@@ -45,10 +45,14 @@ export default function NuevaFacturaPage() {
     FACTURA: string
   }>({ BOLETA: "", FACTURA: "" })
 
+  // Tasa de IGV configurada (no hardcodear). Por defecto 0.18 mientras carga.
+  const [taxRate, setTaxRate] = useState(0.18)
+
   useEffect(() => {
     if (session?.user?.role === "JEFE") {
       fetchCompletedOrders()
       fetchNextNumbers()
+      fetchTaxRate()
     }
   }, [session])
 
@@ -94,11 +98,22 @@ export default function NuevaFacturaPage() {
     }
   }
 
+  const fetchTaxRate = async () => {
+    try {
+      const res = await fetch("/api/system-config")
+      if (!res.ok) return
+      const cfg = await res.json()
+      if (typeof cfg?.taxRate === "number") setTaxRate(cfg.taxRate)
+    } catch (err) {
+      console.error("Error fetching tax rate:", err)
+    }
+  }
+
   const calculateTotals = () => {
     if (!selectedOrder) return { subtotal: 0, igv: 0, total: 0 }
 
     const total = Number(selectedOrder.totalAmount)
-    const subtotal = total / 1.18 // Quitar IGV
+    const subtotal = total / (1 + taxRate) // Quitar IGV con la tasa configurada
     const igv = total - subtotal
 
     return {

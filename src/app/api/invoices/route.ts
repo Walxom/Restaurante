@@ -142,9 +142,6 @@ export async function POST(request: NextRequest) {
 
     // El totalAmount del pedido ya incluye IGV
     const total = Number(order.totalAmount)
-    const IGV_RATE = 0.18
-    const subtotal = total / (1 + IGV_RATE) // Calcular subtotal sin IGV
-    const igv = total - subtotal
 
     // Validar que el monto pagado cubre el total del pedido
     if (amountPaid < total) {
@@ -162,6 +159,14 @@ export async function POST(request: NextRequest) {
     const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const field = type === "BOLETA" ? "lastBoletaNumber" : "lastFacturaNumber"
       const cfg = await tx.systemConfig.findFirstOrThrow()
+
+      // El IGV se desglosa con la tasa configurada (SystemConfig.taxRate),
+      // no con un valor fijo, para que el comprobante sea consistente si el
+      // jefe cambia la tasa. total ya incluye IGV.
+      const taxRate = Number(cfg.taxRate)
+      const subtotal = total / (1 + taxRate)
+      const igv = total - subtotal
+
       const updated = await tx.systemConfig.update({
         where: { id: cfg.id },
         data: { [field]: { increment: 1 } },

@@ -18,7 +18,7 @@ COPY . .
 RUN pnpm db:generate
 RUN pnpm build
 
-# ─── Etapa 3: Runner (producción mínima) ──────────────────────────────────────
+# ─── Etapa 3: Runner (producción) ─────────────────────────────────────────────
 FROM node:20-alpine AS runner
 RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
@@ -26,13 +26,16 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3001
 
-# Copiar solo lo necesario para producción
+# La app NO usa el server de Next standalone, sino un server.js custom
+# (Socket.IO + Next). Por eso copiamos node_modules completo y el build .next:
+# así server.js tiene en runtime next, socket.io y serialport (que Next no
+# rastrearía en un build standalone porque solo los usa server.js).
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/server.js ./server.js
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/package.json ./package.json
 
 # Directorio para la base de datos SQLite persistente
 RUN mkdir -p /data
