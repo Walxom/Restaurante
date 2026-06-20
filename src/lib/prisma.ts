@@ -37,6 +37,11 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 // Fire-and-forget: un fallo aquí no debe impedir importar el cliente.
 // PRAGMA busy_timeout=N devuelve una fila, por eso se usa $queryRawUnsafe
 // (no $executeRawUnsafe, que espera un statement sin resultados).
-prisma
-  .$queryRawUnsafe('PRAGMA busy_timeout = 5000')
-  .catch((e) => console.error('No se pudo aplicar PRAGMA busy_timeout:', e))
+// Guardado a servidor: este módulo se arrastra al bundle del cliente vía un
+// import indebido (useSystemConfig → system.service → prisma); ejecutar una
+// query en el navegador lanza "PrismaClient is unable to run in this browser".
+if (typeof window === 'undefined') {
+  prisma
+    .$queryRawUnsafe('PRAGMA busy_timeout = 5000')
+    .catch((e) => console.error('No se pudo aplicar PRAGMA busy_timeout:', e))
+}
