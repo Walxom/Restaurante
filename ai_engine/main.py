@@ -177,4 +177,7 @@ async def chat(req: ChatRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("ai_engine.main:app", host="0.0.0.0", port=8000, reload=True)
+    # Bind solo a localhost: el frontend llama al motor en http://localhost:8000
+    # (mismo equipo). Exponer en 0.0.0.0 dejaba que cualquier cliente de la LAN
+    # disparara /api/train/* o /api/chat sin auth (quemando cuota de Gemini).
+    uvicorn.run("ai_engine.main:app", host="127.0.0.1", port=8000, reload=True)
