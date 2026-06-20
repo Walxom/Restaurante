@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -32,7 +32,12 @@ export default function UnifiedOrdersPage() {
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null)
 
   const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const itemsPerPage = 10
+  // Token de la última petición en vuelo. Evita que una respuesta obsoleta
+  // (p.ej. el fetch de 'active' del montaje) pise a la del filtro/página actual
+  // al resolverse fuera de orden, dejando la lista vacía por error.
+  const latestReqRef = useRef('')
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -40,12 +45,19 @@ export default function UnifiedOrdersPage() {
       const now = new Date()
       const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
       const statusParam = filter === 'active' ? '&status=active' : `&status=${filter.toUpperCase()}`
-      const response = await fetch(`/api/orders?showAll=true&date=${todayStr}${statusParam}`)
+      const reqKey = `${filter}:${currentPage}`
+      latestReqRef.current = reqKey
+      // Paginación en el servidor: pedimos solo la página actual. Antes se traía
+      // todo (tope 200) y se cortaba en cliente, truncando silenciosamente.
+      const response = await fetch(`/api/orders?showAll=true&date=${todayStr}${statusParam}&page=${currentPage}&limit=${itemsPerPage}`)
+
+      // Descartar si mientras tanto se inició otra petición (cambio de pestaña/página).
+      if (latestReqRef.current !== reqKey) return
 
       if (response.ok) {
-        const { orders } = await response.json()
+        const { orders, pagination } = await response.json()
         setOrders(orders)
-        setCurrentPage(1)
+        setTotalPages(pagination?.pages ?? 1)
       }
       // Actualizar contadores siempre para mantener la UI sincronizada
       fetchOrderCounts()
@@ -54,7 +66,13 @@ export default function UnifiedOrdersPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, filter])
+  }, [session, filter, currentPage])
+
+  // Al cambiar de pestaña, volver a la primera página.
+  const handleFilterChange = (newFilter: "active" | "completed" | "cancelled") => {
+    setFilter(newFilter)
+    setCurrentPage(1)
+  }
 
   const fetchOrderCounts = useCallback(async () => {
     try {
@@ -177,8 +195,8 @@ export default function UnifiedOrdersPage() {
     }
   }
 
-  const totalPages = Math.ceil(orders.length / itemsPerPage)
-  const currentOrders = orders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  // El servidor ya devuelve solo la página actual.
+  const currentOrders = orders
 
   if (isLoading) {
     return <LoadingSpinner fullPage message="Sincronizando pedidos..." />
@@ -207,7 +225,7 @@ export default function UnifiedOrdersPage() {
           </AdminPageHeader>
 
           <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <OrderFilters filter={filter} setFilter={setFilter} orderCounts={orderCounts} />
+            <OrderFilters filter={filter} setFilter={handleFilterChange} orderCounts={orderCounts} />
 
             {orders.length === 0 ? (
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 shadow-sm">
