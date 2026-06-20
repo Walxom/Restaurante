@@ -351,6 +351,21 @@ export default function CompleteOrderModal({
                       </div>
                     </div>
                   )}
+
+                  {/* Nombre / razón social editable: la validación SUNAT lo
+                      autocompleta si hay internet; sin red se ingresa a mano,
+                      así el comprobante no depende de la conexión. */}
+                  <div className="grid gap-2">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-2">
+                      {selectedType === 'boleta' ? 'Nombre del Cliente' : 'Razón Social'}
+                    </Label>
+                    <Input
+                      value={customerData.name}
+                      onChange={(e) => setCustomerData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder={selectedType === 'boleta' ? 'Nombre (opcional)' : 'Razón social'}
+                      className="h-14 rounded-2xl bg-foreground/5 border-border/50 px-4 font-bold"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -376,8 +391,10 @@ export default function CompleteOrderModal({
                 disabled={
                   !selectedType ||
                   !isAmountValid ||
-                  (selectedType === 'boleta' && !isDniVerified) ||
-                  (selectedType === 'factura' && !isRucVerified) ||
+                  // Solo formato, sin depender de SUNAT: factura requiere RUC de
+                  // 11 dígitos; la boleta no exige documento (igual que la
+                  // página de facturación). La validación es best-effort.
+                  (selectedType === 'factura' && customerData.ruc.length !== 11) ||
                   isProcessing
                 }
                 className="flex-[2] h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-blue-600/20"
