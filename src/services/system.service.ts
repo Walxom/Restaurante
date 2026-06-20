@@ -1,53 +1,17 @@
 /**
  * @service system.service.ts
- * Servicio centralizado para la configuración del sistema.
- * 
- * Este archivo combina la lógica de servidor (Prisma) y las utilidades 
- * compartidas de configuración.
+ * Lógica de SERVIDOR de la configuración del sistema (Prisma + caché).
+ *
+ * Las utilidades seguras para el cliente (tipos, constantes, fetch helpers)
+ * viven en `@/features/dashboard/utils/system-config-client` para no arrastrar
+ * Prisma al bundle del navegador. Importar este archivo desde componentes de
+ * cliente rompe con "PrismaClient is unable to run in this browser environment".
  */
 
 import { prisma } from '@/lib/prisma'
+import type { SystemConfigData } from '@/features/dashboard/utils/system-config-client'
 
-// ─── Tipos y Constantes ──────────────────────────────────────────────────────
-
-export interface SystemConfigData {
-  id: string
-  companyName: string
-  companyAddress: string | null
-  companyPhone: string | null
-  companyRuc: string | null
-  taxRate: number
-  currency: string
-  timezone: string
-  lastBoletaNumber: number
-  lastFacturaNumber: number
-}
-
-export const SUPPORTED_CURRENCIES = [
-  { value: "PEN", label: "Soles (S/)" },
-  { value: "USD", label: "Dólares ($)" },
-  { value: "EUR", label: "Euros (€)" },
-  { value: "CLP", label: "Peso Chileno ($)" },
-  { value: "COP", label: "Peso Colombiano ($)" },
-  { value: "MXN", label: "Peso Mexicano ($)" },
-]
-
-export const getSupportedTimezones = () => {
-  try {
-    return Intl.supportedValuesOf('timeZone').map(tz => {
-      const now = new Date()
-      const formatter = new Intl.DateTimeFormat('es-PE', {
-        timeZone: tz,
-        timeZoneName: 'shortOffset',
-      })
-      const parts = formatter.formatToParts(now)
-      const offset = parts.find(p => p.type === 'timeZoneName')?.value || ''
-      return { value: tz, label: `${tz} (${offset})` }
-    }).sort((a, b) => a.label.localeCompare(b.label))
-  } catch (e) {
-    return [{ value: "America/Lima", label: "America/Lima (GMT-5)" }]
-  }
-}
+export type { SystemConfigData }
 
 // ─── Lógica de Servidor (Prisma + Cache) ─────────────────────────────────────
 
@@ -118,68 +82,4 @@ export function invalidateConfigCache(): void {
 export async function getCompanyName(): Promise<string> {
   const config = await getSystemConfig()
   return config.companyName
-}
-
-// ─── Utilidades de Cliente (Fetch API) ───────────────────────────────────────
-
-/**
- * Obtiene la configuración desde el API (Client-side)
- */
-export async function fetchSystemConfigForClient(): Promise<SystemConfigData> {
-  try {
-    const response = await fetch('/api/system-config', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error('Error al obtener configuración')
-    }
-
-    return await response.json()
-  } catch (error) {
-    console.error('Error al obtener configuración del cliente:', error)
-
-    return {
-      id: 'default',
-      companyName: 'Restaurant',
-      companyAddress: 'Dirección no configurada',
-      companyPhone: 'Teléfono no configurado',
-      companyRuc: 'RUC no configurado',
-      taxRate: 0.18,
-      currency: 'PEN',
-      timezone: 'America/Lima',
-      lastBoletaNumber: 0,
-      lastFacturaNumber: 0
-    }
-  }
-}
-
-/**
- * Obtiene información pública de la empresa (Client-side)
- */
-export async function fetchPublicCompanyInfo(): Promise<{ companyName: string; currency: string }> {
-  try {
-    const response = await fetch('/api/public/company-info', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error('Error al obtener información de la empresa')
-    }
-
-    return await response.json()
-  } catch (error) {
-    console.error('Error al obtener información pública de la empresa:', error)
-
-    return {
-      companyName: 'Restaurant',
-      currency: 'PEN'
-    }
-  }
 }

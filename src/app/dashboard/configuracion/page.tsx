@@ -20,10 +20,10 @@ import { TicketPreview } from "./components/ticket-preview"
 import { StatusIndicator } from "./components/status-indicator"
 
 // Utils, Config y Validación
-import { 
-  getSupportedTimezones, 
-  type SystemConfigData as SystemConfig 
-} from "@/services/system.service"
+import {
+  getSupportedTimezones,
+  type SystemConfigData as SystemConfig
+} from "@/features/dashboard/utils/system-config-client"
 import { systemConfigSchema } from "@/features/dashboard/validations/system-config"
 
 import { ConfigSkeleton } from "./components/config-skeleton"

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Settings, Percent, Coins, Globe } from "lucide-react"
 import { ConfigField, TimeZoneSelect } from "./form-utils"
-import { SUPPORTED_CURRENCIES } from "@/services/system.service"
+import { SUPPORTED_CURRENCIES } from "@/features/dashboard/utils/system-config-client"
 
 interface SystemSettingsCardProps {
   config: any
