@@ -63,27 +63,41 @@ export default function MeseroPage() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      // Obtener estadísticas de pedidos activos
-      const pendingOrdersResponse = await fetch('/api/orders?showAll=true&status=active')
+      // Pedidos activos + mesas en paralelo. /api/tables solo requiere sesión,
+      // así que el mesero puede contar las mesas disponibles (antes nunca se
+      // obtenían y la tarjeta "Mesas Disponibles" quedaba siempre en 0).
+      const [pendingOrdersResponse, tablesResponse] = await Promise.all([
+        fetch('/api/orders?showAll=true&status=active'),
+        fetch('/api/tables'),
+      ])
+
       if (pendingOrdersResponse.ok) {
         const { orders: allOrders } = await pendingOrdersResponse.json()
-        
+
         // Obtener todos los pedidos activos para estadísticas
-        const activeOrders = allOrders.filter((order: Order) => 
+        const activeOrders = allOrders.filter((order: Order) =>
           order.status === 'PENDING' || order.status === 'CONFIRMED' || order.status === 'SERVED'
         )
-        
+
         // Calcular total de ventas con validación
         const totalSales = activeOrders.reduce((sum: number, order: Order) => {
           const amount = typeof order.totalAmount === 'number' ? order.totalAmount : parseFloat(order.totalAmount.toString()) || 0
           return sum + amount
         }, 0)
-        
-        setStats(prev => ({ 
-          ...prev, 
+
+        setStats(prev => ({
+          ...prev,
           activeOrders: activeOrders.length || 0,
           totalSales: totalSales
         }))
+      }
+
+      if (tablesResponse.ok) {
+        const tables = await tablesResponse.json()
+        const totalTables = Array.isArray(tables)
+          ? tables.filter((t: { status?: string }) => t.status === 'DISPONIBLE').length
+          : 0
+        setStats(prev => ({ ...prev, totalTables }))
       }
     } catch (error) {
       console.error('Error al cargar datos del dashboard:', error)
