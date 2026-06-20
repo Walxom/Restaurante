@@ -88,6 +88,26 @@ app.prepare().then(() => {
         console.log(`🔌 Socket.IO listo en puerto ${port}`)
       }
     })
+
+  // Cierre ordenado (SIGTERM/SIGINT): deja de aceptar conexiones, cierra los
+  // sockets y el servidor HTTP en vez de matar de golpe peticiones/escrituras
+  // en curso (que podía dejar el WAL de SQLite sin checkpoint).
+  const shutdown = (signal) => {
+    console.log(`\n${signal} recibido. Cerrando servidor...`)
+    const forceExit = setTimeout(() => {
+      console.error('Cierre forzado tras timeout de 10s.')
+      process.exit(1)
+    }, 10000)
+    if (typeof forceExit.unref === 'function') forceExit.unref()
+    io.close(() => {
+      httpServer.close(() => {
+        console.log('Servidor cerrado limpiamente.')
+        process.exit(0)
+      })
+    })
+  }
+  process.on('SIGTERM', () => shutdown('SIGTERM'))
+  process.on('SIGINT', () => shutdown('SIGINT'))
 })
 
 function emitToRoom(room, event, data) {
