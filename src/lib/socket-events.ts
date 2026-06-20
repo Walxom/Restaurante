@@ -1,9 +1,36 @@
+import type { Server as SocketIOServer } from 'socket.io'
 import { emitToRoom, emitToAll } from './socket-server'
+
+// Formas mínimas que estos emisores leen. Son permisivas a propósito: los
+// callers pasan objetos Prisma completos (con Decimal/Date), que satisfacen
+// estructuralmente estas interfaces sin necesidad de mapear.
+interface OrderEventInput {
+  id: string
+  orderNumber: string
+  type: string
+  status: string
+  tableId?: string | null
+  table?: { number?: number | null } | null
+  customerName?: string | null
+  totalAmount?: unknown
+  orderItems?: unknown[] | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user?: { name?: string | null; username?: string | null } | null
+}
+
+interface TableEventInput {
+  id: string
+  number: number
+  capacity?: number | null
+  status: string
+  isActive?: boolean
+}
 
 // Helper functions para emitir eventos de Socket.IO
 
 // Función para emitir eventos cuando no tenemos acceso directo al servidor Socket.IO
-export function emitSocketEvent(event: string, data: any, room?: string) {
+export function emitSocketEvent(event: string, data: unknown, room?: string) {
   if (room) {
     emitToRoom(room, event, data)
   } else {
@@ -12,7 +39,7 @@ export function emitSocketEvent(event: string, data: any, room?: string) {
 }
 
 // Eventos específicos para pedidos
-export function emitNewOrder(order: any) {
+export function emitNewOrder(order: OrderEventInput) {
   emitSocketEvent('new_order', {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -31,7 +58,7 @@ export function emitNewOrder(order: any) {
   }, 'orders')
 }
 
-export function emitOrderUpdate(order: any) {
+export function emitOrderUpdate(order: OrderEventInput) {
   emitSocketEvent('order_updated', {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -50,7 +77,7 @@ export function emitOrderUpdate(order: any) {
   }, 'orders')
 }
 
-export function emitOrderStatusChange(orderId: string, oldStatus: string, newStatus: string, orderData?: any) {
+export function emitOrderStatusChange(orderId: string, oldStatus: string, newStatus: string, orderData?: OrderEventInput | null) {
   emitSocketEvent('order_status_changed', {
     orderId,
     oldStatus,
@@ -67,7 +94,7 @@ export function emitOrderStatusChange(orderId: string, oldStatus: string, newSta
 }
 
 // Eventos específicos para mesas
-export function emitTableUpdate(table: any) {
+export function emitTableUpdate(table: TableEventInput) {
   emitSocketEvent('table_updated', {
     id: table.id,
     number: table.number,
@@ -78,7 +105,7 @@ export function emitTableUpdate(table: any) {
   }, 'tables')
 }
 
-export function emitTableStatusChange(tableId: string, oldStatus: string, newStatus: string, tableData?: any) {
+export function emitTableStatusChange(tableId: string, oldStatus: string, newStatus: string, tableData?: { number?: number | null; capacity?: number | null }) {
   emitSocketEvent('table_status_changed', {
     tableId,
     oldStatus,
@@ -91,7 +118,7 @@ export function emitTableStatusChange(tableId: string, oldStatus: string, newSta
   }, 'tables')
 }
 
-export function emitOrderItemUpdate(orderId: string, itemId: string, action: 'added' | 'updated' | 'removed', itemData?: any) {
+export function emitOrderItemUpdate(orderId: string, itemId: string, action: 'added' | 'updated' | 'removed', itemData?: unknown) {
   emitSocketEvent('order_item_updated', {
     orderId,
     itemId,
@@ -103,5 +130,5 @@ export function emitOrderItemUpdate(orderId: string, itemId: string, action: 'ad
 
 // Declaración global para TypeScript
 declare global {
-  var io: any
+  var io: SocketIOServer | undefined
 }
