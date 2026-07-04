@@ -263,7 +263,7 @@ def main():
                 """, (
                     order_id, order_number, otype, order_status, total,
                     table_id, user["id"], customer_name, customer_dni,
-                    None, created_at.isoformat(), created_at.isoformat()
+                    None, int(created_at.timestamp() * 1000), int(created_at.timestamp() * 1000)
                 ))
 
                 for idx, item in enumerate(items_data):
@@ -279,7 +279,7 @@ def main():
                     """, (
                         item_id, item["quantity"], item["unitPrice"], item["subtotal"],
                         None, item_status, order_id, item["productId"],
-                        created_at.isoformat(), created_at.isoformat()
+                        int(created_at.timestamp() * 1000), int(created_at.timestamp() * 1000)
                     ))
                     created_items += 1
 
@@ -312,7 +312,7 @@ def main():
                         invoice_id, inv_number, inv_type, order_id,
                         fact_customer, fact_ruc, subtotal_inv, igv, total,
                         payment, amount_paid, change,
-                        created_at.isoformat(), user["id"]
+                        int(created_at.timestamp() * 1000), user["id"]
                     ))
 
                     for idx, item in enumerate(items_data):
