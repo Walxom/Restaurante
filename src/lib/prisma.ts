@@ -24,10 +24,12 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     datasourceUrl: buildDatasourceUrl(),
+    // Log detallado sólo en desarrollo; en test y producción sólo errores
+    // (evita ruido de `prisma:query` en la salida de las pruebas).
     log:
-      process.env.NODE_ENV === 'production'
-        ? ['error']
-        : ['query', 'error', 'warn'],
+      process.env.NODE_ENV === 'development'
+        ? ['query', 'error', 'warn']
+        : ['error'],
   })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

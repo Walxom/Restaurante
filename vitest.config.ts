@@ -1,8 +1,11 @@
 import { defineConfig, configDefaults } from "vitest/config"
-import tsconfigPaths from "vite-tsconfig-paths"
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  // Resolución nativa de los paths de tsconfig (@/* → src/*) en Vite 8;
+  // reemplaza al plugin vite-tsconfig-paths y elimina su warning.
+  resolve: {
+    tsconfigPaths: true,
+  },
   test: {
     environment: "node",
     globals: true,

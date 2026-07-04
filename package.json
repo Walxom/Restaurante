@@ -24,8 +24,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "ai:setup": "node ai_engine/scripts/setup_env.js",
-    "ai:generate": ".\\ai_engine\\.venv\\Scripts\\python.exe -m ai_engine.scripts.generate_synthetic_data",
-    "ai:start": ".\\ai_engine\\.venv\\Scripts\\uvicorn.exe ai_engine.main:app --reload --host 127.0.0.1 --port 8000",
+    "ai:generate": ".\\ai_engine\\venv\\Scripts\\python.exe -m ai_engine.scripts.generate_synthetic_data",
+    "ai:start": ".\\ai_engine\\venv\\Scripts\\uvicorn.exe ai_engine.main:app --reload --host 127.0.0.1 --port 8000",
     "dev:ai": "concurrently \"pnpm dev\" \"pnpm ai:start\"",
     "dev:ai:next": "concurrently \"pnpm dev:next\" \"pnpm ai:start\""
   },
