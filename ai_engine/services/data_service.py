@@ -18,10 +18,12 @@ class DataService:
     def get_orders_completed(days_back: int = 90) -> list[dict]:
         return fetch_all("""
             SELECT o.id, o.orderNumber, o.totalAmount, o.type, o.status,
-                   o.createdAt, o.updatedAt, o.tableId, o.userId
+                   datetime(o.createdAt / 1000, 'unixepoch') as createdAt,
+                   datetime(o.updatedAt / 1000, 'unixepoch') as updatedAt,
+                   o.tableId, o.userId
             FROM orders o
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND datetime(o.createdAt) >= datetime('now', ? || ' days')
+              AND datetime(o.createdAt / 1000, 'unixepoch') >= datetime('now', ? || ' days')
             ORDER BY o.createdAt ASC
         """, (f"-{days_back}",))
 
@@ -30,11 +32,11 @@ class DataService:
         return fetch_all("""
             SELECT oi.id, oi.quantity, oi.unitPrice, oi.subtotal,
                    oi.productId, oi.orderId, oi.status,
-                   o.createdAt as orderDate
+                   datetime(o.createdAt / 1000, 'unixepoch') as orderDate
             FROM order_items oi
             JOIN orders o ON o.id = oi.orderId
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND datetime(o.createdAt) >= datetime('now', ? || ' days')
+              AND datetime(o.createdAt / 1000, 'unixepoch') >= datetime('now', ? || ' days')
             ORDER BY o.createdAt ASC
         """, (f"-{days_back}",))
 
@@ -72,21 +74,21 @@ class DataService:
             JOIN orders o ON o.id = oi.orderId
             JOIN products p ON p.id = oi.productId
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND datetime(o.createdAt) >= datetime('now', ? || ' days')
+              AND datetime(o.createdAt / 1000, 'unixepoch') >= datetime('now', ? || ' days')
             ORDER BY o.id
         """, (f"-{days_back}",))
 
     @staticmethod
     def get_daily_sales(days_back: int = 90) -> list[dict]:
         return fetch_all("""
-            SELECT date(o.createdAt) as date,
+            SELECT date(o.createdAt / 1000, 'unixepoch') as date,
                    COUNT(DISTINCT o.id) as order_count,
                    SUM(o.totalAmount) as total_revenue,
                    AVG(o.totalAmount) as avg_ticket
             FROM orders o
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND datetime(o.createdAt) >= datetime('now', ? || ' days')
-            GROUP BY date(o.createdAt)
+              AND datetime(o.createdAt / 1000, 'unixepoch') >= datetime('now', ? || ' days')
+            GROUP BY date(o.createdAt / 1000, 'unixepoch')
             ORDER BY date ASC
         """, (f"-{days_back}",))
 
@@ -98,7 +100,7 @@ class DataService:
             JOIN orders o ON o.id = oi.orderId
             JOIN products p ON p.id = oi.productId
             WHERE o.status IN ('COMPLETED', 'PAID', 'SERVED')
-              AND datetime(o.createdAt) >= datetime('now', ? || ' days')
+              AND datetime(o.createdAt / 1000, 'unixepoch') >= datetime('now', ? || ' days')
             GROUP BY p.id, p.name
             ORDER BY total_sold DESC
             LIMIT ?

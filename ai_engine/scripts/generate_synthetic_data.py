@@ -203,6 +203,13 @@ def main():
 
     conn.execute("BEGIN TRANSACTION;")
     try:
+        # Limpiar datos sintéticos previos para evitar conflictos de clave única
+        print("[INFO] Limpiando datos sintéticos de ejecuciones anteriores...")
+        conn.execute("DELETE FROM invoice_items WHERE invoiceId LIKE 'inv-%'")
+        conn.execute("DELETE FROM invoices WHERE id LIKE 'inv-%'")
+        conn.execute("DELETE FROM order_items WHERE orderId LIKE 'syn-%'")
+        conn.execute("DELETE FROM orders WHERE id LIKE 'syn-%'")
+
         for d in dates:
             volume = daily_volume(d, base=random.randint(20, 35))
             dt_start = datetime.combine(d, datetime.min.time())
