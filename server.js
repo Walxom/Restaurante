@@ -19,10 +19,29 @@ const next = require('next')
 const { Server } = require('socket.io')
 const os = require('os')
 
+// Asegurar que NODE_ENV esté explícitamente definido para evitar desalineación entre bundlers
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = 'development'
+}
+
 const dev = process.env.NODE_ENV !== 'production'
 // En dev escuchamos solo en localhost; en producción en todas las interfaces (LAN)
 const hostname = dev ? 'localhost' : '0.0.0.0'
 const port = process.env.PORT || 3001
+
+// Si se inicia en modo dev y existe un BUILD_ID de producción previo en .next,
+// limpiar para evitar colisiones ENOENT de manifiestos obsoletos entre Webpack y Turbopack
+if (dev) {
+  const buildIdFile = path.join(__dirname, '.next', 'BUILD_ID')
+  if (fs.existsSync(buildIdFile)) {
+    try {
+      console.log('🧹 Limpiando artefactos de producción en .next para evitar colisiones de caché en dev...')
+      fs.rmSync(path.join(__dirname, '.next'), { recursive: true, force: true })
+    } catch {
+      // Ignorar si el sistema de archivos retiene algún lock temporal
+    }
+  }
+}
 
 function getPrivateIP() {
   const interfaces = os.networkInterfaces()
@@ -43,6 +62,11 @@ app.prepare().then(() => {
       const parsedUrl = parse(req.url, true)
       await handle(req, res, parsedUrl)
     } catch (err) {
+      if (err && err.code === 'ENOENT') {
+        res.statusCode = 404
+        res.end('Not found')
+        return
+      }
       console.error('Error occurred handling', req.url, err)
       res.statusCode = 500
       res.end('internal server error')

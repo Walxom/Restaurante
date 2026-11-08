@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const isDev = process.env.NODE_ENV === "development";
+const isDev = process.env.NODE_ENV !== "production";
 
 const nextConfig: NextConfig = {
   eslint: {
@@ -28,6 +28,7 @@ if (!isDev) {
   const withPWA = require("next-pwa");
   const pwaConfig = withPWA({
     dest: "public",
+    disable: isDev,
     register: true,
     skipWaiting: true,
   });

@@ -5,7 +5,7 @@
   "scripts": {
     "setup:all": "node scripts/setup-system.js",
     "doctor": "node scripts/doctor.js",
-    "dev": "cross-env UV_THREADPOOL_SIZE=16 node --max-old-space-size=4096 server.js",
+    "dev": "cross-env NODE_ENV=development UV_THREADPOOL_SIZE=16 node --max-old-space-size=4096 server.js",
     "dev:next": "next dev --turbopack",
     "build": "next build",
     "build:optimized": "cross-env NODE_OPTIONS='--max-old-space-size=16384' next build",
