@@ -34,7 +34,7 @@ import IngredientModal from "@/features/inventory/components/IngredientModal"
 import StockAdjustModal from "@/features/inventory/components/StockAdjustModal"
 import BulkStockAdjustModal from "@/features/inventory/components/BulkStockAdjustModal"
 import IngredientCategoryModal from "@/features/inventory/components/IngredientCategoryModal"
-import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
+import ConfirmDialog from "@/components/ConfirmDialog"
 import { toast } from "react-hot-toast"
 
 export default function InventoryPage() {
@@ -313,7 +313,7 @@ export default function InventoryPage() {
           category={selectedCategory}
         />
 
-        <ConfirmationModal 
+        <ConfirmDialog 
           isOpen={showDeleteModal}
           onClose={() => setShowDeleteModal(false)}
           onConfirm={confirmDelete}

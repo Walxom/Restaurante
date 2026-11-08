@@ -1,9 +1,9 @@
 import { type Order, type OrderStatus, type OrderType, type OrderItem } from "@/types";
 
 /**
- * Convierte un objeto parcial o mock en un objeto Order válido para componentes de UI
+ * Adapta un objeto parcial o deserializado en un objeto Order canónico para la UI
  */
-export function createMockOrder(data: Partial<Order>): Order {
+export function toOrderView(data: Partial<Order>): Order {
   return {
     id: data.id || '',
     orderNumber: data.orderNumber || '0000',
@@ -27,9 +27,9 @@ export function createMockOrder(data: Partial<Order>): Order {
 }
 
 /**
- * Crea un mock de OrderItem
+ * Adapta un objeto parcial en un OrderItem canónico para la UI
  */
-export function createMockOrderItem(data: Partial<OrderItem>): OrderItem {
+export function toOrderItemView(data: Partial<OrderItem>): OrderItem {
   return {
     id: data.id || '',
     productId: data.productId || '',
@@ -51,3 +51,7 @@ export function createMockOrderItem(data: Partial<OrderItem>): OrderItem {
     ...data
   };
 }
+
+// Alias de retrocompatibilidad
+export const createMockOrder = toOrderView;
+export const createMockOrderItem = toOrderItemView;

@@ -2,11 +2,10 @@
 
 import { type Sale } from "@/features/dashboard/hooks/useSales"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { X, Receipt, User, Clock, MapPin, ShoppingBag, CreditCard } from "lucide-react"
+import { X, Receipt, User, Clock, MapPin } from "lucide-react"
 import ThermalPrintButton from "@/features/billing/components/ThermalPrintButton"
 import { useSession } from "next-auth/react"
-import { createMockOrder, createMockOrderItem } from "@/features/orders/utils/type-converters"
+import { toOrderView, toOrderItemView } from "@/features/orders/utils/type-converters"
 
 interface SaleDetailsModalProps {
   sale: Sale | null
@@ -154,7 +153,7 @@ export function SaleDetailsModal({ sale, onClose }: SaleDetailsModalProps) {
           <div className="flex items-center gap-3">
             {sale.status === 'COMPLETED' && (
               <ThermalPrintButton 
-                order={createMockOrder({
+                order={toOrderView({
                   id: sale.id,
                   orderNumber: sale.orderNumber,
                   totalAmount: Number(sale.totalAmount) || 0,
@@ -167,7 +166,7 @@ export function SaleDetailsModal({ sale, onClose }: SaleDetailsModalProps) {
                     capacity: 0 
                   } : null,
                   user: { id: '', name: sale.user?.name || '' },
-                  orderItems: sale.orderItems.map((item, index) => createMockOrderItem({
+                  orderItems: sale.orderItems.map((item, index) => toOrderItemView({
                     id: `item-${index}`,
                     quantity: item.quantity,
                     unitPrice: Number(item.product.price) || 0,

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import ThermalPrintButton from "@/features/billing/components/ThermalPrintButton"
-import { createMockOrder, createMockOrderItem } from "@/features/orders/utils/type-converters"
+import { toOrderView, toOrderItemView } from "@/features/orders/utils/type-converters"
 import {
   ArrowLeft,
   Receipt,
@@ -295,7 +295,7 @@ export default function FacturaDetailsPage({
           
           <div className="flex items-center justify-start sm:justify-end w-full sm:w-auto gap-3 overflow-x-auto pb-2 sm:pb-0 custom-scrollbar">
             {invoice.order && (() => {
-              const mockOrder = createMockOrder({
+              const orderView = toOrderView({
                 id: invoice.order.id,
                 orderNumber: invoice.order.orderNumber,
                 status: 'COMPLETED',
@@ -310,7 +310,7 @@ export default function FacturaDetailsPage({
                   status: 'OCUPADA',
                   capacity: 0
                 } : null,
-                orderItems: invoice.order.orderItems ? invoice.order.orderItems.map((item) => createMockOrderItem({
+                orderItems: invoice.order.orderItems ? invoice.order.orderItems.map((item) => toOrderItemView({
                   id: item.id,
                   quantity: item.quantity,
                   unitPrice: Number(item.unitPrice),
@@ -327,7 +327,7 @@ export default function FacturaDetailsPage({
                     category: { id: '', name: '' }
                   },
                   createdAt: invoice.issuedAt
-                })) : invoice.items.map((item, index) => createMockOrderItem({
+                })) : invoice.items.map((item, index) => toOrderItemView({
                   id: `item-${index}`,
                   quantity: item.quantity,
                   unitPrice: Number(item.unitPrice),
@@ -358,7 +358,7 @@ export default function FacturaDetailsPage({
 
               return (
                 <ThermalPrintButton 
-                  order={mockOrder}
+                  order={orderView}
                   size="default"
                   variant="outline"
                   currentUser={session?.user ? {

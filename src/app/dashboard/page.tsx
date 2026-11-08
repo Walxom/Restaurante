@@ -11,7 +11,7 @@ import InvoiceWidget from "@/features/dashboard/components/InvoiceWidget"
 import PedidosPorServirWidget from "@/features/dashboard/components/PedidosPorServirWidget"
 import PedidosServidosWidget from "@/features/dashboard/components/PedidosServidosWidget"
 import {
-  Users, Clock, DollarSign, LogOut, TrendingUp, Package,
+  Users, Clock, DollarSign, TrendingUp, Package,
   BookOpen, Brain, FileText, Printer, Settings, Utensils,
   Activity, ChevronRight,
 } from "lucide-react"
@@ -19,7 +19,7 @@ import { useSystemConfig } from "@/features/dashboard/hooks/useSystemConfig"
 import { useDashboardStats } from "@/features/dashboard/hooks/useDashboardStats"
 import { NotificationDrawer } from "@/features/dashboard/components/NotificationDrawer"
 import QuickActionButton, { type ActionColor } from "@/features/dashboard/components/QuickActionButton"
-import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
+import ConfirmDialog from "@/components/ConfirmDialog"
 import { StatCard } from "@/features/dashboard/components/StatCard"
 import { usePrinter } from "@/features/billing/hooks/usePrinter"
 import { RoleGuard } from "@/components/auth/role-guard"
@@ -315,15 +315,14 @@ export default function DashboardPage() {
         />
 
         {/* MODAL DE CIERRE DE SESIÓN */}
-        <ConfirmationModal
+        <ConfirmDialog
           isOpen={showSignOutModal}
           onClose={cancelSignOut}
           onConfirm={confirmSignOut}
           title="¿Cerrar sesión?"
           description="¿Estás seguro de que quieres cerrar tu sesión? Tendrás que volver a ingresar tus credenciales para acceder."
           confirmText="Cerrar sesión"
-          variant="danger"
-          icon={LogOut}
+          variant="destructive"
         />
       </div>
     </RoleGuard>

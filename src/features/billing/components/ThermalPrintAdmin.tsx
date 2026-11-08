@@ -6,7 +6,6 @@ import {
   Play, 
   Square, 
   RefreshCw, 
-  AlertCircle, 
   Trash2,
   Clock,
   Info,
@@ -14,7 +13,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ConfirmationModal } from '@/components/ui/ConfirmationModal'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import { 
   usePrinter, 
   type PrinterServiceStatus, 
@@ -149,7 +148,7 @@ export default function ThermalPrintAdmin() {
       </div>
 
       {/* MODAL PARA DETENER SERVICIO */}
-      <ConfirmationModal
+      <ConfirmDialog
         isOpen={showStopModal}
         onClose={() => setShowStopModal(false)}
         onConfirm={() => {
@@ -160,13 +159,12 @@ export default function ThermalPrintAdmin() {
         description="Al detener el servicio, las comandas no se imprimirán automáticamente en cocina hasta que se vuelva a activar manualmente."
         confirmText="Detener servicio"
         cancelText="Cancelar"
-        variant="danger"
-        icon={AlertCircle}
+        variant="destructive"
         isLoading={isLoading}
       />
 
       {/* MODAL ACCESIBLE PARA VACIAR COLA */}
-      <ConfirmationModal
+      <ConfirmDialog
         isOpen={showClearModal}
         onClose={() => setShowClearModal(false)}
         onConfirm={() => {
@@ -177,8 +175,7 @@ export default function ThermalPrintAdmin() {
         description="Esta acción eliminará de forma irreversible todos los tickets y comprobantes en espera de impresión."
         confirmText="Vaciar cola"
         cancelText="Cancelar"
-        variant="danger"
-        icon={Trash2}
+        variant="destructive"
         isLoading={isLoading}
       />
     </div>

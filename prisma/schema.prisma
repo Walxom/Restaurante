@@ -50,6 +50,8 @@ model Product {
   category    Category    @relation(fields: [categoryId], references: [id])
   recipe      Recipe?
 
+  @@index([categoryId])
+  @@index([isActive, isAvailable])
   @@map("products")
 }
 
@@ -143,6 +145,8 @@ model Ingredient {
   category          IngredientCategory? @relation(fields: [categoryId], references: [id])
   recipeIngredients RecipeIngredient[]
 
+  @@index([categoryId])
+  @@index([isActive])
   @@map("ingredients")
 }
 
@@ -232,6 +236,7 @@ model InvoiceItem {
   total       Decimal
   invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
+  @@index([invoiceId])
   @@map("invoice_items")
 }
 
