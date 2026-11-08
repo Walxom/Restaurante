@@ -60,7 +60,11 @@ export function usePrinter(pollingInterval = 15000) {
         if (hardwareData.errorCode === 'OUT_OF_PAPER') newState.hardwareStatus = 'out_of_paper'
       } else {
         newState.hardwareStatus = 'disconnected'
-        newState.message = 'No se pudo conectar con la impresora'
+        if (newState.serviceStatus === 'inactive') {
+          newState.message = 'Servicio detenido. Actívelo para habilitar comandas.'
+        } else {
+          newState.message = 'No se pudo conectar con la impresora física'
+        }
       }
 
       setState(prev => ({ ...prev, ...newState }))
@@ -99,7 +103,7 @@ export function usePrinter(pollingInterval = 15000) {
       } else {
         throw new Error(result.error || 'Error al iniciar')
       }
-    } catch (error) {
+    } catch {
       toast.error('No se pudo iniciar el servicio', { id: toastId })
     } finally {
       setIsLoading(false)
@@ -116,7 +120,7 @@ export function usePrinter(pollingInterval = 15000) {
         setState(prev => ({ ...prev, isManualStopped: true, serviceStatus: 'inactive' }))
         toast.success('Servicio detenido', { id: toastId })
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al detener el servicio', { id: toastId })
     } finally {
       setIsLoading(false)
@@ -130,7 +134,7 @@ export function usePrinter(pollingInterval = 15000) {
       if (response.ok) {
         toast.success('Cola de impresión limpia', { id: toastId })
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al limpiar la cola', { id: toastId })
     }
   }

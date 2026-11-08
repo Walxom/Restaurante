@@ -1,9 +1,5 @@
 "use client"
 
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
 import { Printer } from "lucide-react"
 import { AdminPageHeader } from "@/components/layout/PageHeader"
 import ThermalPrintAdmin from "@/features/billing/components/ThermalPrintAdmin"
@@ -11,15 +7,13 @@ import PrinterConfiguration from "@/features/billing/components/PrinterConfigura
 import { RoleGuard } from "@/components/auth/role-guard"
 
 export default function ImpresionPage() {
-  const router = useRouter()
-
   return (
     <RoleGuard allowedRoles={["JEFE"]}>
       <div className="min-h-screen bg-background transition-colors duration-500">
         <div className="relative z-10 flex flex-col">
           <AdminPageHeader
             title="Administración de Impresión"
-            subtitle="Servicios y Configuración de Hardware"
+            subtitle="Servicios y configuración de hardware local"
             icon={Printer}
             backTo="/dashboard"
           />
