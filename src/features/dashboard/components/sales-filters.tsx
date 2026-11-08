@@ -1,7 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Calendar, Filter, ChevronDown } from "lucide-react"
+import { Calendar, ChevronDown } from "lucide-react"
 
 interface SalesFiltersProps {
   filter: string
@@ -15,6 +14,7 @@ interface SalesFiltersProps {
   setStartDate: (date: string) => void
   endDate: string
   setEndDate: (date: string) => void
+  isFetching?: boolean
 }
 
 export function SalesFilters({
@@ -28,7 +28,8 @@ export function SalesFilters({
   startDate,
   setStartDate,
   endDate,
-  setEndDate
+  setEndDate,
+  isFetching = false,
 }: SalesFiltersProps) {
   
   const periods = [
@@ -49,20 +50,26 @@ export function SalesFilters({
             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Período de Análisis</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {periods.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setFilter(p.id)}
-                data-testid={`btn-filter-period-${p.id}`}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border ${
-                  filter === p.id 
-                    ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' 
-                    : 'bg-background/50 text-muted-foreground border-border/50 hover:bg-background/80 hover:border-border'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+            {periods.map((p) => {
+              const isActive = filter === p.id
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setFilter(p.id)}
+                  data-testid={`btn-filter-period-${p.id}`}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border flex items-center gap-1.5 ${
+                    isActive 
+                      ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' 
+                      : 'bg-background/50 text-muted-foreground border-border/50 hover:bg-background/80 hover:border-border'
+                  }`}
+                >
+                  {isActive && isFetching && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground animate-ping" />
+                  )}
+                  {p.label}
+                </button>
+              )
+            })}
           </div>
         </div>
 

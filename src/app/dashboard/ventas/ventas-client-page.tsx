@@ -1,9 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { BarChart3, ChevronLeft, ChevronRight, Hash } from "lucide-react"
+import { BarChart3, ChevronLeft, ChevronRight, Hash, RefreshCw } from "lucide-react"
 import { AdminPageHeader } from "@/components/layout/PageHeader"
 import { useSales, type Sale } from "@/features/dashboard/hooks/useSales"
 import { SalesStatsGrid } from "@/features/dashboard/components/sales-stats-grid"
@@ -13,12 +12,11 @@ import { SalesTable } from "@/features/dashboard/components/sales-table"
 import { SaleDetailsModal } from "@/features/dashboard/components/sale-details-modal"
 
 export default function HistorialVentasClient() {
-  const router = useRouter()
   const {
     sales,
     stats,
-    loading,
-    paginationLoading,
+    isInitialLoading,
+    isFetching,
     filter,
     setFilter,
     statusFilter,
@@ -36,27 +34,9 @@ export default function HistorialVentasClient() {
   } = useSales()
 
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
-  const [showModal, setShowModal] = useState(false)
 
   const handleViewDetails = (sale: Sale) => {
     setSelectedSale(sale)
-    setShowModal(true)
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative transition-colors duration-500">
-        <div className="relative z-10 flex flex-col items-center gap-6 animate-pulse">
-          <div className="h-20 w-20 rounded-3xl bg-primary/20 flex items-center justify-center border border-primary/30 shadow-2xl shadow-primary/20">
-            <BarChart3 className="w-10 h-10 text-primary animate-bounce" />
-          </div>
-          <div className="space-y-2 text-center">
-            <h2 className="text-xs font-black text-foreground uppercase tracking-[0.3em]">Sincronizando Historial</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Consultando registros en base de datos...</p>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -67,21 +47,33 @@ export default function HistorialVentasClient() {
         backTo="/dashboard"
       >
         <div className="hidden md:flex flex-col items-end mr-2">
-          <span className="text-[9px] font-black text-primary uppercase tracking-widest">Sincronización Activa</span>
-          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-50">Real-time data flow</span>
+          <span className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5">
+            {isFetching && <RefreshCw className="w-2.5 h-2.5 text-primary animate-spin" />}
+            {isFetching ? "Actualizando Datos..." : "Sincronización Activa"}
+          </span>
+          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-50">
+            Real-time data flow
+          </span>
         </div>
         <div className="hidden sm:flex h-10 w-10 rounded-2xl bg-primary/10 items-center justify-center border border-primary/20">
           <BarChart3 className="w-5 h-5 text-primary" />
         </div>
       </AdminPageHeader>
 
-      <main className="relative max-w-7xl mx-auto px-6 py-10 space-y-10">
+      {/* Barra de progreso superior no bloqueante durante actualizaciones en segundo plano */}
+      {isFetching && (
+        <div className="h-0.5 w-full bg-primary/20 overflow-hidden relative">
+          <div className="absolute inset-0 bg-primary animate-pulse w-full h-full" />
+        </div>
+      )}
+
+      <main className={`relative max-w-7xl mx-auto px-6 py-10 space-y-10 transition-opacity duration-300 ${isFetching ? 'opacity-85' : 'opacity-100'}`}>
         
         {/* KPI GRID */}
-        <SalesStatsGrid stats={stats} />
+        <SalesStatsGrid stats={stats} loading={isInitialLoading} />
 
         {/* ANALYTICS & BI MODULE */}
-        <SalesAnalyticsPanel stats={stats} loading={paginationLoading} />
+        <SalesAnalyticsPanel stats={stats} loading={isInitialLoading} />
 
         {/* CONTROLES Y TABLA */}
         <div className="space-y-6">
@@ -98,7 +90,7 @@ export default function HistorialVentasClient() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setPage(page - 1)}
-                  disabled={page === 1 || paginationLoading}
+                  disabled={page === 1 || isFetching}
                   data-testid="btn-page-prev"
                   className="h-9 w-9 rounded-xl p-0 hover:bg-foreground/5"
                 >
@@ -113,7 +105,7 @@ export default function HistorialVentasClient() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setPage(page + 1)}
-                  disabled={page === totalPages || paginationLoading}
+                  disabled={page === totalPages || isFetching}
                   data-testid="btn-page-next"
                   className="h-9 w-9 rounded-xl p-0 hover:bg-foreground/5"
                 >
@@ -136,12 +128,13 @@ export default function HistorialVentasClient() {
             setStartDate={setStartDate}
             endDate={endDate}
             setEndDate={setEndDate}
+            isFetching={isFetching}
           />
 
           {/* TABLA DE RESULTADOS */}
           <SalesTable 
             sales={sales}
-            paginationLoading={paginationLoading}
+            paginationLoading={isFetching}
             onViewDetails={handleViewDetails}
           />
 
@@ -165,10 +158,7 @@ export default function HistorialVentasClient() {
       {/* MODAL DE DETALLES */}
       <SaleDetailsModal 
         sale={selectedSale}
-        onClose={() => {
-          setShowModal(false)
-          setSelectedSale(null)
-        }}
+        onClose={() => setSelectedSale(null)}
       />
     </div>
   )

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 
@@ -68,8 +68,9 @@ export function useSales({ limit = 10 }: UseSalesProps = {}) {
     cancelledOrders: 0,
   })
   
-  const [loading, setLoading] = useState(true)
-  const [paginationLoading, setPaginationLoading] = useState(false)
+  const isFirstFetchRef = useRef(true)
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [isFetching, setIsFetching] = useState(false)
   const [filter, setFilter] = useState("day")
   const [statusFilter, setStatusFilter] = useState("all")
   const [page, setPage] = useState(1)
@@ -93,8 +94,7 @@ export function useSales({ limit = 10 }: UseSalesProps = {}) {
 
   const fetchSalesData = useCallback(async () => {
     try {
-      if (sales.length === 0) setLoading(true)
-      else setPaginationLoading(true)
+      setIsFetching(true)
 
       const url = new URL(`${window.location.origin}/api/sales`)
       url.searchParams.set("filter", filter)
@@ -114,17 +114,26 @@ export function useSales({ limit = 10 }: UseSalesProps = {}) {
       const response = await fetch(url.toString())
       if (response.ok) {
         const data = await response.json()
-        setSales(data.sales)
-        setStats(data.stats)
-        setTotalPages(data.totalPages)
+        setSales(data.sales || [])
+        setStats(data.stats || {
+          totalSales: 0,
+          totalOrders: 0,
+          averageTicket: 0,
+          completedOrders: 0,
+          cancelledOrders: 0,
+        })
+        setTotalPages(data.totalPages || 1)
       }
     } catch (error) {
       console.error("Error al cargar datos de ventas:", error)
     } finally {
-      setLoading(false)
-      setPaginationLoading(false)
+      setIsFetching(false)
+      if (isFirstFetchRef.current) {
+        isFirstFetchRef.current = false
+        setIsInitialLoading(false)
+      }
     }
-  }, [filter, statusFilter, page, limit, startDate, endDate, selectedYear, sales.length])
+  }, [filter, statusFilter, page, limit, startDate, endDate, selectedYear])
 
   useEffect(() => {
     fetchAvailableYears()
@@ -146,8 +155,10 @@ export function useSales({ limit = 10 }: UseSalesProps = {}) {
   return {
     sales,
     stats,
-    loading,
-    paginationLoading,
+    loading: isInitialLoading,
+    isInitialLoading,
+    isFetching,
+    paginationLoading: isFetching,
     filter,
     setFilter,
     statusFilter,

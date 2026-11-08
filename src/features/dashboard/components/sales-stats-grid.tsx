@@ -5,9 +5,30 @@ import { DollarSign, ShoppingCart, TrendingUp, X } from "lucide-react"
 
 interface SalesStatsGridProps {
   stats: SalesStats
+  loading?: boolean
 }
 
-export function SalesStatsGrid({ stats }: SalesStatsGridProps) {
+export function SalesStatsGrid({ stats, loading = false }: SalesStatsGridProps) {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {[0, 1, 2, 3].map((idx) => (
+          <div
+            key={idx}
+            className="bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 p-6 shadow-sm animate-pulse"
+          >
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="h-2.5 w-20 bg-muted/60 rounded" />
+                <div className="h-6 w-28 bg-muted/80 rounded-md" />
+              </div>
+              <div className="h-12 w-12 rounded-2xl bg-muted/40" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-PE', {
       style: 'currency',
