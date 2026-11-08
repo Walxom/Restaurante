@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react"
 import type { ChatMessage } from "@/features/ai-analytics/types/ai.types"
 
-const AI_ENGINE_URL = "http://localhost:8000"
+const AI_ENGINE_URL = "/api/ai/proxy"
 
 export function useAiChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([{
@@ -60,7 +60,7 @@ export function useAiChat() {
       setError(errMsg)
       setMessages((prev) => [...prev, {
         role: "assistant",
-        content: `Lo siento, no pude conectar con el motor de IA. Verifica que el servicio este activo en ${AI_ENGINE_URL}.`,
+        content: "Lo siento, no pude conectar con el motor de IA. Verifica que el microservicio esté iniciado desde el panel de control.",
         type: "error"
       }])
     } finally {

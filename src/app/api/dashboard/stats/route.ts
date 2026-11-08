@@ -20,18 +20,90 @@ export async function GET(_request: NextRequest) {
     const mañana = new Date(hoy)
     mañana.setDate(mañana.getDate() + 1)
 
-    // Obtener estadísticas de mesas
-    const mesasStats = await prisma.table.groupBy({
-      by: ['status'],
-      where: {
-        isActive: true
-      },
-      _count: {
-        id: true
-      }
-    })
+    // Ejecutar todas las consultas independientes en paralelo con Promise.all
+    // para eliminar el cuello de botella de 9 queries secuenciales en SQLite
+    const [
+      mesasStats,
+      pedidosPendientes,
+      pedidosServidos,
+      ventasPedidosServidos,
+      ventasHoy,
+      productosActivos,
+      totalMesas,
+      stockBajoResult,
+      activeOrdersAgg
+    ] = await Promise.all([
+      // 1. Estadísticas de mesas agrupadas por estado
+      prisma.table.groupBy({
+        by: ['status'],
+        where: { isActive: true },
+        _count: { id: true }
+      }),
 
-    // Convertir a formato más fácil de usar
+      // 2. Pedidos pendientes (requieren atención activa en cocina)
+      prisma.order.count({
+        where: {
+          status: { in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'] }
+        }
+      }),
+
+      // 3. Pedidos servidos del día
+      prisma.order.count({
+        where: {
+          status: 'SERVED',
+          createdAt: { gte: hoy, lt: mañana }
+        }
+      }),
+
+      // 4. Total de ventas operativas del día (pedidos servidos y completados)
+      prisma.order.aggregate({
+        where: {
+          status: { in: ['SERVED', 'COMPLETED'] },
+          createdAt: { gte: hoy, lt: mañana }
+        },
+        _sum: { totalAmount: true },
+        _count: { id: true }
+      }),
+
+      // 5. Total de ventas fiscales del día (facturas y boletas emitidas)
+      prisma.invoice.aggregate({
+        where: {
+          issuedAt: { gte: hoy, lt: mañana },
+          status: 'ISSUED'
+        },
+        _sum: { total: true },
+        _count: { id: true }
+      }),
+
+      // 6. Productos activos y disponibles en carta
+      prisma.product.count({
+        where: { isActive: true, isAvailable: true }
+      }),
+
+      // 7. Total de mesas activas configuradas
+      prisma.table.count({
+        where: { isActive: true }
+      }),
+
+      // 8. Ingredientes con stock bajo o crítico
+      prisma.$queryRaw`
+        SELECT COUNT(*) as count 
+        FROM ingredients 
+        WHERE isActive = 1 
+        AND currentStock <= minStock
+      `,
+
+      // 9. Pedidos activos para métricas en vivo de salón
+      prisma.order.aggregate({
+        where: {
+          status: { in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'SERVED'] }
+        },
+        _sum: { totalAmount: true },
+        _count: { id: true }
+      })
+    ])
+
+    // Convertir estados de mesas a formato estructurado
     const mesasCount = {
       DISPONIBLE: 0,
       OCUPADA: 0,
@@ -45,106 +117,18 @@ export async function GET(_request: NextRequest) {
       }
     })
 
-    // Obtener pedidos pendientes (estados que requieren atención)
-    const pedidosPendientes = await prisma.order.count({
-      where: {
-        status: {
-          in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY']
-        }
-      }
-    })
+    const rawStock = stockBajoResult as Array<{ count?: number | string }>
+    const stockBajo = Number(rawStock[0]?.count || 0)
 
-    // Obtener pedidos servidos del día
-    const pedidosServidos = await prisma.order.count({
-      where: {
-        status: 'SERVED',
-        createdAt: {
-          gte: hoy,
-          lt: mañana
-        }
-      }
-    })
-
-    // Obtener total de ventas del día incluyendo pedidos SERVIDO
-    const ventasPedidosServidos = await prisma.order.aggregate({
-      where: {
-        status: {
-          in: ['SERVED', 'COMPLETED']
-        },
-        createdAt: {
-          gte: hoy,
-          lt: mañana
-        }
-      },
-      _sum: {
-        totalAmount: true
-      },
-      _count: {
-        id: true
-      }
-    })
-
-    // Obtener ventas del día
-    const ventasHoy = await prisma.invoice.aggregate({
-      where: {
-        issuedAt: {
-          gte: hoy,
-          lt: mañana
-        },
-        status: 'ISSUED'
-      },
-      _sum: {
-        total: true
-      },
-      _count: {
-        id: true
-      }
-    })
-
-    // Obtener productos activos
-    const productosActivos = await prisma.product.count({
-      where: {
-        isActive: true,
-        isAvailable: true
-      }
-    })
-
-    // Obtener total de mesas configuradas
-    const totalMesas = await prisma.table.count({
-      where: {
-        isActive: true
-      }
-    })
-
-    // Obtener ingredientes con stock bajo usando SQL raw
-    const stockBajoResult = await prisma.$queryRaw`
-      SELECT COUNT(*) as count 
-      FROM ingredients 
-      WHERE isActive = 1 
-      AND currentStock <= minStock
-    `
-    const stockBajo = Number((stockBajoResult as any)[0]?.count || 0)
-
-    // Obtener pedidos activos para métricas en vivo de salón
-    const activeOrdersAgg = await prisma.order.aggregate({
-      where: {
-        status: {
-          in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'SERVED']
-        }
-      },
-      _sum: {
-        totalAmount: true
-      },
-      _count: {
-        id: true
-      }
-    })
-
-    // Combinar ventas de facturas y pedidos servidos/completados
+    // Desglose de ventas fiscales y operativas
     const totalVentasFacturas = Number(ventasHoy._sum.total) || 0
     const totalVentasPedidos = Number(ventasPedidosServidos._sum.totalAmount) || 0
     const cantidadFacturas = ventasHoy._count.id || 0
     const cantidadPedidos = ventasPedidosServidos._count.id || 0
+
+    // Priorizar ventas fiscales si existen comprobantes, o total operativo en su defecto
+    const totalVentas = totalVentasFacturas > 0 ? totalVentasFacturas : totalVentasPedidos
+    const cantidadVentas = cantidadFacturas > 0 ? cantidadFacturas : cantidadPedidos
 
     const stats = {
       mesas: mesasCount,
@@ -153,8 +137,8 @@ export async function GET(_request: NextRequest) {
       activeOrders: activeOrdersAgg._count.id || 0,
       totalSales: Number(activeOrdersAgg._sum.totalAmount) || 0,
       ventasHoy: {
-        total: Math.max(totalVentasFacturas, totalVentasPedidos), // Usar el mayor para evitar duplicados
-        cantidad: Math.max(cantidadFacturas, cantidadPedidos),
+        total: totalVentas,
+        cantidad: cantidadVentas,
         detalles: {
           facturas: {
             total: totalVentasFacturas,

@@ -8,7 +8,7 @@ import type {
   AiEngineHealth,
 } from "@/features/ai-analytics/types/ai.types"
 
-const AI_ENGINE_URL = "http://localhost:8000"
+const AI_ENGINE_URL = "/api/ai/proxy"
 
 const makeFetcher = (timeoutMs: number) => {
   return async (url: string, options?: RequestInit) => {

@@ -216,8 +216,10 @@ export async function POST(request: NextRequest) {
     let printResult = null
     if (autoPrint) {
       try {
-        // Usar la nueva API de comprobantes
-        const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/thermal-print/receipt`, {
+        // Usar la API de comprobantes con el puerto real configurado
+        const port = process.env.PORT || 3001
+        const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${port}`
+        const response = await fetch(`${baseUrl}/api/thermal-print/receipt`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -227,7 +229,7 @@ export async function POST(request: NextRequest) {
             documentType: result.type,
             customerName: result.customerName,
             customerRuc: result.customerRuc,
-            paymentMethod: 'EFECTIVO'
+            paymentMethod: result.paymentMethod || paymentMethod || 'EFECTIVO'
           }),
         })
 
