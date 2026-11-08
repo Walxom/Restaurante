@@ -39,22 +39,22 @@ export const StatCard = ({ label, value, subValue, icon: Icon, color, loading = 
         style={{ background: `radial-gradient(circle at center, ${accent}14, transparent 65%)` }}
       />
 
-      <div className="p-5 pl-[22px]">
+      <div className="p-3.5 sm:p-5 pl-4 sm:pl-[22px]">
         {/* Etiqueta */}
         <p
-          className="text-[10px] font-bold uppercase mb-3 text-muted-foreground"
+          className="text-[9px] sm:text-[10px] font-bold uppercase mb-2 sm:mb-3 text-muted-foreground truncate"
           style={{ letterSpacing: '0.18em' }}
         >
           {label}
         </p>
 
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex items-end justify-between gap-2 sm:gap-3">
           <div className="min-w-0 flex-1">
             {loading ? (
-              <div className="h-8 w-20 rounded-lg animate-pulse bg-muted" />
+              <div className="h-6 sm:h-8 w-16 sm:w-20 rounded-lg animate-pulse bg-muted" />
             ) : (
               <p
-                className="text-3xl font-black leading-none truncate text-foreground"
+                className="text-xl sm:text-3xl font-black leading-none truncate text-foreground"
                 style={{
                   fontFamily: 'var(--font-geist-mono, monospace)',
                   letterSpacing: '-0.03em',
@@ -64,7 +64,7 @@ export const StatCard = ({ label, value, subValue, icon: Icon, color, loading = 
               </p>
             )}
             {subValue && !loading && (
-              <p className="text-xs mt-1.5 truncate text-muted-foreground">
+              <p className="text-[10px] sm:text-xs mt-1 truncate text-muted-foreground">
                 {subValue}
               </p>
             )}
@@ -72,10 +72,10 @@ export const StatCard = ({ label, value, subValue, icon: Icon, color, loading = 
 
           {/* Ícono con fondo de acento */}
           <div
-            className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center"
+            className="flex-shrink-0 w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center"
             style={{ background: `${accent}18` }}
           >
-            <Icon className="w-5 h-5" style={{ color: accent }} />
+            <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: accent }} />
           </div>
         </div>
       </div>

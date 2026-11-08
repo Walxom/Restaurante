@@ -56,7 +56,7 @@ export default function PedidosPorServirWidget({
       setLoading(true)
       setError(null)
       
-      const response = await fetch('/api/orders?showAll=true&status=active')
+      const response = await fetch('/api/orders?showAll=true&status=active&limit=15')
       if (!response.ok) {
         throw new Error('Error al cargar pedidos')
       }
@@ -185,15 +185,17 @@ export default function PedidosPorServirWidget({
   }
 
   return (
-    <div className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${className}`}>
+    <div className={`bg-card/40 backdrop-blur-md rounded-xl sm:rounded-2xl border border-border/50 overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md ${className}`}>
       {showHeader && (
         <div className="p-4 sm:p-6 border-b border-border/50">
           <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
+            <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-2.5 uppercase tracking-tight">
+              <div className="p-1.5 sm:p-2 bg-orange-500/10 rounded-xl text-orange-500">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
               {title}
             </h2>
-            <span className="px-2.5 py-0.5 bg-orange-100 dark:bg-orange-500/20 rounded-full text-xs font-bold text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20">
+            <span className="px-2.5 py-0.5 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-full text-xs font-bold border border-orange-500/20">
               {orders.length}
             </span>
           </div>
@@ -217,15 +219,17 @@ export default function PedidosPorServirWidget({
             {loading ? (
               <div className="text-center py-6 sm:py-8">
                 <div className="animate-spin w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full mx-auto mb-2"></div>
-                <p className="text-gray-500 text-sm">Cargando pedidos...</p>
+                <p className="text-muted-foreground text-sm">Cargando pedidos...</p>
               </div>
             ) : orders.length === 0 ? (
               <div className="text-center py-6 sm:py-8">
-                <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-green-500 mx-auto mb-2 sm:mb-3" />
-                <p className="text-gray-500 font-medium text-sm sm:text-base">
+                <div className="w-14 h-14 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-3 ring-8 ring-emerald-500/5 text-emerald-500">
+                  <CheckCircle2 className="w-7 h-7" />
+                </div>
+                <p className="text-foreground font-bold text-sm sm:text-base">
                   {userRole === 'MESERO' ? 'No hay pedidos por servir' : 'Todos los pedidos están al día'}
                 </p>
-                <p className="text-gray-400 text-xs sm:text-sm">
+                <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
                   {userRole === 'MESERO' ? 'Los pedidos listos aparecerán aquí' : 'Los nuevos pedidos aparecerán aquí'}
                 </p>
               </div>
@@ -234,7 +238,7 @@ export default function PedidosPorServirWidget({
                 {orders.map((order) => (
                   <div 
                     key={order.id}
-                    className="group p-3 sm:p-4 bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-[1.25rem] cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:scale-[1.01] hover:border-blue-500/20"
+                    className="group p-3 sm:p-4 bg-foreground/5 hover:bg-foreground/[0.08] border border-border/40 hover:border-foreground/20 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-md"
                     onClick={() => handleOrderClick(order.id)}
                   >
                     <div className="flex items-center justify-between">

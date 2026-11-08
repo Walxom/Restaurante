@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
@@ -36,12 +36,13 @@ export async function GET(request: NextRequest) {
       DISPONIBLE: 0,
       OCUPADA: 0,
       ESPERANDO: 0,
-      POR_LIMPIAR: 0,
-      FUERA_DE_SERVICIO: 0
+      MANTENIMIENTO: 0,
     }
 
     mesasStats.forEach((stat: { status: string; _count: { id: number } }) => {
-      mesasCount[stat.status as keyof typeof mesasCount] = stat._count.id
+      if (stat.status in mesasCount) {
+        mesasCount[stat.status as keyof typeof mesasCount] = stat._count.id
+      }
     })
 
     // Obtener pedidos pendientes (estados que requieren atención)
@@ -124,6 +125,21 @@ export async function GET(request: NextRequest) {
     `
     const stockBajo = Number((stockBajoResult as any)[0]?.count || 0)
 
+    // Obtener pedidos activos para métricas en vivo de salón
+    const activeOrdersAgg = await prisma.order.aggregate({
+      where: {
+        status: {
+          in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'SERVED']
+        }
+      },
+      _sum: {
+        totalAmount: true
+      },
+      _count: {
+        id: true
+      }
+    })
+
     // Combinar ventas de facturas y pedidos servidos/completados
     const totalVentasFacturas = Number(ventasHoy._sum.total) || 0
     const totalVentasPedidos = Number(ventasPedidosServidos._sum.totalAmount) || 0
@@ -134,6 +150,8 @@ export async function GET(request: NextRequest) {
       mesas: mesasCount,
       pedidosPendientes,
       pedidosServidos,
+      activeOrders: activeOrdersAgg._count.id || 0,
+      totalSales: Number(activeOrdersAgg._sum.totalAmount) || 0,
       ventasHoy: {
         total: Math.max(totalVentasFacturas, totalVentasPedidos), // Usar el mayor para evitar duplicados
         cantidad: Math.max(cantidadFacturas, cantidadPedidos),

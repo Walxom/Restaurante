@@ -57,7 +57,7 @@ export const QuickActionButton = ({
       onClick={onClick}
       variant="outline"
       className={cn(
-        "h-16 sm:h-20 flex flex-col items-center justify-center gap-2 transition-all duration-300 rounded-2xl group",
+        "h-16 sm:h-20 p-1 sm:p-2 flex flex-col items-center justify-center gap-1 sm:gap-2 transition-all duration-300 rounded-xl sm:rounded-2xl group",
         "bg-card/40 backdrop-blur-md border-border/50",
         "hover:bg-foreground/5 hover:border-foreground/20 hover:scale-[1.02] shadow-sm",
         getHoverShadow(),
@@ -66,7 +66,7 @@ export const QuickActionButton = ({
       disabled={disabled}
     >
       <div className={cn(
-        "p-2 rounded-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
+        "p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
         "bg-background/80 dark:bg-black/40 shadow-sm border border-border/30",
         color === 'orange' && "text-orange-500",
         color === 'purple' && "text-purple-500",
@@ -78,7 +78,7 @@ export const QuickActionButton = ({
       )}>
         <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
       </div>
-      <span className="text-[10px] sm:text-[11px] font-black text-center text-foreground uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">
+      <span className="text-[9px] sm:text-[11px] font-black text-center text-foreground uppercase tracking-tight sm:tracking-widest opacity-80 group-hover:opacity-100 transition-opacity truncate max-w-full px-1">
         {label}
       </span>
     </Button>

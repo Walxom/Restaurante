@@ -124,13 +124,13 @@ function InvoiceWidget() {
             {/* Estadísticas principales */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {[
-                { label: 'Comprobantes', value: stats.todayInvoices, color: 'blue' },
-                { label: 'Ingresos', value: formatCurrency(stats.todayRevenue).replace('PEN', 'S/'), color: 'emerald' },
-                { label: 'Sin Facturar', value: stats.pendingOrders, color: 'orange' },
-                { label: 'Ticket Promedio', value: formatCurrency(stats.averageTicket).replace('PEN', 'S/'), color: 'purple' },
+                { label: 'Comprobantes', value: stats.todayInvoices, colorClass: 'text-blue-500' },
+                { label: 'Ingresos', value: formatCurrency(stats.todayRevenue), colorClass: 'text-emerald-500' },
+                { label: 'Sin Facturar', value: stats.pendingOrders, colorClass: 'text-orange-500' },
+                { label: 'Ticket Promedio', value: formatCurrency(stats.averageTicket), colorClass: 'text-purple-500' },
               ].map((stat) => (
                 <div key={stat.label} className="p-4 bg-foreground/5 rounded-2xl border border-border/30 text-center flex flex-col items-center justify-center space-y-1">
-                  <div className={`text-xl sm:text-2xl font-black tracking-tighter text-${stat.color}-500`}>
+                  <div className={`text-xl sm:text-2xl font-black tracking-tighter ${stat.colorClass}`}>
                     {stat.value}
                   </div>
                   <div className="text-[9px] uppercase font-black text-muted-foreground tracking-[0.1em] opacity-60">

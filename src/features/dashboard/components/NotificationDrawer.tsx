@@ -5,18 +5,12 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X, AlertTriangle, CheckCircle, Clock, Package, Bell } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import type { DashboardStats } from "../hooks/useDashboardStats"
 
 interface NotificationDrawerProps {
   isOpen: boolean
   onClose: () => void
-  stats: {
-    stockBajo: number
-    pedidosPendientes: number
-    mesas: {
-      POR_LIMPIAR?: number
-      FUERA_DE_SERVICIO?: number
-    }
-  } | null
+  stats: DashboardStats | null
   loading: boolean
 }
 
@@ -45,22 +39,12 @@ export function NotificationDrawer({ isOpen, onClose, stats, loading }: Notifica
       })
     }
 
-    if (stats.mesas.POR_LIMPIAR && stats.mesas.POR_LIMPIAR > 0) {
+    if (stats.mesas.MANTENIMIENTO && stats.mesas.MANTENIMIENTO > 0) {
       items.push({
-        type: 'info' as const,
+        type: 'warning' as const,
         icon: AlertTriangle,
-        title: 'Mesas por Limpiar',
-        message: `${stats.mesas.POR_LIMPIAR} mesas necesitan limpieza`,
-        action: 'Asignar personal'
-      })
-    }
-
-    if (stats.mesas.FUERA_DE_SERVICIO && stats.mesas.FUERA_DE_SERVICIO > 0) {
-      items.push({
-        type: 'error' as const,
-        icon: AlertTriangle,
-        title: 'Mesas Fuera de Servicio',
-        message: `${stats.mesas.FUERA_DE_SERVICIO} mesas no disponibles`,
+        title: 'Mesas en Mantenimiento',
+        message: `${stats.mesas.MANTENIMIENTO} ${stats.mesas.MANTENIMIENTO === 1 ? 'mesa no disponible' : 'mesas no disponibles'} por mantenimiento`,
         action: 'Revisar estado'
       })
     }

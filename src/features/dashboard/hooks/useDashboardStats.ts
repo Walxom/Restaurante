@@ -7,6 +7,7 @@ export interface DashboardStats {
     DISPONIBLE: number;
     OCUPADA: number;
     ESPERANDO: number;
+    MANTENIMIENTO: number;
     POR_LIMPIAR?: number;
     FUERA_DE_SERVICIO?: number;
   };
@@ -41,20 +42,6 @@ export interface DashboardStats {
   totalSales: number;
 }
 
-interface Order {
-  id: string;
-  orderNumber: string;
-  status: string;
-  totalAmount: number;
-  type: string;
-  table?: {
-    number: number;
-  };
-  user: {
-    name: string;
-  };
-}
-
 export const useDashboardStats = () => {
   const { data: session } = useSession();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -79,27 +66,6 @@ export const useDashboardStats = () => {
       }
 
       const data = await response.json();
-
-      // Obtener pedidos activos para calcular activeOrders y totalSales
-      const ordersResponse = await fetch('/api/orders?showAll=true&status=active');
-      if (ordersResponse.ok) {
-        const { orders: allOrders } = await ordersResponse.json();
-
-        // Filtrar pedidos activos (PENDING, CONFIRMED, SERVED)
-        const activeOrders = allOrders.filter((order: Order) =>
-          order.status === 'PENDING' || order.status === 'CONFIRMED' || order.status === 'SERVED'
-        );
-
-        // Calcular total de ventas activas
-        const totalSales = activeOrders.reduce((sum: number, order: Order) => {
-          const amount = Number(order.totalAmount) || 0;
-          return sum + amount;
-        }, 0);
-
-        data.activeOrders = activeOrders.length || 0;
-        data.totalSales = totalSales;
-      }
-
       setStats(data);
     } catch (error) {
       console.error('Error:', error);
@@ -152,40 +118,46 @@ export const useDashboardStats = () => {
     room: 'tables'
   });
 
+  const ordersSocketInstance = ordersSocket?.socket;
   useEffect(() => {
-    if (ordersSocket?.socket) {
-      setOrdersConnected(ordersSocket.socket.connected);
-      ordersSocket.socket.on('connect', () => setOrdersConnected(true));
-      ordersSocket.socket.on('disconnect', () => setOrdersConnected(false));
+    if (ordersSocketInstance) {
+      setOrdersConnected(ordersSocketInstance.connected);
+      const onConnect = () => setOrdersConnected(true);
+      const onDisconnect = () => setOrdersConnected(false);
+
+      ordersSocketInstance.on('connect', onConnect);
+      ordersSocketInstance.on('disconnect', onDisconnect);
       return () => {
-        ordersSocket.socket?.off('connect');
-        ordersSocket.socket?.off('disconnect');
+        ordersSocketInstance.off('connect', onConnect);
+        ordersSocketInstance.off('disconnect', onDisconnect);
       };
     }
-  }, [ordersSocket]);
+  }, [ordersSocketInstance]);
 
+  const tablesSocketInstance = tablesSocket?.socket;
   useEffect(() => {
-    if (tablesSocket?.socket) {
-      setTablesConnected(tablesSocket.socket.connected);
-      tablesSocket.socket.on('connect', () => setTablesConnected(true));
-      tablesSocket.socket.on('disconnect', () => setTablesConnected(false));
+    if (tablesSocketInstance) {
+      setTablesConnected(tablesSocketInstance.connected);
+      const onConnect = () => setTablesConnected(true);
+      const onDisconnect = () => setTablesConnected(false);
       
-      tablesSocket.socket.on('table_updated', () => {
+      const onTableChange = () => {
         setTimeout(() => fetchAllData(), 100);
-      });
+      };
 
-      tablesSocket.socket.on('table_status_changed', () => {
-        setTimeout(() => fetchAllData(), 100);
-      });
+      tablesSocketInstance.on('connect', onConnect);
+      tablesSocketInstance.on('disconnect', onDisconnect);
+      tablesSocketInstance.on('table_updated', onTableChange);
+      tablesSocketInstance.on('table_status_changed', onTableChange);
 
       return () => {
-        tablesSocket.socket?.off('connect');
-        tablesSocket.socket?.off('disconnect');
-        tablesSocket.socket?.off('table_updated');
-        tablesSocket.socket?.off('table_status_changed');
+        tablesSocketInstance.off('connect', onConnect);
+        tablesSocketInstance.off('disconnect', onDisconnect);
+        tablesSocketInstance.off('table_updated', onTableChange);
+        tablesSocketInstance.off('table_status_changed', onTableChange);
       };
     }
-  }, [tablesSocket, fetchAllData]);
+  }, [tablesSocketInstance, fetchAllData]);
 
   // Intervalo de actualización
   useEffect(() => {
@@ -202,8 +174,7 @@ export const useDashboardStats = () => {
     let count = 0;
     if (stats.stockBajo > 0) count++;
     if (stats.pedidosPendientes > 5) count++;
-    if (stats.mesas.POR_LIMPIAR && stats.mesas.POR_LIMPIAR > 0) count++;
-    if (stats.mesas.FUERA_DE_SERVICIO && stats.mesas.FUERA_DE_SERVICIO > 0) count++;
+    if (stats.mesas.MANTENIMIENTO && stats.mesas.MANTENIMIENTO > 0) count++;
     return count;
   }, [stats]);
 

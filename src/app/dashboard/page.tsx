@@ -15,7 +15,7 @@ import {
   BookOpen, Brain, FileText, Printer, Settings, Utensils,
   Activity, ChevronRight,
 } from "lucide-react"
-import { useCompanyName, useSystemConfig } from "@/features/dashboard/hooks/useSystemConfig"
+import { useSystemConfig } from "@/features/dashboard/hooks/useSystemConfig"
 import { useDashboardStats } from "@/features/dashboard/hooks/useDashboardStats"
 import { NotificationDrawer } from "@/features/dashboard/components/NotificationDrawer"
 import QuickActionButton, { type ActionColor } from "@/features/dashboard/components/QuickActionButton"
@@ -34,7 +34,8 @@ export default function DashboardPage() {
   const router = useRouter()
   const [showSignOutModal, setShowSignOutModal] = useState(false)
   const { isNavigating, navigateWithLoading } = useNavigationLoading()
-  const { companyName } = useCompanyName()
+  const { config, formatCurrency } = useSystemConfig()
+  const companyName = config?.companyName || 'Restaurant'
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false)
 
   const { serviceStatus, hardwareStatus, message: printerMessage } = usePrinter()
@@ -49,8 +50,6 @@ export default function DashboardPage() {
     fetchStats,
     getAlertsCount,
   } = useDashboardStats()
-
-  const { formatCurrency } = useSystemConfig()
 
   const handleSignOut  = () => setShowSignOutModal(true)
   const confirmSignOut = () => signOut({ callbackUrl: "/login" })
@@ -96,60 +95,37 @@ export default function DashboardPage() {
           alertsCount={getAlertsCount()}
           onNotificationsClick={() => setIsNotificationDrawerOpen(true)}
           onSignOut={handleSignOut}
-        />
+        >
+          {stats?.ultimaActualizacion && (
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/50 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+              <Activity className="w-3 h-3 text-emerald-500 animate-pulse" />
+              <span>
+                {new Date(stats.ultimaActualizacion).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+          )}
+        </DashboardPageHeader>
 
         {/* ── CONTENIDO PRINCIPAL ── */}
         <main className="relative z-10 max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
 
-          {/* BARRA DE ESTADO EN VIVO */}
-          <div className="mb-5 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-foreground/[0.03] border border-foreground/[0.07]">
-            <span className="relative flex h-2 w-2 flex-shrink-0">
-              <span
-                className="animate-ping absolute inset-0 rounded-full opacity-70"
-                style={{ background: isLive ? TEAL : CORAL }}
-              />
-              <span
-                className="relative h-2 w-2 rounded-full"
-                style={{ background: isLive ? TEAL : CORAL }}
-              />
-            </span>
-            <span
-              className="text-[10px] font-bold uppercase"
-              style={{ color: isLive ? TEAL : CORAL, letterSpacing: '0.18em' }}
-            >
-              {isLive ? 'Sistema en vivo' : 'Reconectando…'}
-            </span>
-            <div className="h-3 w-px mx-1 flex-shrink-0 bg-foreground/10" />
-            <span className="text-[11px] text-muted-foreground">{companyName}</span>
-            <div className="ml-auto flex items-center gap-2">
-              <Activity className="w-3 h-3 text-muted-foreground/50" />
-              <span className="text-[11px] font-mono text-muted-foreground/50">
-                {stats?.ultimaActualizacion
-                  ? new Date(stats.ultimaActualizacion).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
-                  : '--:--'}
-              </span>
-            </div>
-          </div>
-
-          {/* ALERTA DE IMPRESIÓN */}
-          <StatusAlert
-            variant={serviceStatus === 'active' ? 'success' : 'warning'}
-            icon={Printer}
-            title={`Impresión: ${serviceStatus === 'active' ? 'ACTIVA' : 'DETENIDA'}`}
-            description={
-              serviceStatus === 'active'
-                ? (hardwareStatus === 'connected' ? 'Impresora lista.' : printerMessage)
-                : 'Los pedidos NO se imprimirán automáticamente en cocina.'
-            }
-            pulse={serviceStatus !== 'active'}
-            action={
-              <Button size="sm" variant="outline" onClick={navigateToImpresion}
-                className="rounded-full border-current/30 hover:bg-current/5 text-xs w-full sm:w-auto">
-                Gestionar
-              </Button>
-            }
-            className="mb-5"
-          />
+          {/* ALERTA DE IMPRESIÓN (solo visible ante anomalía o servicio detenido) */}
+          {serviceStatus !== 'active' && (
+            <StatusAlert
+              variant="warning"
+              icon={Printer}
+              title="Servicio de Impresión DETENIDO"
+              description="Los pedidos NO se imprimirán automáticamente en cocina."
+              pulse={true}
+              action={
+                <Button size="sm" variant="outline" onClick={navigateToImpresion}
+                  className="rounded-full border-current/30 hover:bg-current/5 text-xs w-full sm:w-auto">
+                  Gestionar
+                </Button>
+              }
+              className="mb-5"
+            />
+          )}
 
           {error && (
             <StatusAlert
@@ -174,7 +150,7 @@ export default function DashboardPage() {
           </p>
 
           {/* TARJETAS DE ESTADÍSTICAS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
             {[
               {
                 label: 'Mesas Disponibles',
@@ -304,8 +280,8 @@ export default function DashboardPage() {
                 — Acciones rápidas
               </p>
             </div>
-            <div className="p-5">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-3">
+            <div className="p-3 sm:p-5">
+              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-7 gap-2 sm:gap-3">
                 {[
                   { label: 'Menú',         icon: BookOpen,   color: 'orange' as ActionColor, onClick: navigateToMenu },
                   { label: 'Inventario',   icon: Package,    color: 'purple' as ActionColor, onClick: navigateToInventario },
