@@ -12,12 +12,13 @@ import {
   TabsTrigger
 } from "@/components/ui/tabs"
 
-// Componentes locales
-import { ConfigHeader } from "./components/config-header"
-import { RestaurantInfoCard } from "./components/restaurant-info-card"
-import { SystemSettingsCard } from "./components/system-settings-card"
-import { TicketPreview } from "./components/ticket-preview"
-import { StatusIndicator } from "./components/status-indicator"
+// Componentes
+import { ConfigHeader } from "@/features/dashboard/components/config-header"
+import { RestaurantInfoCard } from "@/features/dashboard/components/restaurant-info-card"
+import { SystemSettingsCard } from "@/features/dashboard/components/system-settings-card"
+import { TicketPreview } from "@/features/dashboard/components/ticket-preview"
+import { StatusIndicator } from "@/features/dashboard/components/status-indicator"
+import { ConfigSkeleton } from "@/features/dashboard/components/config-skeleton"
 
 // Utils, Config y Validación
 import {
@@ -25,8 +26,6 @@ import {
   type SystemConfigData as SystemConfig
 } from "@/features/dashboard/utils/system-config-client"
 import { systemConfigSchema } from "@/features/dashboard/validations/system-config"
-
-import { ConfigSkeleton } from "./components/config-skeleton"
 import { RoleGuard } from "@/components/auth/role-guard"
 
 export default function ConfiguracionSistemaPage() {
