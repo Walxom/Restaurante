@@ -1,5 +1,4 @@
 const { execSync } = require('child_process');
-const fs = require('fs');
 const path = require('path');
 
 // Códigos de colores ANSI para la consola
@@ -23,7 +22,7 @@ const printBanner = () => {
 const runCommand = (cmd, options = {}) => {
   try {
     return execSync(cmd, { stdio: 'pipe', encoding: 'utf-8', ...options }).trim();
-  } catch (error) {
+  } catch {
     return null;
   }
 };

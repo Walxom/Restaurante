@@ -33,7 +33,6 @@ def connect():
     # El generador necesita escribir, asi que no usamos modo read-only
     conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode = WAL;")
     return conn
 
 

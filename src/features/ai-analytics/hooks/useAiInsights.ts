@@ -23,9 +23,9 @@ const makeFetcher = (timeoutMs: number) => {
       clearTimeout(timeoutId)
       if (!res.ok) throw new Error(`Error ${res.status}`)
       return res.json()
-    } catch (err: any) {
+    } catch (err: unknown) {
       clearTimeout(timeoutId)
-      if (err.name === "AbortError") throw new Error("Timeout")
+      if (err instanceof Error && err.name === "AbortError") throw new Error("Timeout")
       throw err
     }
   }
@@ -35,7 +35,7 @@ const fastFetcher = makeFetcher(4000)
 const slowFetcher = makeFetcher(20000)
 
 export function useAiHealth() {
-  const { data, error, isLoading } = useSWR<AiEngineHealth>(
+  const { data, error, isLoading, mutate } = useSWR<AiEngineHealth>(
     `${AI_ENGINE_URL}/health`,
     fastFetcher,
     {
@@ -50,6 +50,7 @@ export function useAiHealth() {
     isAiOnline: !!data && data.status === "ok",
     error,
     isLoading,
+    mutate,
   }
 }
 
@@ -145,3 +146,41 @@ export async function triggerRetrainAll(): Promise<{ status: string; message: st
     clearTimeout(timeoutId)
   }
 }
+
+export async function startAiService(): Promise<{ success: boolean; message: string }> {
+  const res = await fetch("/api/ai/service", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "start" }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.details || err.error || `Error ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function stopAiService(): Promise<{ success: boolean; message: string }> {
+  const res = await fetch("/api/ai/service", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "stop" }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.details || err.error || `Error ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function getAiServiceLogs(): Promise<string[]> {
+  try {
+    const res = await fetch("/api/ai/service?logs=true")
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.data?.logs || []
+  } catch {
+    return []
+  }
+}
+
