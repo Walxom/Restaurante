@@ -1,0 +1,934 @@
+openapi: 3.1.0
+info:
+  title: SIGER-IA API - Sistema Integral de Gestión de Restaurantes y POS Asistido por IA
+  description: |
+    API RESTful de alto rendimiento y arquitectura local-first para la gestión operativa,
+    comandas en tiempo real (Socket.IO KDS), facturación electrónica local y motor predictivo de IA
+    en la cevichería y restaurante **Fondo Marino** / piloto operativo **Mr Frit** (Trujillo, Perú).
+  version: 1.2.0
+  contact:
+    name: Squad de Desarrollo SIGER-IA (UPN Trujillo)
+    email: jose.chafloque@upn.pe
+servers:
+  - url: http://localhost:3001
+    description: Servidor de desarrollo integrado con WebSockets (server.js en puerto 3001)
+  - url: http://localhost:3000
+    description: Servidor Next.js Turbopack (pnpm dev:next)
+  - url: http://192.168.0.100:3001
+    description: Despliegue en red de área local on-premise (LAN restaurante)
+
+paths:
+  /api/auth/csrf:
+    get:
+      summary: Obtener token CSRF para autenticación
+      description: Retorna el token CSRF generado por NextAuth v4 para proteger las solicitudes de inicio de sesión mediante el patrón double-submit cookie.
+      operationId: getCsrfToken
+      tags:
+        - Autenticación
+      responses:
+        '200':
+          description: Token CSRF obtenido exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csrfToken:
+                    type: string
+                    example: "a8f3b2c1d0e9..."
+
+  /api/auth/callback/credentials:
+    post:
+      summary: Autenticación de usuario con credenciales bcrypt (NextAuth v4)
+      description: Valida el acceso de usuarios al sistema mediante NextAuth v4 con estrategia JWT. Emite la cookie de sesión HttpOnly `next-auth.session-token`.
+      operationId: loginWithCredentials
+      tags:
+        - Autenticación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                csrfToken:
+                  type: string
+                  example: "a8f3b2c1d0e9..."
+                username:
+                  type: string
+                  example: "mesero"
+                password:
+                  type: string
+                  example: "mesero123"
+              required:
+                - csrfToken
+                - username
+                - password
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                csrfToken:
+                  type: string
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - csrfToken
+                - username
+                - password
+      responses:
+        '200':
+          description: Autenticación exitosa. Se emite la cookie `next-auth.session-token`.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: "next-auth.session-token=eyJhbGci...; Path=/; HttpOnly; SameSite=Lax"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: "http://localhost:3001/mesero"
+        '401':
+          description: Credenciales incorrectas o cuenta bloqueada/inactiva.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/session:
+    get:
+      summary: Obtener sesión activa del usuario
+      description: Retorna la sesión activa descifrada a partir de la cookie JWT HttpOnly o header Bearer.
+      operationId: getSession
+      tags:
+        - Autenticación
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sesión activa recuperada exitosamente. Si no hay sesión activa, retorna un objeto vacío.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/UserSummary'
+                  expires:
+                    type: string
+                    format: date-time
+                    example: "2026-11-08T18:00:00.000Z"
+        '401':
+          description: Sesión no autenticada o token inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/signout:
+    post:
+      summary: Cierre de sesión de usuario
+      description: Invalida la sesión actual y elimina la cookie de sesión JWT.
+      operationId: signOutUser
+      tags:
+        - Autenticación
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sesión cerrada exitosamente.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: "next-auth.session-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: "http://localhost:3001/login"
+
+  /api/tables:
+    get:
+      summary: Listar todas las mesas del salón gastronómico
+      description: Devuelve el estado en tiempo real (DISPONIBLE, OCUPADA, ESPERANDO, MANTENIMIENTO) de cada mesa en el salón.
+      operationId: getTables
+      tags:
+        - Mesas y Salón
+      responses:
+        '200':
+          description: Lista de mesas recuperada.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Table'
+
+  /api/tables/{id}/status:
+    patch:
+      summary: Actualizar estado operativo de una mesa
+      description: Cambia el estado de una mesa y propaga la actualización vía WebSockets a toda la red local.
+      operationId: updateTableStatus
+      tags:
+        - Mesas y Salón
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador CUID de la mesa
+          schema:
+            type: string
+            example: "cltbl000101"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [DISPONIBLE, OCUPADA, ESPERANDO, MANTENIMIENTO]
+                  example: "OCUPADA"
+              required:
+                - status
+      responses:
+        '200':
+          description: Estado de la mesa actualizado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Table'
+        '404':
+          description: Mesa no encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/products:
+    get:
+      summary: Obtener catálogo de platos y bebidas
+      description: Retorna los productos registrados en el menú gastronómico con soporte de filtros.
+      operationId: getProducts
+      tags:
+        - Menú y Productos
+      parameters:
+        - name: categoryId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filtrar por ID de categoría
+        - name: onlyAvailable
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: Filtrar solo platos habilitados para venta
+      responses:
+        '200':
+          description: Lista de productos del menú.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /api/orders:
+    get:
+      summary: Listar comandas con paginación y filtros operativos
+      description: |
+        Retorna un objeto paginado con las comandas registradas. Soporta `status=active`
+        (excluye COMPLETED y CANCELLED para monitores de cocina KDS), `userId`, `tableId`,
+        `showAll`, `withoutInvoice`, `date`, `page` (default 1) y `limit` (default 200, max 500).
+      operationId: getOrders
+      tags:
+        - Comandas y Pedidos
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "active"
+          description: Estado de las órdenes. 'active' excluye COMPLETED y CANCELLED.
+        - name: tableId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 200
+      responses:
+        '200':
+          description: Objeto paginado de órdenes recuperado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      summary: Registrar nueva comanda desde terminal táctil de mozo
+      description: Crea una orden con sus líneas de pedido, dispara evento Socket.io (emitNewOrder) a cocina e inicia el flujo operativo.
+      operationId: createOrder
+      tags:
+        - Comandas y Pedidos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderDTO'
+      responses:
+        '201':
+          description: Comanda registrada exitosamente y despachada a cocina.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Datos de comanda inválidos o error en validación Zod.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/orders/{id}/status:
+    patch:
+      summary: Actualizar estado de comanda en monitor KDS de cocina
+      description: Permite transicionar la comanda y emitir alertas Socket.io en tiempo real a mozos y cocina.
+      operationId: updateOrderStatus
+      tags:
+        - Comandas y Pedidos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [PENDING, CONFIRMED, PREPARING, READY, SERVED, COMPLETED, CANCELLED]
+                  example: "READY"
+              required:
+                - status
+      responses:
+        '200':
+          description: Estado de comanda actualizado y propagado por WebSockets.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /api/invoices:
+    post:
+      summary: Emitir comprobante fiscal y liquidar mesa
+      description: Valida con createInvoiceSchema (Zod), genera correlativo atómico dentro de una transacción Prisma ($transaction) e incrementa el contador en SystemConfig.
+      operationId: createInvoice
+      tags:
+        - Facturación y Caja
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvoiceDTO'
+      responses:
+        '201':
+          description: Comprobante emitido con correlativo fiscal asignado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '400':
+          description: Validación fallida o monto pagado insuficiente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/ingredients:
+    get:
+      summary: Consultar kardex e inventario de insumos
+      description: Retorna las existencias físicas de insumos marinos y abarrotes, alertando ítems con currentStock <= minStock.
+      operationId: getIngredients
+      tags:
+        - Inventario y Recetas
+      responses:
+        '200':
+          description: Lista de ingredientes y existencias.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+
+  /api/printers/{id}/print-ticket:
+    post:
+      summary: Enviar ticket RAW ESC/POS a impresora térmica de red
+      description: Envía los bytes formateados a la impresora térmica de cocina ZJ-8360 (IP 192.168.0.100:9100) o impresora Bluetooth de caja.
+      operationId: printTicket
+      tags:
+        - Hardware e Impresión
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId:
+                  type: string
+                  example: "clord00099"
+                ticketType:
+                  type: string
+                  enum: [KITCHEN_TICKET, PRE_INVOICE, FINAL_INVOICE]
+                  example: "KITCHEN_TICKET"
+              required:
+                - orderId
+                - ticketType
+      responses:
+        '200':
+          description: Ticket despachado exitosamente a la impresora.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  bytesPrinted:
+                    type: integer
+                    example: 348
+        '500':
+          description: Error de socket de red o impresora fuera de línea.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/ai/forecast:
+    post:
+      summary: Predicción de demanda de insumos con IA (FastAPI microservice)
+      description: Conecta con el microservicio en Python (puerto 8000) para proyectar el consumo semanal de insumos marinos y cárnicos.
+      operationId: getDemandForecast
+      tags:
+        - Inteligencia Artificial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                targetDate:
+                  type: string
+                  format: date
+                  example: "2026-11-09"
+                horizonDays:
+                  type: integer
+                  default: 7
+                  example: 7
+              required:
+                - targetDate
+      responses:
+        '200':
+          description: Proyecciones calculadas por el modelo predictivo.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  predictions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ingredientName:
+                          type: string
+                          example: "Pescado Corvina / Pollo"
+                        predictedKg:
+                          type: number
+                          example: 28.5
+
+  /api/ai/service:
+    get:
+      summary: Consultar estado del microservicio de Inteligencia Artificial (Python FastAPI)
+      description: |
+        Verifica el estado del motor de IA comprobando el puerto 8000 (/health), el proceso local mediante PID,
+        la presencia del entorno virtual Python (venv) y, opcionalmente, las últimas líneas de registro de log.
+        Ruta restringida exclusivamente al rol `JEFE`.
+      operationId: getAiServiceStatus
+      tags:
+        - Inteligencia Artificial
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: logs
+          schema:
+            type: boolean
+            default: false
+          description: Si es true, retorna las últimas 30 líneas de `logs/ai-engine.log`.
+      responses:
+        '200':
+          description: Estado del servicio de IA obtenido exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      isRunning:
+                        type: boolean
+                        example: true
+                      pid:
+                        type: integer
+                        nullable: true
+                        example: 14520
+                      port:
+                        type: integer
+                        example: 8000
+                      venvReady:
+                        type: boolean
+                        example: true
+                      healthUrl:
+                        type: string
+                        example: "http://127.0.0.1:8000/health"
+                      recentLogs:
+                        type: array
+                        items:
+                          type: string
+        '401':
+          description: No autenticado o sesión expirada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado (requiere rol JEFE).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Gestionar ciclo de vida del microservicio de IA (start, stop, restart)
+      description: |
+        Permite al administrador `JEFE` arrancar, detener o reiniciar el microservicio Python FastAPI
+        directamente desde la interfaz web sin requerir acceso manual a la terminal de comandos del servidor.
+      operationId: controlAiService
+      tags:
+        - Inteligencia Artificial
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [start, stop, restart]
+                  example: "start"
+              required:
+                - action
+      responses:
+        '200':
+          description: Acción ejecutada exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Microservicio de IA iniciado en segundo plano."
+                  data:
+                    type: object
+                    properties:
+                      isRunning:
+                        type: boolean
+                        example: true
+                      pid:
+                        type: integer
+                        nullable: true
+                        example: 14520
+        '400':
+          description: Acción inválida o parámetros incorrectos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado (requiere rol JEFE).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno al gestionar el subproceso del motor de IA.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: next-auth.session-token
+      description: Cookie de sesión JWT emitida automáticamente por NextAuth v4
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "clusr0101"
+        username:
+          type: string
+          example: "jefe"
+        name:
+          type: string
+          example: "Jefe del Restaurante"
+        role:
+          type: string
+          enum: [JEFE, MESERO]
+          example: "JEFE"
+        isActive:
+          type: boolean
+          example: true
+
+    Table:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "cltbl001"
+        number:
+          type: integer
+          example: 4
+        capacity:
+          type: integer
+          example: 4
+        status:
+          type: string
+          enum: [DISPONIBLE, OCUPADA, ESPERANDO, MANTENIMIENTO]
+          example: "DISPONIBLE"
+        isActive:
+          type: boolean
+          example: true
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "clprd001"
+        name:
+          type: string
+          example: "Ceviche Mixto Clasico / Lomo Saltado"
+        description:
+          type: string
+          example: "Plato emblematico de la casa"
+        price:
+          type: number
+          format: float
+          example: 18.00
+        isAvailable:
+          type: boolean
+          example: true
+        categoryId:
+          type: string
+          example: "clcat001"
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "clord0001"
+        orderNumber:
+          type: string
+          example: "ORD-20261102-001"
+        type:
+          type: string
+          enum: [MESA, PARA_LLEVAR, DELIVERY]
+          example: "MESA"
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, PREPARING, READY, SERVED, COMPLETED, CANCELLED, PAID]
+          example: "CONFIRMED"
+        totalAmount:
+          type: number
+          example: 36.00
+        tableId:
+          type: string
+          nullable: true
+          example: "cltbl001"
+        userId:
+          type: string
+          example: "clusr_mesero"
+        createdAt:
+          type: string
+          format: date-time
+        orderItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "clitm001"
+        quantity:
+          type: integer
+          example: 2
+        unitPrice:
+          type: number
+          example: 18.00
+        subtotal:
+          type: number
+          example: 36.00
+        notes:
+          type: string
+          nullable: true
+          example: "Sin picante"
+        status:
+          type: string
+          example: "PREPARING"
+        productId:
+          type: string
+          example: "clprd001"
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 200
+        total:
+          type: integer
+          example: 45
+        pages:
+          type: integer
+          example: 1
+
+    CreateOrderDTO:
+      type: object
+      properties:
+        tableId:
+          type: string
+          example: "cltbl001"
+        type:
+          type: string
+          enum: [MESA, LLEVAR, DELIVERY]
+          default: "MESA"
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+                example: "clprd001"
+              quantity:
+                type: integer
+                example: 2
+              notes:
+                type: string
+                example: "Poco picante"
+            required:
+              - productId
+              - quantity
+      required:
+        - items
+
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "clinv001"
+        number:
+          type: string
+          example: "B001-0000421"
+        type:
+          type: string
+          enum: [BOLETA, FACTURA]
+          example: "BOLETA"
+        subtotal:
+          type: number
+          example: 30.51
+        igv:
+          type: number
+          example: 5.49
+        total:
+          type: number
+          example: 36.00
+        paymentMethod:
+          type: string
+          enum: [EFECTIVO, YAPE, PLIN, TARJETA]
+          example: "YAPE"
+        amountPaid:
+          type: number
+          example: 36.00
+        change:
+          type: number
+          example: 0.00
+        status:
+          type: string
+          example: "ISSUED"
+
+    CreateInvoiceDTO:
+      type: object
+      properties:
+        orderId:
+          type: string
+          example: "clord0001"
+        type:
+          type: string
+          enum: [BOLETA, FACTURA]
+          example: "BOLETA"
+        paymentMethod:
+          type: string
+          enum: [EFECTIVO, YAPE, PLIN, TARJETA]
+          example: "YAPE"
+        amountPaid:
+          type: number
+          example: 40.00
+        customerName:
+          type: string
+          nullable: true
+          example: "Juan Perez"
+        customerDni:
+          type: string
+          nullable: true
+          example: "47891234"
+        customerRuc:
+          type: string
+          nullable: true
+          example: null
+      required:
+        - orderId
+        - type
+        - paymentMethod
+        - amountPaid
+
+    Ingredient:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "cling001"
+        name:
+          type: string
+          example: "Papas / Pollo / Pescado"
+        unit:
+          type: string
+          example: "kg"
+        currentStock:
+          type: number
+          example: 50.0
+        minStock:
+          type: number
+          example: 10.0
+        cost:
+          type: number
+          example: 2.50
+        isActive:
+          type: boolean
+          example: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: "Bad Request"
+        message:
+          type: string
+          example: "Error de validación en la solicitud."

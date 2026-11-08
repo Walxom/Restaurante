@@ -14,6 +14,12 @@ SQLite, plus a separate Python AI microservice. Roles are `JEFE` (owner/admin) a
 Package manager is **pnpm**. Node app runs on port **3001**; AI engine on **8000**.
 
 ```bash
+# Setup & Health Check (Turnkey DevEx)
+.\scripts\bootstrap.ps1     # native OS bootstrap for Windows (installs node, pnpm, uv if missing)
+pnpm setup:all              # turnkey orchestrator: .env crypto + deps + db push/seed + AI venv + doctor
+pnpm doctor                 # pre-flight diagnostic: ports (:3001, :8000), .env, SQLite, Python 3.10, disk
+pnpm db:backup              # create timestamped SQLite snapshot in backups/
+
 # Web app (Next.js + Socket.IO via custom server.js)
 pnpm dev                    # custom server.js (Socket.IO) + Turbopack — the normal dev command
 pnpm dev:next               # plain `next dev --turbopack` — NO Socket.IO (realtime won't work)
@@ -102,7 +108,8 @@ Opens the same SQLite DB **read-only** (`DATABASE_URL` in `ai_engine/.env`).
 - ML models: demand forecasting, market-basket (Apriori), inventory prediction.
 - LLM: Google Gemini with circuit breaker + rate-limiter + in-memory cache (30 min TTL, configurable via `GEMINI_CACHE_TTL_SECONDS`).
 - Restaurant name in LLM prompts comes from `RESTAURANT_NAME` env var (default: `Fondo Marino`).
-- Endpoints: `/api/insights/*`, `/api/train/*`, `/api/chat`, `/health`.
+- Endpoints FastAPI: `/api/insights/*`, `/api/train/*`, `/api/chat`, `/health`.
+- Service Lifecycle: Next.js API `/api/ai/service` (GET health/PID/logs, POST start/stop/restart - JEFE role).
 - The POS works fully without this service.
 
 ### Data model (Prisma / SQLite)
