@@ -44,7 +44,7 @@ const eslintConfig = [
   },
   {
     // Entrypoints y scripts de Node son CommonJS por diseño: require() es correcto.
-    files: ["server.js", "*.config.{js,cjs,mjs}", "ai_engine/**/*.js"],
+    files: ["server.js", "*.config.{js,cjs,mjs}", "ai_engine/**/*.js", "scripts/**/*.js"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
     },

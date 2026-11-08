@@ -1,3 +1,18 @@
+const fs = require('fs')
+const path = require('path')
+
+// Cargar variables de entorno nativamente desde .env antes de inicializar Next.js
+const envPath = path.resolve(__dirname, '.env')
+if (fs.existsSync(envPath)) {
+  if (typeof process.loadEnvFile === 'function') {
+    try {
+      process.loadEnvFile(envPath)
+    } catch {
+      // Si falla process.loadEnvFile, Next.js lo intentará en app.prepare()
+    }
+  }
+}
+
 const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')

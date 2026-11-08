@@ -58,12 +58,11 @@ ai_engine/cache/
 ai_engine/__pycache__/
 ai_engine/**/__pycache__/
 ai_engine/venv/
-scripts/
-
-# pero NO ignorar ai_engine/scripts/
-!ai_engine/scripts/
 
 .agents/
+skills-lock.json
+logs/
+*.log
 PUNTOS_T2/.obsidian
 backups/
 

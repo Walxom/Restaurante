@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "setup:all": "node scripts/setup-system.js",
+    "doctor": "node scripts/doctor.js",
     "dev": "cross-env UV_THREADPOOL_SIZE=16 node --max-old-space-size=4096 server.js",
     "dev:next": "next dev --turbopack",
     "build": "next build",

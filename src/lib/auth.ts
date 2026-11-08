@@ -35,6 +35,7 @@ function limpiarIntentos(username: string): void {
 }
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || (process.env.NODE_ENV !== "production" ? "siger_default_dev_secret_2026_upn" : undefined),
   providers: [
     CredentialsProvider({
       name: "credentials",
