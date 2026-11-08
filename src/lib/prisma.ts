@@ -13,9 +13,13 @@ const globalForPrisma = globalThis as unknown as {
 // NO se usa WAL a propósito: el motor IA abre la BD en solo-lectura (?mode=ro) y
 // SQLite no permite abrir en solo-lectura una BD en modo WAL (requiere escribir
 // el archivo -shm). WAL rompería ese acceso.
-function buildDatasourceUrl(): string | undefined {
-  const url = process.env.DATABASE_URL
-  if (!url) return undefined
+// Garantizar fallback seguro de DATABASE_URL si no se cargó el archivo .env
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'file:./dev.db'
+}
+
+function buildDatasourceUrl(): string {
+  const url = process.env.DATABASE_URL || 'file:./dev.db'
   if (url.includes('connection_limit')) return url
   return `${url}${url.includes('?') ? '&' : '?'}connection_limit=1`
 }

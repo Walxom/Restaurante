@@ -221,27 +221,25 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Generar número de orden único
-    let orderNumber = generateOrderNumber()
-    let attempts = 0
-    while (attempts < 10) {
-      const existing = await prisma.order.findUnique({
-        where: { orderNumber }
-      })
-      if (!existing) break
-      orderNumber = generateOrderNumber()
-      attempts++
-    }
-
-    if (attempts >= 10) {
-      return NextResponse.json(
-        { error: 'Error al generar número de orden' },
-        { status: 500 }
-      )
-    }
-
-    // Crear el pedido con sus items en una transacción
+    // Crear el pedido con sus items en una transacción atómica
     const order = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Generar número de orden único de forma atómica dentro de la transacción
+      let orderNumber = generateOrderNumber()
+      let attempts = 0
+      while (attempts < 15) {
+        const existing = await tx.order.findUnique({
+          where: { orderNumber },
+          select: { id: true }
+        })
+        if (!existing) break
+        orderNumber = generateOrderNumber()
+        attempts++
+      }
+
+      if (attempts >= 15) {
+        throw new Error('Error de concurrencia al generar número de orden único')
+      }
+
       // Crear el pedido directamente en estado CONFIRMED
       const newOrder = await tx.order.create({
         data: {
@@ -303,7 +301,7 @@ export async function POST(request: NextRequest) {
         
         // DISPONIBLE → ESPERANDO cuando se crea el primer pedido
         if (currentTable?.status === 'DISPONIBLE') {
-          const updatedTable = await tx.table.update({
+          await tx.table.update({
             where: { id: tableId },
             data: { status: 'ESPERANDO' }
           })

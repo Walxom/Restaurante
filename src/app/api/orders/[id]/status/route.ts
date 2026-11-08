@@ -104,7 +104,7 @@ async function deductStockForItem(itemId: string, tx: any) {
 }
 
 // Función para deducir stock de ingredientes basado en recetas
-async function deductStockForOrder(orderId: string, tx: any) {
+async function _deductStockForOrder(orderId: string, tx: any) {
   // Obtener los items del pedido con sus productos y recetas
   const orderItems = await tx.orderItem.findMany({
     where: { orderId },

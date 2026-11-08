@@ -53,9 +53,6 @@ export interface UpdateOrderDto {
   items?: UpdateOrderItemDto[]
 }
 
-// Forma mínima de fila de producto que necesitan los callbacks de este servicio
-type ProductRow = { id: string; price: number | string }
-
 // ─── Selects reutilizables ───────────────────────────────────────────────────
 
 const orderInclude = {
@@ -151,61 +148,83 @@ export async function search(query: string) {
 // ─── Mutaciones ──────────────────────────────────────────────────────────────
 
 /**
- * Crea un pedido con sus items en una transacción.
+ * Crea un pedido con sus items en una transacción atómica.
  * Calcula el totalAmount sumando (unitPrice * quantity) por cada item.
+ * Garantiza unicidad del orderNumber libre de condiciones de carrera.
  */
 export async function create(dto: CreateOrderDto) {
-  // Validar que todos los productos existen y están disponibles
-  const productIds = dto.items.map((i) => i.productId)
-  const products = await prisma.product.findMany({
-    where: { id: { in: productIds }, isAvailable: true, isActive: true },
-  })
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    // Validar que todos los productos existen y están disponibles
+    const productIds = dto.items.map((i) => i.productId)
+    const products = await tx.product.findMany({
+      where: { id: { in: productIds }, isAvailable: true, isActive: true },
+    })
 
-  if (products.length !== productIds.length) {
-    throw new Error("Uno o más productos no están disponibles")
-  }
+    if (products.length !== productIds.length) {
+      throw new Error("Uno o más productos no están disponibles")
+    }
 
-  // Calcular total
-  const totalAmount = dto.items.reduce((sum, item) => {
-    const product = products.find((p) => p.id === item.productId)!
-    return sum + Number(product.price) * item.quantity
-  }, 0)
+    // Calcular total
+    const totalAmount = dto.items.reduce((sum, item) => {
+      const product = products.find((p) => p.id === item.productId)!
+      return sum + Number(product.price) * item.quantity
+    }, 0)
 
-  // Generar número de pedido único (Ej: PED-20250514-001)
-  const today = new Date()
-  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "")
-  const count = await prisma.order.count()
-  const orderNumber = `PED-${dateStr}-${String(count + 1).padStart(3, "0")}`
+    // Generar número de pedido único dentro de la transacción
+    const today = new Date()
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "")
+    const count = await tx.order.count()
+    let nextNum = count + 1
+    let orderNumber = `PED-${dateStr}-${String(nextNum).padStart(3, "0")}`
 
-  return prisma.order.create({
-    data: {
-      orderNumber,
-      type: dto.type,
-      status: "PENDING",
-      totalAmount,
-      tableId: dto.tableId ?? null,
-      userId: dto.userId,
-      customerName: dto.customerName ?? null,
-      customerPhone: dto.customerPhone ?? null,
-      customerAddress: dto.customerAddress ?? null,
-      customerAddressReference: dto.customerAddressReference ?? null,
-      notes: dto.notes ?? null,
-      orderItems: {
-        create: dto.items.map((item) => {
-          const product = products.find((p) => p.id === item.productId)!
-          const unitPrice = Number(product.price)
-          return {
-            productId: item.productId,
-            quantity: item.quantity,
-            unitPrice,
-            subtotal: unitPrice * item.quantity,
-            notes: item.notes ?? null,
-            status: "PENDING",
-          }
-        }),
+    // Detección y resolución proactiva de colisiones (acotado para evitar loops infinitos)
+    let attempts = 0
+    while (attempts < 10 && (await tx.order.findUnique({ where: { orderNumber }, select: { id: true } }))) {
+      nextNum++
+      orderNumber = `PED-${dateStr}-${String(nextNum).padStart(3, "0")}`
+      attempts++
+    }
+
+    const createdOrder = await tx.order.create({
+      data: {
+        orderNumber,
+        type: dto.type,
+        status: "PENDING",
+        totalAmount,
+        tableId: dto.tableId ?? null,
+        userId: dto.userId,
+        customerName: dto.customerName ?? null,
+        customerPhone: dto.customerPhone ?? null,
+        customerAddress: dto.customerAddress ?? null,
+        customerAddressReference: dto.customerAddressReference ?? null,
+        notes: dto.notes ?? null,
+        orderItems: {
+          create: dto.items.map((item) => {
+            const product = products.find((p) => p.id === item.productId)!
+            const unitPrice = Number(product.price)
+            return {
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice,
+              subtotal: unitPrice * item.quantity,
+              notes: item.notes ?? null,
+              status: "PENDING",
+            }
+          }),
+        },
       },
-    },
-    include: orderInclude,
+      include: orderInclude,
+    })
+
+    // Si se asignó una mesa, actualizar su estado a OCUPADA
+    if (dto.tableId) {
+      await tx.table.update({
+        where: { id: dto.tableId },
+        data: { status: "OCUPADA" },
+      })
+    }
+
+    return createdOrder
   })
 }
 
@@ -341,7 +360,6 @@ export async function update(id: string, dto: UpdateOrderDto) {
       const keepItemIds = dtoExistingItems.map((i) => i.id!)
 
       // Eliminar items que no están en el DTO (excepto los ya servidos)
-      type DbItem = { id: string; status: string }
       const itemsToDelete = existingItemsInDb.filter(
         (dbItem) => !keepItemIds.includes(dbItem.id) && dbItem.status !== "SERVED"
       )
@@ -405,7 +423,8 @@ export async function update(id: string, dto: UpdateOrderDto) {
     try {
       const { printOrderChanges } = await import("./printer/kitchen-printer.service")
       // No esperamos (await) a la impresión para no bloquear la respuesta de la API
-      printOrderChanges(id, (existingOrder as any).orderItems, dto.items)
+      const prevItems = (existingOrder as unknown as { orderItems: unknown[] }).orderItems || []
+      printOrderChanges(id, prevItems as never, dto.items)
     } catch (e) {
       console.error("Error al intentar imprimir cambios:", e)
     }

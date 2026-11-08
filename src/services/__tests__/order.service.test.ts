@@ -19,7 +19,11 @@ vi.mock("@/lib/prisma", () => ({
 import { prisma } from "@/lib/prisma"
 import { create, updateStatus, cancel } from "../order.service"
 
-beforeEach(() => vi.clearAllMocks())
+beforeEach(() => {
+  vi.clearAllMocks()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  vi.mocked(prisma.$transaction).mockImplementation(async (cb: any) => cb(prisma))
+})
 
 /**
  * updateStatus — camino básico (caja blanca):
@@ -158,7 +162,9 @@ describe("order.service.create", () => {
       { id: "p2", price: 15 }, // 15 × 1 = 15  → total 55
     ] as never)
     vi.mocked(prisma.order.count).mockResolvedValue(4 as never)
+    vi.mocked(prisma.order.findUnique).mockResolvedValue(null as never)
     vi.mocked(prisma.order.create).mockResolvedValue({ id: "ord-new" } as never)
+    vi.mocked(prisma.table.update).mockResolvedValue({ id: "mesa-1", status: "OCUPADA" } as never)
 
     await create({
       type: "MESA",
@@ -176,6 +182,32 @@ describe("order.service.create", () => {
           totalAmount: 55,
           status: "PENDING",
           orderNumber: expect.stringMatching(/^PED-\d{8}-005$/), // count 4 + 1 = 005
+        }),
+      })
+    )
+  })
+
+  it("resuelve colisiones de orderNumber de forma atómica avanzando el correlativo", async () => {
+    vi.mocked(prisma.product.findMany).mockResolvedValue([
+      { id: "p1", price: 10 },
+    ] as never)
+    vi.mocked(prisma.order.count).mockResolvedValue(4 as never)
+    // Simula que PED-YYYYMMDD-005 ya existe, pero PED-YYYYMMDD-006 está libre
+    vi.mocked(prisma.order.findUnique)
+      .mockResolvedValueOnce({ id: "existente-005" } as never)
+      .mockResolvedValueOnce(null as never)
+    vi.mocked(prisma.order.create).mockResolvedValue({ id: "ord-collision-fixed" } as never)
+
+    await create({
+      type: "DELIVERY",
+      userId: "u1",
+      items: [{ productId: "p1", quantity: 1 }],
+    })
+
+    expect(prisma.order.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          orderNumber: expect.stringMatching(/^PED-\d{8}-006$/), // Avanzó de 005 a 006
         }),
       })
     )
