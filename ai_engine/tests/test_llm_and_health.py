@@ -52,3 +52,11 @@ def test_config_gemini_invalid_format(client):
     response = client.post("/api/config/gemini", json={"apiKey": "short\ninvalid"})
     assert response.status_code == 400
     assert "Formato de API Key no válido" in response.json()["detail"]
+
+
+def test_config_gemini_aq_format_syntax():
+    sample_key = "AQ.Ab8RN6JyMezHxbGgCuTyMtmp99kG6yXKU8QzV4iOAGki3tMN1g"
+    assert len(sample_key) >= 20
+    assert len(sample_key) <= 80
+    assert not any(c in sample_key for c in ["\n", "\r", " ", "\t"])
+

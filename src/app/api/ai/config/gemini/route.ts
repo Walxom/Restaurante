@@ -79,11 +79,12 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Validación de seguridad en formato de clave (OWASP: Prevención de inyección)
-    const geminiKeyRegex = /^[A-Za-z0-9_-]{20,60}$/
+    // Permite claves tradicionales (AIzaSy...) y el nuevo formato Google AI Studio (AQ....)
+    const geminiKeyRegex = /^[A-Za-z0-9_.-]{20,80}$/
     if (!geminiKeyRegex.test(rawKey)) {
       return NextResponse.json(
         {
-          error: "Formato de clave inválido. Las claves de Google Gemini sólo contienen letras, números, guiones y guiones bajos.",
+          error: "Formato de clave inválido. Las claves de Google Gemini sólo contienen letras, números, puntos, guiones y guiones bajos.",
         },
         { status: 400 }
       )
@@ -111,7 +112,8 @@ export async function POST(request: NextRequest) {
     } catch {
       // Microservicio Python no activo: validar directamente contra la API pública de Google Gemini
       try {
-        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(rawKey)}`
+        const targetModel = model || "gemini-3.1-flash-lite"
+        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(targetModel)}:generateContent?key=${encodeURIComponent(rawKey)}`
         const testRes = await fetch(googleUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

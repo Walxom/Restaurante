@@ -116,8 +116,8 @@ async def configure_gemini(req: GeminiConfigRequest):
             }
         }
 
-    # Validación de formato seguro
-    if len(key) < 20 or len(key) > 60 or any(c in key for c in ["\n", "\r", " ", "\t"]):
+    # Validación de formato seguro (longitud hasta 80 caracteres para formatos AIzaSy... y AQ....)
+    if len(key) < 20 or len(key) > 80 or any(c in key for c in ["\n", "\r", " ", "\t"]):
         raise HTTPException(
             status_code=400,
             detail="Formato de API Key no válido. Las claves de Google Gemini no contienen espacios ni saltos de línea."

@@ -226,7 +226,7 @@ export default function GeminiKeyModal({
                   type={showKey ? "text" : "password"}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="AIzaSy..."
+                  placeholder="AIzaSy... o AQ...."
                   disabled={isLoading}
                   autoComplete="off"
                   className="w-full h-11 px-4 pr-11 bg-background/50 border border-border/60 rounded-xl text-xs font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all disabled:opacity-50"
@@ -251,9 +251,9 @@ export default function GeminiKeyModal({
                 disabled={isLoading}
                 className="w-full h-11 px-3 bg-background/50 border border-border/60 rounded-xl text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all disabled:opacity-50"
               >
-                <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Recomendado - Ultrarrápido y Gratuito)</option>
-                <option value="gemini-2.5-flash">gemini-2.5-flash (Alta Precisión)</option>
-                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Recomendado - Free Tier Ultrarrápido)</option>
+                <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Free Tier Balanceado)</option>
+                <option value="gemini-3.5-flash">gemini-3.5-flash (Free Tier Alta Capacidad)</option>
               </select>
             </div>
 
