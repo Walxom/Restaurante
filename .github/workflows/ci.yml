@@ -10,7 +10,7 @@ jobs:
   # ─── Job 1: Calidad de código, pruebas Node.js, Python IA y Cold-Start ───────
   quality:
     name: Lint + Pruebas Unitarias (Vitest + Pytest) + Setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout del repositorio
@@ -69,7 +69,7 @@ jobs:
   # ─── Job 2: Pruebas E2E / aceptación + accesibilidad (Playwright + axe-core) ──
   e2e:
     name: E2E + Accesibilidad (Playwright)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: quality
 
     steps:
@@ -118,7 +118,7 @@ jobs:
   # ─── Job 3: Compilación de producción con caché ─────────────────────────────
   build:
     name: Build de producción Next.js
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: quality
 
     steps:
@@ -164,4 +164,5 @@ jobs:
         with:
           name: nextjs-build
           path: .next/
+          include-hidden-files: true
           retention-days: 3
