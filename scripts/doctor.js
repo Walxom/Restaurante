@@ -166,6 +166,16 @@ async function runDoctor() {
     hasErrors = true
   }
 
+  // Comprobar estado de Google Gemini API Key
+  const geminiKey = process.env.GEMINI_API_KEY
+  if (geminiKey && geminiKey.trim().length >= 20) {
+    const model = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite'
+    check('Clave Google Gemini (LLM Conversacional)', true, `(Activa - modelo: ${model})`)
+  } else {
+    check('Clave Google Gemini (LLM Conversacional)', true, `(Sin configurar - opera en modo reglas locales)`)
+    console.log(`    ${c.cyan}→ Tip: Puedes ingresar tu API Key gratuita en /dashboard/inteligencia o en .env (https://aistudio.google.com/apikey)${c.reset}`)
+  }
+
   // ─── 5. PERMISOS DE ESCRITURA EN DISCO ─────────────────────────────────────
   console.log(`\n${c.bold}💾 5. Sistema de Archivos y Permisos:${c.reset}`)
   try {

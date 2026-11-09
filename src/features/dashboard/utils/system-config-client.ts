@@ -21,6 +21,8 @@ export interface SystemConfigData {
   timezone: string
   lastBoletaNumber: number
   lastFacturaNumber: number
+  geminiApiKey?: string | null
+  geminiModel?: string | null
 }
 
 export const SUPPORTED_CURRENCIES = [

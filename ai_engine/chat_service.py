@@ -131,8 +131,7 @@ class ChatService:
             if self.llm.client and self.llm.api_key:
                 self.llm._rate_limit()
 
-                from google import genai
-                client = genai.Client(api_key=self.llm.api_key)
+                client = self.llm.client
 
                 full_prompt = f"{system_prompt}\n\nHistorial:\n"
                 if history:

@@ -5,6 +5,7 @@ import ForecastChart from "./ForecastChart"
 import InventoryAlertPanel from "./InventoryAlertPanel"
 import MarketBasketSuggestions from "./MarketBasketSuggestions"
 import AiChatPanel from "./AiChatPanel"
+import GeminiKeyModal from "./GeminiKeyModal"
 import {
   useAiHealth,
   triggerRetrainAll,
@@ -20,21 +21,30 @@ import {
   Play,
   Power,
   AlertCircle,
+  AlertTriangle,
   ChevronDown,
   ChevronUp,
   Loader2,
   FileText,
   Sparkles,
+  Key,
 } from "lucide-react"
 import { RoleGuard } from "@/components/auth/role-guard"
 import { AdminPageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
 
 export default function AiDashboard() {
-  const { isAiOnline, isLoading: healthLoading, mutate } = useAiHealth()
+  const {
+    isAiOnline,
+    isGeminiConfigured,
+    geminiModel,
+    isLoading: healthLoading,
+    mutate,
+  } = useAiHealth()
   const [isRetraining, setIsRetraining] = useState(false)
   const [isStarting, setIsStarting] = useState(false)
   const [isStopping, setIsStopping] = useState(false)
+  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false)
   const [startStep, setStartStep] = useState<string>("")
   const [showManualCommands, setShowManualCommands] = useState(false)
   const [showLogs, setShowLogs] = useState(false)
@@ -301,12 +311,36 @@ export default function AiDashboard() {
     return (
       <div className="flex flex-col gap-8 sm:gap-10">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[9px] font-black uppercase tracking-widest text-emerald-500 w-fit">
-            <Wifi className="w-3 h-3" />
-            AI Conectado - Datos en tiempo real
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[9px] font-black uppercase tracking-widest text-emerald-500 w-fit">
+              <Wifi className="w-3 h-3" />
+              Modelos Locales Conectados
+            </div>
+
+            {isGeminiConfigured ? (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[9px] font-black uppercase tracking-widest text-emerald-500 w-fit">
+                <Sparkles className="w-3 h-3" />
+                Gemini LLM: {geminiModel}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-[9px] font-black uppercase tracking-widest text-amber-500 w-fit">
+                <AlertTriangle className="w-3 h-3" />
+                Gemini LLM: Sin Configurar (Reglas Locales)
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsKeyModalOpen(true)}
+              className="h-8 rounded-full text-[9px] font-black uppercase tracking-widest bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary transition-all gap-1.5"
+            >
+              <Key className="w-3 h-3" />
+              {isGeminiConfigured ? "Gestionar Gemini" : "Configurar Gemini"}
+            </Button>
+
             <Button
               variant="outline"
               size="sm"
@@ -332,6 +366,34 @@ export default function AiDashboard() {
           </div>
         </div>
 
+        {!isGeminiConfigured && (
+          <div className="w-full bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-start gap-3">
+              <div className="h-9 w-9 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-500 shrink-0 mt-0.5">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-black uppercase tracking-wider text-amber-500">
+                  Google Gemini no configurado - Asistente en modo local limitado
+                </h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Las predicciones matemáticas de demanda e inventario están activas, pero el chat cognitivo opera únicamente con plantillas estáticas de palabras clave. Añade tu API Key de Google Gemini gratuita para habilitar comprensión conversacional fluida.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setIsKeyModalOpen(true)}
+              className="h-9 px-4 rounded-xl text-xs font-black uppercase tracking-wider shadow-md shadow-primary/20 hover:shadow-lg transition-all shrink-0 gap-2"
+            >
+              <Key className="w-3.5 h-3.5" />
+              Configurar Clave
+            </Button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
           <ForecastChart />
           <InventoryAlertPanel />
@@ -340,8 +402,16 @@ export default function AiDashboard() {
         <MarketBasketSuggestions />
 
         <div className="w-full">
-          <AiChatPanel />
+          <AiChatPanel onOpenGeminiConfig={() => setIsKeyModalOpen(true)} />
         </div>
+
+        <GeminiKeyModal
+          isOpen={isKeyModalOpen}
+          onClose={() => setIsKeyModalOpen(false)}
+          onSuccess={() => mutate()}
+          isCurrentlyConfigured={isGeminiConfigured}
+          currentModel={geminiModel}
+        />
       </div>
     )
   }

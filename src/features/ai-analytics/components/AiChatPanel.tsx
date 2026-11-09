@@ -2,18 +2,26 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useAiChat } from "@/features/ai-analytics/hooks/useAiChat"
+import { useAiHealth } from "@/features/ai-analytics/hooks/useAiInsights"
 import {
   MessageCircle,
   Send,
   RotateCcw,
-  Brain,
+  Sparkles,
   AlertTriangle,
   Loader2,
+  Terminal,
+  Key,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export default function AiChatPanel() {
+interface AiChatPanelProps {
+  onOpenGeminiConfig?: () => void
+}
+
+export default function AiChatPanel({ onOpenGeminiConfig }: AiChatPanelProps) {
   const { messages, isLoading, error, sendMessage, clearChat } = useAiChat()
+  const { isGeminiConfigured, geminiModel } = useAiHealth()
   const [input, setInput] = useState("")
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -46,11 +54,31 @@ export default function AiChatPanel() {
             <MessageCircle className="w-5 h-5 text-emerald-500" />
           </div>
           <div>
-            <h3 className="text-sm font-black text-foreground uppercase tracking-widest">
-              Chat con IA
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-black text-foreground uppercase tracking-widest">
+                Chat con IA
+              </h3>
+              {isGeminiConfigured ? (
+                <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  Gemini IA
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onOpenGeminiConfig}
+                  className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 transition-colors flex items-center gap-1"
+                  title="Haz clic para configurar Gemini y habilitar razonamiento conversacional"
+                >
+                  <Key className="w-2.5 h-2.5" />
+                  Reglas Locales (Configurar)
+                </button>
+              )}
+            </div>
             <p className="text-[10px] font-bold text-muted-foreground tracking-widest mt-1 uppercase opacity-60">
-              Consulta datos del negocio en lenguaje natural
+              {isGeminiConfigured
+                ? `Modelo conversacional activo (${geminiModel})`
+                : "Modo sintético local - Preguntas guiadas del negocio"}
             </p>
           </div>
         </div>
@@ -79,23 +107,35 @@ export default function AiChatPanel() {
                 msg.role === "user"
                   ? "bg-primary/10 border border-primary/20"
                   : msg.type === "llm"
-                  ? "bg-emerald-500/5 border border-emerald-500/10"
+                  ? "bg-emerald-500/5 border border-emerald-500/15"
                   : msg.type === "error"
                   ? "bg-red-500/5 border border-red-500/10"
-                  : "bg-muted/50 border border-border/50"
+                  : "bg-amber-500/5 border border-amber-500/15"
               }`}
             >
               {msg.role === "assistant" && (
                 <div className="flex items-center gap-1.5 mb-1.5">
                   {msg.type === "llm" ? (
-                    <Brain className="w-3.5 h-3.5 text-emerald-500" />
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
                   ) : msg.type === "error" ? (
                     <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
                   ) : (
-                    <MessageCircle className="w-3.5 h-3.5 text-muted-foreground" />
+                    <Terminal className="w-3.5 h-3.5 text-amber-500" />
                   )}
-                  <span className="text-[9px] font-black uppercase tracking-widest opacity-60">
-                    {msg.type === "llm" ? "IA" : msg.type === "error" ? "Error" : "Asistente"}
+                  <span
+                    className={`text-[9px] font-black uppercase tracking-widest ${
+                      msg.type === "llm"
+                        ? "text-emerald-500"
+                        : msg.type === "error"
+                        ? "text-red-500"
+                        : "text-amber-500"
+                    }`}
+                  >
+                    {msg.type === "llm"
+                      ? "Gemini IA ✨"
+                      : msg.type === "error"
+                      ? "Error de Conexión"
+                      : "Regla Local (Sin LLM)"}
                   </span>
                 </div>
               )}
@@ -137,6 +177,21 @@ export default function AiChatPanel() {
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {!isGeminiConfigured && messages.length <= 2 && !isLoading && (
+          <div className="p-3 bg-amber-500/5 border border-amber-500/15 rounded-xl flex items-center justify-between gap-3 text-[10px] text-amber-500/90 animate-in fade-in">
+            <span className="leading-snug">
+              Tip: Este modo responde sobre ventas, insumos y canasta. Para conversar libremente con IA sobre cualquier tema, configura tu API Key de Gemini.
+            </span>
+            <button
+              type="button"
+              onClick={onOpenGeminiConfig}
+              className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg font-bold shrink-0 transition-colors uppercase tracking-wider text-[9px]"
+            >
+              Configurar
+            </button>
           </div>
         )}
       </div>

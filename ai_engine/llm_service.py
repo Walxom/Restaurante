@@ -8,9 +8,10 @@ from typing import Optional
 from dotenv import load_dotenv
 from pathlib import Path
 
-env_path = Path(__file__).parent / ".env"
-if env_path.exists():
-    load_dotenv(env_path)
+# Cargar variables de entorno: primero ai_engine/.env, luego raíz /.env si existe
+for candidate in [Path(__file__).parent / ".env", Path(__file__).parent.parent / ".env"]:
+    if candidate.exists():
+        load_dotenv(candidate)
 
 
 class LLMService:
@@ -18,7 +19,6 @@ class LLMService:
     _min_call_interval = 3.0
 
     def __init__(self):
-        self.api_key = os.getenv("GEMINI_API_KEY", "")
         self.timeout = float(os.getenv("GEMINI_TIMEOUT_SECONDS", "3.0"))
         self.failure_threshold = int(os.getenv("GEMINI_CIRCUIT_FAILURE_THRESHOLD", "5"))
         self.recovery_seconds = int(os.getenv("GEMINI_CIRCUIT_RECOVERY_SECONDS", "60"))
@@ -35,15 +35,62 @@ class LLMService:
         self._cache_ttl = int(os.getenv("GEMINI_CACHE_TTL_SECONDS", "1800"))
         self._narrative_cache: dict[str, tuple[dict, float]] = {}
 
+        self.api_key, self._gemini_model = self._resolve_api_key()
+        self._init_client()
+
+    def _resolve_api_key(self) -> tuple[str, str]:
+        """Resuelve la API Key respetando la jerarquía: Base de Datos SQLite > Variable de Entorno."""
+        try:
+            from ai_engine.database import fetch_one
+            cfg = fetch_one("SELECT geminiApiKey, geminiModel FROM system_config LIMIT 1")
+            if cfg and cfg.get("geminiApiKey"):
+                db_key = str(cfg["geminiApiKey"]).strip()
+                db_model = str(cfg.get("geminiModel") or "").strip() or self._gemini_model
+                if db_key:
+                    return db_key, db_model
+        except Exception:
+            pass
+
+        env_key = os.getenv("GEMINI_API_KEY", "").strip()
+        env_model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite").strip()
+        return env_key, env_model
+
+    def _init_client(self):
         if self.api_key:
             try:
                 from google import genai
                 self.client = genai.Client(api_key=self.api_key)
-                print("[LLM] Google Gemini 2.0 configurado exitosamente (google.genai).")
+                print(f"[LLM] Google Gemini configurado exitosamente (google.genai, modelo: {self._gemini_model}).")
             except Exception as e:
                 print(f"[LLM] Error configurando Gemini: {e}")
+                self.client = None
         else:
+            self.client = None
             print("[LLM] Sin API key de Gemini. Usando solo fallback local.")
+
+    def update_api_key(self, api_key: str, model: Optional[str] = None) -> bool:
+        """Actualiza en memoria la clave de Gemini sin requerir reinicio del proceso."""
+        self.api_key = api_key.strip()
+        if model and model.strip():
+            self._gemini_model = model.strip()
+        self.circuit_open = False
+        self.failure_count = 0
+        self._narrative_cache.clear()
+
+        if not self.api_key:
+            self.client = None
+            print("[LLM] Clave de Gemini eliminada en memoria. Modo local activado.")
+            return True
+
+        try:
+            from google import genai
+            self.client = genai.Client(api_key=self.api_key)
+            print(f"[LLM] Gemini actualizado en caliente con modelo '{self._gemini_model}'.")
+            return True
+        except Exception as e:
+            print(f"[LLM] Error actualizando cliente Gemini: {e}")
+            self.client = None
+            return False
 
     def _can_retry(self) -> bool:
         if not self.circuit_open:

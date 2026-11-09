@@ -13,15 +13,17 @@ _root = Path(__file__).parent.parent.resolve()
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-env_path = Path(__file__).parent / ".env"
-if env_path.exists():
-    load_dotenv(env_path)
+for candidate in [Path(__file__).parent / ".env", Path(__file__).parent.parent / ".env"]:
+    if candidate.exists():
+        load_dotenv(candidate)
 
 from ai_engine.services.insight_service import InsightService
 from ai_engine.chat_service import ChatService
 
 insight_service = InsightService()
 chat_service = ChatService()
+# Compartir la misma instancia de LLMService para sincronización de credenciales y rate limits
+chat_service.llm = insight_service.llm
 
 
 @asynccontextmanager
@@ -73,13 +75,86 @@ class ChatRequest(BaseModel):
     history: Optional[list[dict]] = None
 
 
+class GeminiConfigRequest(BaseModel):
+    apiKey: str
+    model: Optional[str] = None
+
+
 @app.get("/health")
 async def health():
+    llm = insight_service.llm
+    is_ready = bool(llm.client and llm.api_key)
     return {
         "status": "ok",
         "service": "ai-engine",
         "trained": insight_service._trained,
+        "gemini": {
+            "configured": is_ready,
+            "model": llm._gemini_model,
+            "status": "ready" if is_ready else "missing_key",
+            "circuit_open": llm.circuit_open,
+        },
         "timestamp": time.time()
+    }
+
+
+@app.post("/api/config/gemini")
+async def configure_gemini(req: GeminiConfigRequest):
+    key = (req.apiKey or "").strip()
+    target_model = (req.model or "").strip() or insight_service.llm._gemini_model
+
+    if not key:
+        insight_service.llm.update_api_key("")
+        return {
+            "status": "ok",
+            "message": "Clave de Gemini removida. El motor opera en modo reglas locales.",
+            "gemini": {
+                "configured": False,
+                "model": target_model,
+                "status": "missing_key",
+                "circuit_open": False,
+            }
+        }
+
+    # Validación de formato seguro
+    if len(key) < 20 or len(key) > 60 or any(c in key for c in ["\n", "\r", " ", "\t"]):
+        raise HTTPException(
+            status_code=400,
+            detail="Formato de API Key no válido. Las claves de Google Gemini no contienen espacios ni saltos de línea."
+        )
+
+    # Smoke test en vivo con el SDK oficial de Google
+    try:
+        from google import genai
+        test_client = genai.Client(api_key=key)
+        resp = test_client.models.generate_content(
+            model=target_model,
+            contents="Hola",
+            config={"max_output_tokens": 5}
+        )
+        if not resp:
+            raise ValueError("Respuesta vacía de Google Gemini.")
+    except Exception as e:
+        err_msg = str(e)
+        print(f"[Gemini Smoke Test Error]: {err_msg}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error al validar con Google AI Studio: {err_msg[:120]}"
+        )
+
+    success = insight_service.llm.update_api_key(key, target_model)
+    if not success:
+        raise HTTPException(status_code=500, detail="Fallo al activar cliente de Gemini en memoria.")
+
+    return {
+        "status": "ok",
+        "message": "API Key de Google Gemini verificada y activada correctamente.",
+        "gemini": {
+            "configured": True,
+            "model": target_model,
+            "status": "ready",
+            "circuit_open": False,
+        }
     }
 
 

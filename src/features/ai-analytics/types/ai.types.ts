@@ -82,10 +82,18 @@ export interface MarketBasketResponse {
   narrative: NarrativeInsight
 }
 
+export interface AiGeminiStatus {
+  configured: boolean
+  model: string
+  status: "ready" | "missing_key" | "error"
+  circuit_open: boolean
+}
+
 export interface AiEngineHealth {
   status: string
   service: string
   trained: boolean
+  gemini?: AiGeminiStatus
   timestamp: number
 }
 

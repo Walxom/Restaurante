@@ -39,7 +39,7 @@ export function useAiHealth() {
     `${AI_ENGINE_URL}/health`,
     fastFetcher,
     {
-      refreshInterval: 30000,
+      refreshInterval: 15000,
       revalidateOnFocus: false,
       errorRetryCount: 0,
       shouldRetryOnError: false,
@@ -48,10 +48,26 @@ export function useAiHealth() {
   return {
     health: data,
     isAiOnline: !!data && data.status === "ok",
+    isGeminiConfigured: !!data?.gemini?.configured,
+    geminiModel: data?.gemini?.model || "gemini-3.1-flash-lite",
+    geminiStatus: data?.gemini?.status || "missing_key",
     error,
     isLoading,
     mutate,
   }
+}
+
+export async function saveGeminiApiKey(apiKey: string, model?: string) {
+  const res = await fetch("/api/ai/config/gemini", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ apiKey, model }),
+  })
+  const json = await res.json()
+  if (!res.ok) {
+    throw new Error(json.error || json.detail || "Error al configurar la API Key de Gemini")
+  }
+  return json
 }
 
 function useAiData<T>(

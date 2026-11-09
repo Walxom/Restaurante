@@ -37,7 +37,15 @@ export async function GET() {
       })
     }
 
-    return NextResponse.json(config)
+    const safeConfig = {
+      ...config,
+      geminiApiKey: config.geminiApiKey
+        ? `${config.geminiApiKey.slice(0, 6)}••••••••••••${config.geminiApiKey.slice(-4)}`
+        : null,
+      isGeminiKeyConfigured: !!config.geminiApiKey,
+    }
+
+    return NextResponse.json(safeConfig)
   } catch (error) {
     console.error("Error al obtener configuración:", error)
     return NextResponse.json(
@@ -103,7 +111,15 @@ export async function PUT(request: NextRequest) {
     // Invalidar caché de servidor para asegurar consistencia de datos inmediata
     invalidateConfigCache()
 
-    return NextResponse.json(config)
+    const safeConfig = {
+      ...config,
+      geminiApiKey: config.geminiApiKey
+        ? `${config.geminiApiKey.slice(0, 6)}••••••••••••${config.geminiApiKey.slice(-4)}`
+        : null,
+      isGeminiKeyConfigured: !!config.geminiApiKey,
+    }
+
+    return NextResponse.json(safeConfig)
   } catch (error) {
     console.error("Error al actualizar configuración:", error)
     return NextResponse.json(
