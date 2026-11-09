@@ -1,9 +1,30 @@
 services:
-  bendistaurante:
+  siger-ai:
     build:
       context: .
+      dockerfile: ai_engine/Dockerfile
+    container_name: siger-ai
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      ENVIRONMENT: production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - siger-network
+
+  siger-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
       target: runner
-    container_name: bendistaurante-pos
+    container_name: siger-web
     ports:
       - "3001:3001"
     volumes:
@@ -11,18 +32,30 @@ services:
       - sqlite_data:/data
     environment:
       NODE_ENV: production
+      PORT: 3001
       DATABASE_URL: file:/data/prod.db
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-siger_default_dev_secret_change_in_production}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3001}
+      AI_ENGINE_URL: http://siger-ai:8000
+      AI_ENGINE_ENABLED: "true"
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
     restart: unless-stopped
+    depends_on:
+      siger-ai:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/public/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - siger-network
 
 volumes:
   sqlite_data:
     driver: local
+
+networks:
+  siger-network:
+    driver: bridge

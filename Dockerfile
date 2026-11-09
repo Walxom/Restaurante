@@ -23,25 +23,30 @@ FROM node:20-alpine AS runner
 RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
 
-ENV NODE_ENV=production
-ENV PORT=3001
+ENV NODE_ENV=production \
+    PORT=3001 \
+    DATABASE_URL=file:/data/prod.db
 
-# La app NO usa el server de Next standalone, sino un server.js custom
-# (Socket.IO + Next). Por eso copiamos node_modules completo y el build .next:
-# así server.js tiene en runtime next, socket.io y serialport (que Next no
-# rastrearía en un build standalone porque solo los usa server.js).
+# Copiar artefactos de compilación y servidor personalizado
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/server.js ./server.js
 COPY --from=builder /app/package.json ./package.json
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
-# Directorio para la base de datos SQLite persistente
-RUN mkdir -p /data
-ENV DATABASE_URL=file:/data/prod.db
+# Directorio para la base de datos persistente con permisos para usuario node
+RUN mkdir -p /data && \
+    chmod +x ./docker-entrypoint.sh && \
+    chown -R node:node /data /app
+
+USER node
 
 EXPOSE 3001
 
-# El servidor custom maneja Socket.IO + Next.js en producción
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO- http://localhost:3001/api/public/health || exit 1
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "server.js"]
