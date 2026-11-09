@@ -212,37 +212,28 @@ export async function POST(request: NextRequest) {
       })
     })
 
-    // Imprimir automáticamente si se solicita
+    // Imprimir automáticamente en proceso si se solicita (sin bucle HTTP loopback)
     let printResult = null
-    if (autoPrint) {
+    if (autoPrint && result.orderId) {
       try {
-        // Usar la API de comprobantes con el puerto real configurado
-        const port = process.env.PORT || 3001
-        const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${port}`
-        const response = await fetch(`${baseUrl}/api/thermal-print/receipt`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            orderId: result.orderId,
-            documentType: result.type,
-            customerName: result.customerName,
-            customerRuc: result.customerRuc,
-            paymentMethod: result.paymentMethod || paymentMethod || 'EFECTIVO'
-          }),
+        const { printReceiptForOrder } = await import('@/services/printer/receipt-printer.service')
+        const printRes = await printReceiptForOrder({
+          orderId: result.orderId,
+          documentType: result.type as 'BOLETA' | 'FACTURA',
+          customerName: result.customerName || undefined,
+          customerRuc: result.customerRuc || undefined,
+          paymentMethod: result.paymentMethod || paymentMethod || 'EFECTIVO'
         })
 
-        if (response.ok) {
+        if (printRes.success) {
           printResult = { success: true, message: 'Comprobante impreso exitosamente' }
         } else {
-          const error = await response.json()
-          printResult = { success: false, error: error.error || 'Error al imprimir' }
+          printResult = { success: false, error: printRes.error || 'Error al imprimir' }
         }
       } catch (printError) {
         console.error("Error en impresión automática:", printError)
         // No fallar la creación de factura por error de impresión
-        const errorMessage = printError && typeof printError === 'object' && 'message' in printError ? printError.message : 'Error desconocido'
+        const errorMessage = printError && typeof printError === 'object' && 'message' in printError ? (printError as Error).message : 'Error desconocido'
         printResult = { success: false, error: errorMessage }
       }
     }

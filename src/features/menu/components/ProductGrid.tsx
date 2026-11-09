@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { type Product, type CartItem } from "@/types"
 import { ProductCard } from "@/features/orders/components/ProductCard"
 import { StateFeedback } from "@/components/ui/StateFeedback"
@@ -15,6 +15,15 @@ export default function ProductGrid({ products, onAddToCart, cartItems }: Produc
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({})
   const [notes, setNotes] = useState<{ [key: string]: string }>({})
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null)
+
+  // Indexar cantidades de carrito en un mapa para búsqueda O(1)
+  const cartQuantityMap = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const item of cartItems) {
+      map.set(item.productId, (map.get(item.productId) || 0) + item.quantity)
+    }
+    return map
+  }, [cartItems])
 
   const getQuantity = (productId: string) => quantities[productId] || 1
   const getNotes = (productId: string) => notes[productId] || ""
@@ -39,11 +48,6 @@ export default function ProductGrid({ products, onAddToCart, cartItems }: Produc
     setExpandedProduct(null)
   }
 
-  const getCartQuantity = (productId: string) => {
-    const cartItem = cartItems.find(item => item.productId === productId)
-    return cartItem ? cartItem.quantity : 0
-  }
-
   if (products.length === 0) {
     return (
       <StateFeedback
@@ -60,7 +64,7 @@ export default function ProductGrid({ products, onAddToCart, cartItems }: Produc
         <ProductCard
           key={product.id}
           product={product}
-          cartQuantity={getCartQuantity(product.id)}
+          cartQuantity={cartQuantityMap.get(product.id) || 0}
           quantity={getQuantity(product.id)}
           notes={getNotes(product.id)}
           isExpanded={expandedProduct === product.id}

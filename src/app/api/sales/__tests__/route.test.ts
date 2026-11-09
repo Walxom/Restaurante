@@ -45,6 +45,7 @@ beforeEach(() => {
   vi.mocked(prisma.invoice.groupBy).mockResolvedValue([])
   vi.mocked(prisma.product.findMany).mockResolvedValue([])
   vi.mocked(prisma.user.findMany).mockResolvedValue([])
+  vi.mocked(prisma.$queryRaw).mockResolvedValue([])
 })
 
 describe("GET /api/sales", () => {
@@ -97,9 +98,7 @@ describe("GET /api/sales", () => {
       },
     ]
 
-    vi.mocked(prisma.order.findMany)
-      .mockResolvedValueOnce(mockOrders as any)
-      .mockResolvedValueOnce(mockOrders as any)
+    vi.mocked(prisma.order.findMany).mockResolvedValueOnce(mockOrders as any)
     vi.mocked(prisma.order.count).mockResolvedValue(1)
 
     const req = new NextRequest("http://localhost:3001/api/sales?filter=week&page=1&limit=10")

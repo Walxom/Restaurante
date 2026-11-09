@@ -120,6 +120,40 @@ export async function findMany(filters: IngredientFilters) {
   const orderBy: any = {}
   orderBy[sortBy as string] = sortOrder
 
+  const isComplexStockFilter = Boolean(stockFilter && !['all', 'empty'].includes(stockFilter))
+
+  if (isComplexStockFilter) {
+    // Para filtros complejos basados en relación currentStock / minStock,
+    // se consulta el universo activo y se filtra antes de paginar para evitar desincronización
+    const allMatching = await prisma.ingredient.findMany({
+      where,
+      include: { category: { select: { id: true, name: true, color: true } } },
+      orderBy
+    })
+
+    const filtered = allMatching.filter((i) => {
+      const { status } = calculateStockStatus(i.currentStock, i.minStock)
+      return status === stockFilter
+    })
+
+    const totalCount = filtered.length
+    const paginated = filtered.slice(skip, skip + limit)
+    const processed = paginated.map((i) => ({
+      ...i,
+      ...calculateStockStatus(i.currentStock, i.minStock)
+    }))
+
+    return {
+      ingredients: processed,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+        totalItems: totalCount,
+        itemsPerPage: limit
+      }
+    }
+  }
+
   const [ingredients, totalCount] = await Promise.all([
     prisma.ingredient.findMany({
       where,
@@ -131,16 +165,7 @@ export async function findMany(filters: IngredientFilters) {
     prisma.ingredient.count({ where })
   ])
 
-  // Aplicar filtros de stock en memoria si son complejos (relación current/min)
-  let resultIngredients = ingredients
-  if (stockFilter && !['all', 'empty'].includes(stockFilter)) {
-    resultIngredients = ingredients.filter((i: { currentStock: number; minStock: number }) => {
-      const { status } = calculateStockStatus(i.currentStock, i.minStock)
-      return status === stockFilter
-    })
-  }
-
-  const processed = resultIngredients.map((i: { currentStock: number; minStock: number }) => ({
+  const processed = ingredients.map((i) => ({
     ...i,
     ...calculateStockStatus(i.currentStock, i.minStock)
   }))

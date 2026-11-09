@@ -186,15 +186,16 @@ export async function POST(request: NextRequest) {
 
     // Obtener información de productos para calcular totales
     const productIds = items.map((item: { productId: string }) => item.productId)
+    const uniqueProductIds = [...new Set(productIds)]
     const products = await prisma.product.findMany({
       where: {
-        id: { in: productIds },
+        id: { in: uniqueProductIds },
         isActive: true,
         isAvailable: true
       }
     })
 
-    if (products.length !== productIds.length) {
+    if (products.length !== uniqueProductIds.length) {
       return NextResponse.json(
         { error: 'Algunos productos no están disponibles' },
         { status: 400 }
@@ -222,7 +223,13 @@ export async function POST(request: NextRequest) {
     })
 
     // Crear el pedido con sus items en una transacción atómica
-    const order = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const { order, tableStatusPayload } = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      let pendingTableStatus: {
+        tableId: string
+        fromStatus: string
+        toStatus: string
+        meta: { number: number; capacity: number }
+      } | null = null
       // Generar número de orden único de forma atómica dentro de la transacción
       let orderNumber = generateOrderNumber()
       let attempts = 0
@@ -306,16 +313,31 @@ export async function POST(request: NextRequest) {
             data: { status: 'ESPERANDO' }
           })
           
-          // Emitir evento de cambio de estado de mesa
-          emitTableStatusChange(tableId, 'DISPONIBLE', 'ESPERANDO', {
-            number: currentTable.number,
-            capacity: currentTable.capacity
-          })
+          // Preparar payload para emitir fuera de la transacción
+          pendingTableStatus = {
+            tableId,
+            fromStatus: 'DISPONIBLE',
+            toStatus: 'ESPERANDO',
+            meta: {
+              number: currentTable.number,
+              capacity: currentTable.capacity
+            }
+          }
         }
       }
 
-      return newOrder
+      return { order: newOrder, tableStatusPayload: pendingTableStatus }
     })
+
+    // Emitir eventos de Socket.IO únicamente después de confirmar la transacción
+    if (tableStatusPayload) {
+      emitTableStatusChange(
+        tableStatusPayload.tableId,
+        tableStatusPayload.fromStatus,
+        tableStatusPayload.toStatus,
+        tableStatusPayload.meta
+      )
+    }
 
     // Emitir evento de Socket.IO para nuevo pedido
     emitNewOrder(order)

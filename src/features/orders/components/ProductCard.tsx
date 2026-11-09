@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { type Product } from "@/types"
 import { Plus, Minus, MoreHorizontal, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -18,7 +19,7 @@ interface ProductCardProps {
   onAddToCart: () => void
 }
 
-export function ProductCard({
+function ProductCardBase({
   product,
   cartQuantity,
   quantity,
@@ -127,3 +128,14 @@ export function ProductCard({
     </div>
   )
 }
+
+export const ProductCard = memo(ProductCardBase, (prev, next) => {
+  return (
+    prev.product.id === next.product.id &&
+    prev.product.price === next.product.price &&
+    prev.cartQuantity === next.cartQuantity &&
+    prev.quantity === next.quantity &&
+    prev.notes === next.notes &&
+    prev.isExpanded === next.isExpanded
+  )
+})

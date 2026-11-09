@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -105,11 +105,14 @@ export default function NewOrderPage() {
     }
   }
 
-  const filteredProducts = products.filter(product => {
-    const matchesCategory = selectedCategory ? product.categoryId === selectedCategory : true
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch
-  })
+  const filteredProducts = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    return products.filter(product => {
+      const matchesCategory = selectedCategory ? product.categoryId === selectedCategory : true
+      const matchesSearch = query ? product.name.toLowerCase().includes(query) : true
+      return matchesCategory && matchesSearch
+    })
+  }, [products, selectedCategory, searchQuery])
 
   if (error) {
     return (

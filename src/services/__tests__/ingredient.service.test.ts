@@ -20,6 +20,7 @@ import {
   calculateStockStatus,
   create,
   remove,
+  findMany,
 } from "../ingredient.service"
 
 beforeEach(() => vi.clearAllMocks())
@@ -188,5 +189,44 @@ describe("ingredient.service.remove", () => {
       where: { id: "ing-1" },
     })
     expect(prisma.ingredient.update).not.toHaveBeenCalled()
+  })
+})
+
+describe("ingredient.service.findMany", () => {
+  it("pagina correctamente con filtros estándar sin stockFilter complejo", async () => {
+    const mockList = [
+      { id: "ing-1", name: "Sal", currentStock: 10, minStock: 2, category: null },
+      { id: "ing-2", name: "Pimienta", currentStock: 5, minStock: 1, category: null },
+    ]
+    vi.mocked(prisma.ingredient.findMany).mockResolvedValue(mockList as never)
+    vi.mocked(prisma.ingredient.count).mockResolvedValue(2)
+
+    const result = await findMany({ page: 1, limit: 10 })
+
+    expect(prisma.ingredient.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 0, take: 10 })
+    )
+    expect(result.ingredients).toHaveLength(2)
+    expect(result.pagination.totalItems).toBe(2)
+    expect(result.pagination.totalPages).toBe(1)
+  })
+
+  it("filtra antes de paginar cuando stockFilter es 'critical' para evitar desincronización de páginas", async () => {
+    const mockList = [
+      { id: "ing-1", name: "Ceviche Mix", currentStock: 1, minStock: 10, category: null }, // ratio 0.1 -> critical
+      { id: "ing-2", name: "Arroz", currentStock: 50, minStock: 10, category: null }, // ratio 5 -> ok
+      { id: "ing-3", name: "Camarón", currentStock: 1, minStock: 10, category: null }, // ratio 0.1 -> critical
+      { id: "ing-4", name: "Pescado", currentStock: 8, minStock: 10, category: null }, // ratio 0.8 -> low
+    ]
+    vi.mocked(prisma.ingredient.findMany).mockResolvedValue(mockList as never)
+
+    const result = await findMany({ stockFilter: "critical", page: 1, limit: 1 })
+
+    // Solo 2 items son critical
+    expect(result.pagination.totalItems).toBe(2)
+    expect(result.pagination.totalPages).toBe(2)
+    expect(result.ingredients).toHaveLength(1)
+    expect(result.ingredients[0].status).toBe("critical")
+    expect(result.ingredients[0].name).toBe("Ceviche Mix")
   })
 })
