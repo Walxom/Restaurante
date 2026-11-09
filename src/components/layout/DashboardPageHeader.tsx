@@ -44,29 +44,40 @@ export function DashboardPageHeader({
               <h1 className="text-base sm:text-lg font-bold text-foreground tracking-tight leading-none mb-1 truncate">
                 {companyName}
               </h1>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                {userName && (
-                  <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap truncate max-w-[120px] sm:max-w-none">
-                    {userName}
-                  </p>
-                )}
-                <div className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 bg-slate-100 dark:bg-slate-800/50 rounded-full border border-slate-200 dark:border-slate-700/50 shrink-0 whitespace-nowrap">
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full animate-pulse shrink-0 ${
-                      isOnline
-                        ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                        : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
-                    }`}
-                  ></div>
-                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight shrink-0 whitespace-nowrap">
-                    {isOnline ? "En línea" : "Desconectado"}
-                  </span>
-                </div>
-              </div>
+              {userName && (
+                <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap truncate max-w-[160px] sm:max-w-none">
+                  {userName}
+                </p>
+              )}
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {/* Indicador de Conexión en Tiempo Real (WebSockets / Sincronización) */}
+            <div
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] sm:text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                isOnline
+                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400 animate-pulse"
+              }`}
+              title={
+                isOnline
+                  ? "Conexión WebSockets en tiempo real activa con cocina y mesas"
+                  : "Sin conexión con el servidor en tiempo real. Intentando reconectar..."
+              }
+            >
+              <div
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                  isOnline
+                    ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"
+                    : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"
+                }`}
+              />
+              <span className="hidden sm:inline whitespace-nowrap">
+                {isOnline ? "Sincronizado" : "Sin Conexión"}
+              </span>
+            </div>
+
             {children && <div className="flex items-center gap-2">{children}</div>}
 
             {onNotificationsClick && (

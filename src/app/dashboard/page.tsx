@@ -13,7 +13,7 @@ import PedidosServidosWidget from "@/features/dashboard/components/PedidosServid
 import {
   Users, Clock, DollarSign, TrendingUp, Package,
   BookOpen, Brain, FileText, Printer, Settings, Utensils,
-  Activity, ChevronRight,
+  ChevronRight,
 } from "lucide-react"
 import { useSystemConfig } from "@/features/dashboard/hooks/useSystemConfig"
 import { useDashboardStats } from "@/features/dashboard/hooks/useDashboardStats"
@@ -95,16 +95,7 @@ export default function DashboardPage() {
           alertsCount={getAlertsCount()}
           onNotificationsClick={() => setIsNotificationDrawerOpen(true)}
           onSignOut={handleSignOut}
-        >
-          {stats?.ultimaActualizacion && (
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/50 text-[11px] font-mono text-slate-500 dark:text-slate-400">
-              <Activity className="w-3 h-3 text-emerald-500 animate-pulse" />
-              <span>
-                {new Date(stats.ultimaActualizacion).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-          )}
-        </DashboardPageHeader>
+        />
 
         {/* ── CONTENIDO PRINCIPAL ── */}
         <main className="relative z-10 max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
