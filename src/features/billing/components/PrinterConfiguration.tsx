@@ -15,7 +15,7 @@ import {
   Zap
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { PrinterCard } from '@/app/impresion/components/printer-card'
+import { PrinterCard } from './PrinterCard'
 import { ConfigField } from '@/features/dashboard/components/form-utils'
 import { printerConfigSchema } from '@/features/billing/validations/printer-config'
 import { usePrinter } from '@/features/billing/hooks/usePrinter'

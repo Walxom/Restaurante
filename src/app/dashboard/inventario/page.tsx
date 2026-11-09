@@ -23,10 +23,10 @@ import { useInventoryAlerts } from "@/features/inventory/hooks/useInventoryAlert
 import { type Ingredient, type IngredientCategory } from "@/types"
 
 // Components
-import { InventoryStats } from "./components/inventory-stats"
-import { InventoryFilters } from "./components/inventory-filters"
-import { IngredientTable } from "./components/ingredient-table"
-import { CategoryTable } from "./components/category-table"
+import { InventoryStats } from "@/features/inventory/components/InventoryStats"
+import { InventoryFilters } from "@/features/inventory/components/InventoryFilters"
+import { IngredientTable } from "@/features/inventory/components/IngredientTable"
+import { CategoryTable } from "@/features/inventory/components/CategoryTable"
 import { RoleGuard } from "@/components/auth/role-guard"
 
 // Modals (Existing)
