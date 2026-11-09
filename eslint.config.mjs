@@ -21,6 +21,10 @@ const eslintConfig = [
       "public/workbox-*.js",
       "next-env.d.ts",
       "src/lib/thermal-print/examples/**",
+      // Entorno virtual de Python de IA y backups
+      "ai_engine/venv/**",
+      "**/venv/**",
+      "backups/**",
       // Seeds usan any intencional para scripts de datos de ejemplo
       "prisma/seed*.ts",
     ],

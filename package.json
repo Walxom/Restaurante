@@ -26,6 +26,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:setup": "node scripts/test-setup-all.js",
+    "test:backup": "node scripts/test-backup-restore.js",
+    "test:devops": "node scripts/test-devops-config.js",
     "ai:setup": "node ai_engine/scripts/setup_env.js",
     "ai:generate": ".\\ai_engine\\venv\\Scripts\\python.exe -m ai_engine.scripts.generate_synthetic_data",
     "ai:start": ".\\ai_engine\\venv\\Scripts\\uvicorn.exe ai_engine.main:app --reload --host 127.0.0.1 --port 8000",

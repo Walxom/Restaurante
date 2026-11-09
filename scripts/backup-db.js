@@ -79,9 +79,14 @@ async function runBackup() {
     fs.mkdirSync(backupsDir, { recursive: true })
   }
 
-  const timestamp = getFormattedTimestamp()
-  const backupFileName = `dev_backup_${timestamp}.db`
-  const localBackupPath = path.join(backupsDir, backupFileName)
+  let timestamp = getFormattedTimestamp()
+  let backupFileName = `dev_backup_${timestamp}.db`
+  let localBackupPath = path.join(backupsDir, backupFileName)
+  let collisionCounter = 1
+  while (fs.existsSync(localBackupPath)) {
+    backupFileName = `dev_backup_${timestamp}_${collisionCounter++}.db`
+    localBackupPath = path.join(backupsDir, backupFileName)
+  }
   const normalizedSqlPath = localBackupPath.replace(/\\/g, '/')
 
   console.log(`  Origen:   ${c.dim}Base de datos activa (SQLite WAL)${c.reset}`)
