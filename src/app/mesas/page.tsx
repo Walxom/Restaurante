@@ -117,7 +117,7 @@ export default function MesasPage() {
   }
 
   return (
-    <div className="min-h-screen transition-colors duration-500">
+    <div className="min-h-screen">
       <div className="relative z-10 flex flex-col">
       {/* Header minimalista */}
       <AdminPageHeader

@@ -62,7 +62,7 @@ export default function EditOrderPage() {
 
   return (
     <RoleGuard allowedRoles={["MESERO", "JEFE"]}>
-      <div className="min-h-screen bg-background relative overflow-hidden transition-colors duration-500 pb-12">
+      <div className="min-h-screen bg-background relative overflow-hidden pb-12">
 
         <div className="relative z-10 flex flex-col min-h-screen">
           <EditOrderHeader

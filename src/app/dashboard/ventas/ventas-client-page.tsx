@@ -40,7 +40,7 @@ export default function HistorialVentasClient() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-500 selection:bg-primary/30">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
       <AdminPageHeader
         title="Dashboard de Ventas"
         subtitle="Análisis de Transacciones y KPIs"

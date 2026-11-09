@@ -157,7 +157,7 @@ export default function FacturacionPage() {
 
   return (
     <RoleGuard allowedRoles={["JEFE"]}>
-      <div className="min-h-screen bg-background transition-colors duration-500 overflow-x-hidden w-full">
+      <div className="min-h-screen bg-background overflow-x-hidden w-full">
         <div className="relative z-10 flex flex-col w-full min-w-0">
           <AdminPageHeader
             title="Gestión de Comprobantes"

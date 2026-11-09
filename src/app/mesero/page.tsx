@@ -230,8 +230,7 @@ export default function MeseroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      <div className="fixed inset-0 bg-linear-to-br from-blue-500/[0.03] via-transparent to-indigo-500/[0.03] pointer-events-none" />
+    <div className="min-h-screen bg-background">
       {/* Header minimalista */}
       <DashboardPageHeader
         companyName={companyName}
@@ -243,11 +242,11 @@ export default function MeseroPage() {
       <main className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Estadísticas compactas */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 group">
+          <div className="bg-card rounded-3xl p-5 shadow-sm border border-border/50 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 group">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-1">Mesas Disponibles</p>
-                <p className="text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tighter">{stats.totalTables}</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">Mesas Disponibles</p>
+                <p className="text-3xl font-black text-foreground leading-none tracking-tighter">{stats.totalTables}</p>
               </div>
               <div className="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300">
                 <Users className="w-7 h-7 text-blue-600 dark:text-blue-400" />
@@ -255,11 +254,11 @@ export default function MeseroPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300 group">
+          <div className="bg-card rounded-3xl p-5 shadow-sm border border-border/50 hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300 group">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-1">Activos</p>
-                <p className="text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tighter">{stats.activeOrders}</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">Activos</p>
+                <p className="text-3xl font-black text-foreground leading-none tracking-tighter">{stats.activeOrders}</p>
               </div>
               <div className="w-14 h-14 bg-orange-50 dark:bg-orange-500/10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300">
                 <Clock className="w-7 h-7 text-orange-600 dark:text-orange-400" />
@@ -267,11 +266,11 @@ export default function MeseroPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 group">
+          <div className="bg-card rounded-3xl p-5 shadow-sm border border-border/50 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 group">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-1">Ventas Activas</p>
-                <p className="text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tighter">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">Ventas Activas</p>
+                <p className="text-3xl font-black text-foreground leading-none tracking-tighter">
                   S/ {(typeof stats.totalSales === 'number' ? stats.totalSales : 0).toFixed(2)}
                 </p>
               </div>
@@ -301,16 +300,16 @@ export default function MeseroPage() {
 
           <button
             onClick={() => router.push("/pedidos")}
-            className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+            className="group relative bg-card border border-border/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
           >
-            <div className="absolute inset-0 bg-slate-500/[0.03] group-hover:bg-transparent transition-colors" />
+            <div className="absolute inset-0 bg-foreground/[0.02] group-hover:bg-transparent transition-colors" />
             <div className="flex items-center justify-between relative z-10">
               <div className="text-left">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Mis Pedidos</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm">Ver y gestionar todos los pedidos</p>
+                <h3 className="text-lg font-bold text-foreground mb-1">Mis Pedidos</h3>
+                <p className="text-muted-foreground text-sm">Ver y gestionar todos los pedidos</p>
               </div>
-              <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 rounded-xl flex items-center justify-center transition-colors">
-                <Eye className="w-6 h-6 text-slate-600 dark:text-slate-300" />
+              <div className="w-12 h-12 bg-muted/50 group-hover:bg-muted rounded-xl flex items-center justify-center transition-colors">
+                <Eye className="w-6 h-6 text-foreground" />
               </div>
             </div>
           </button>

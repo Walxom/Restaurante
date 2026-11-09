@@ -60,3 +60,18 @@ def test_config_gemini_aq_format_syntax():
     assert len(sample_key) <= 80
     assert not any(c in sample_key for c in ["\n", "\r", " ", "\t"])
 
+
+def test_chat_service_shared_llm_sync():
+    from ai_engine.chat_service import ChatService
+    shared_llm = LLMService()
+    chat_svc = ChatService(llm=shared_llm)
+    assert chat_svc.llm is shared_llm
+
+    # Validar que si no hay cliente ni API key, cae elegantemente en regla local o auto-resuelve desde BD
+    shared_llm.client = None
+    shared_llm.api_key = ""
+    res = chat_svc.chat("¿Cuáles son los insumos que faltan?")
+    assert res["role"] == "assistant"
+    assert res["type"] in ["llm", "fallback"]
+    assert len(res["content"]) > 10
+

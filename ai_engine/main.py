@@ -21,9 +21,8 @@ from ai_engine.services.insight_service import InsightService
 from ai_engine.chat_service import ChatService
 
 insight_service = InsightService()
-chat_service = ChatService()
-# Compartir la misma instancia de LLMService para sincronización de credenciales y rate limits
-chat_service.llm = insight_service.llm
+# Compartir explícitamente la misma instancia de LLMService para sincronización total de credenciales y rate limits
+chat_service = ChatService(llm=insight_service.llm)
 
 
 @asynccontextmanager
@@ -105,6 +104,7 @@ async def configure_gemini(req: GeminiConfigRequest):
 
     if not key:
         insight_service.llm.update_api_key("")
+        chat_service.llm.update_api_key("")
         return {
             "status": "ok",
             "message": "Clave de Gemini removida. El motor opera en modo reglas locales.",
@@ -143,6 +143,7 @@ async def configure_gemini(req: GeminiConfigRequest):
         )
 
     success = insight_service.llm.update_api_key(key, target_model)
+    chat_service.llm.update_api_key(key, target_model)
     if not success:
         raise HTTPException(status_code=500, detail="Fallo al activar cliente de Gemini en memoria.")
 

@@ -208,7 +208,7 @@ export default function FacturaDetailsPage({
 
   if (session?.user?.role !== "JEFE") {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="bg-card/40 backdrop-blur-xl border border-border/50 rounded-[2rem] p-8 shadow-2xl max-w-md w-full text-center animate-in fade-in zoom-in-95 duration-500">
           <div className="w-20 h-20 bg-red-500/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-500/20">
             <Lock className="w-10 h-10 text-red-500" />
@@ -224,7 +224,7 @@ export default function FacturaDetailsPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-in fade-in duration-500">
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse"></div>
@@ -238,7 +238,7 @@ export default function FacturaDetailsPage({
 
   if (error && !invoice) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="bg-card/40 backdrop-blur-xl border border-border/50 rounded-[2rem] p-8 shadow-2xl max-w-md w-full text-center animate-in fade-in zoom-in-95 duration-500">
           <div className="w-20 h-20 bg-red-500/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-500/20">
             <AlertTriangle className="w-10 h-10 text-red-500" />
@@ -260,7 +260,7 @@ export default function FacturaDetailsPage({
   if (!invoice) return null
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 relative overflow-hidden pb-20">
+    <div className="min-h-screen bg-background relative overflow-hidden pb-20">
       {/* Background Orbs */}
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3 pointer-events-none" />

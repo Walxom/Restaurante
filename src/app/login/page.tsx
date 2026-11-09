@@ -88,7 +88,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50 via-gray-50 to-gray-100 dark:from-slate-900 dark:via-slate-950 dark:to-black p-4 transition-colors duration-500">
+    <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50 via-gray-50 to-gray-100 dark:from-slate-900 dark:via-slate-950 dark:to-black p-4">
       {/* Título de la página para accesibilidad y SEO */}
       <title>{loading ? "Cargando..." : `Ingresar - ${companyName}`}</title>
 

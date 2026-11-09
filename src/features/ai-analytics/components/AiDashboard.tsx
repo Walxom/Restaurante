@@ -418,7 +418,7 @@ export default function AiDashboard() {
 
   return (
     <RoleGuard allowedRoles={["JEFE"]}>
-      <div className="min-h-screen bg-background transition-colors duration-500">
+      <div className="min-h-screen bg-background">
         <div className="relative z-10 flex flex-col">
           <AdminPageHeader
             title="Inteligencia de Negocio"

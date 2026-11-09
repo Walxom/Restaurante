@@ -5,9 +5,6 @@ import { ChefHat } from "lucide-react"
 export function AppLoading() {
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background relative overflow-hidden">
-      {/* Fondo con gradiente coherente con el dashboard */}
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 pointer-events-none" />
-      
       <div className="relative z-10 flex flex-col items-center">
         {/* Contenedor del Icono con animación de pulso */}
         <div className="relative mb-8">

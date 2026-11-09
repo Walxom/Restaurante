@@ -14,8 +14,8 @@ from ai_engine.llm_service import LLMService
 
 
 class ChatService:
-    def __init__(self):
-        self.llm = LLMService()
+    def __init__(self, llm: Optional[LLMService] = None):
+        self.llm = llm if llm is not None else LLMService()
         self.max_history = 10
 
     def _build_system_context(self) -> str:
@@ -128,6 +128,12 @@ class ChatService:
         messages.append({"role": "user", "parts": [message]})
 
         try:
+            # Autocuración: Si no hay cliente activo en memoria, reintentar resolución desde BD/env
+            if not self.llm.client or not self.llm.api_key:
+                db_key, db_model = self.llm._resolve_api_key()
+                if db_key:
+                    self.llm.update_api_key(db_key, db_model)
+
             if self.llm.client and self.llm.api_key:
                 self.llm._rate_limit()
 
@@ -150,18 +156,20 @@ class ChatService:
                 )
 
                 if response.text:
+                    content = response.text.strip()
+                    print(f"[Chat] Respuesta Gemini ({len(content)} chars, modelo: {self.llm._gemini_model})")
                     return {
                         "role": "assistant",
-                        "content": response.text.strip(),
+                        "content": content,
                         "timestamp": datetime.now().isoformat(),
                         "type": "llm"
                     }
 
-            raise RuntimeError("Gemini no disponible")
+            raise RuntimeError("Gemini no configurado o sin API Key")
 
         except Exception as e:
             err_msg = str(e)
-            print(f"[Chat] Gemini fallo: {err_msg[:100]}")
+            print(f"[Chat] Fallback a regla local ({err_msg[:80]})")
 
             return {
                 "role": "assistant",
