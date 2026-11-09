@@ -4,8 +4,9 @@ import { spawn, execSync } from "child_process"
 import path from "path"
 import fs from "fs"
 
-const PID_FILE = path.join(process.cwd(), ".ai_engine.pid")
 const LOGS_DIR = path.join(process.cwd(), "logs")
+const PID_FILE = path.join(LOGS_DIR, "ai-engine.pid")
+const LEGACY_PID_FILE = path.join(process.cwd(), ".ai_engine.pid")
 const LOG_FILE = path.join(LOGS_DIR, "ai-engine.log")
 const AI_PORT = 8000
 const AI_HEALTH_URL = `http://127.0.0.1:${AI_PORT}/health`
@@ -27,12 +28,47 @@ async function checkAiHealth(timeoutMs = 1500): Promise<boolean> {
   }
 }
 
+function isAiProcess(pid: number): boolean {
+  if (!pid || isNaN(pid) || pid <= 0) return false
+  const isWin = process.platform === "win32"
+  try {
+    if (isWin) {
+      const output = execSync(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`, {
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }).toLowerCase()
+      return output.includes("python") || output.includes("uvicorn")
+    } else {
+      const output = execSync(`ps -p ${pid} -o comm=`, {
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }).toLowerCase()
+      return output.includes("python") || output.includes("uvicorn")
+    }
+  } catch {
+    return false
+  }
+}
+
 function getSavedPid(): number | null {
   try {
+    // 1. Intentar leer desde logs/ai-engine.pid
     if (fs.existsSync(PID_FILE)) {
       const pidStr = fs.readFileSync(PID_FILE, "utf-8").trim()
       const pid = parseInt(pidStr, 10)
       return isNaN(pid) ? null : pid
+    }
+    // 2. Compatibilidad hacia atrás: leer legado .ai_engine.pid si existe y migrarlo
+    if (fs.existsSync(LEGACY_PID_FILE)) {
+      const legacyStr = fs.readFileSync(LEGACY_PID_FILE, "utf-8").trim()
+      const pid = parseInt(legacyStr, 10)
+      if (!isNaN(pid)) {
+        savePid(pid)
+        try {
+          fs.unlinkSync(LEGACY_PID_FILE)
+        } catch {}
+        return pid
+      }
     }
   } catch {
     // Ignore read errors
@@ -42,7 +78,15 @@ function getSavedPid(): number | null {
 
 function savePid(pid: number): void {
   try {
+    if (!fs.existsSync(LOGS_DIR)) {
+      fs.mkdirSync(LOGS_DIR, { recursive: true })
+    }
     fs.writeFileSync(PID_FILE, pid.toString(), "utf-8")
+    if (fs.existsSync(LEGACY_PID_FILE)) {
+      try {
+        fs.unlinkSync(LEGACY_PID_FILE)
+      } catch {}
+    }
   } catch (err) {
     console.error("[AI Service API] Error saving PID file:", err)
   }
@@ -52,6 +96,9 @@ function clearPid(): void {
   try {
     if (fs.existsSync(PID_FILE)) {
       fs.unlinkSync(PID_FILE)
+    }
+    if (fs.existsSync(LEGACY_PID_FILE)) {
+      fs.unlinkSync(LEGACY_PID_FILE)
     }
   } catch (err) {
     console.error("[AI Service API] Error removing PID file:", err)
@@ -95,18 +142,24 @@ function stopProcessTree(pid: number | null): void {
   const isWin = process.platform === "win32"
 
   if (pid) {
-    try {
-      if (isWin) {
-        execSync(`taskkill /PID ${pid} /T /F`, { stdio: "ignore" })
-      } else {
-        process.kill(-pid, "SIGTERM")
+    if (isAiProcess(pid)) {
+      try {
+        if (isWin) {
+          execSync(`taskkill /PID ${pid} /T /F`, { stdio: "ignore" })
+        } else {
+          process.kill(-pid, "SIGTERM")
+        }
+      } catch {
+        // Ignore if process already died
       }
-    } catch {
-      // Ignore if process already died
+    } else {
+      console.warn(
+        `[AI Service API] Proceso con PID ${pid} no coincide con python/uvicorn; se omite terminación directa por seguridad.`
+      )
     }
   }
 
-  // Liberar el puerto 8000 en Windows por si acaso
+  // Liberar el puerto 8000 en Windows solo si el proceso pertenece a python/uvicorn
   if (isWin) {
     try {
       const netstatOutput = execSync(`netstat -ano | findstr :${AI_PORT}`, {
@@ -115,8 +168,8 @@ function stopProcessTree(pid: number | null): void {
       const lines = netstatOutput.trim().split("\n")
       for (const line of lines) {
         const parts = line.trim().split(/\s+/)
-        const portPid = parts[parts.length - 1]
-        if (portPid && !isNaN(Number(portPid)) && Number(portPid) > 0) {
+        const portPid = parseInt(parts[parts.length - 1], 10)
+        if (!isNaN(portPid) && portPid > 0 && isAiProcess(portPid)) {
           execSync(`taskkill /PID ${portPid} /F`, { stdio: "ignore" })
         }
       }
@@ -139,7 +192,15 @@ export async function GET(request: NextRequest) {
   if (!auth.isValid) return auth.response
 
   const isRunning = await checkAiHealth()
-  const savedPid = getSavedPid()
+  let savedPid = getSavedPid()
+
+  // Limpieza automática si el microservicio no responde y el PID es huérfano
+  if (!isRunning && savedPid) {
+    if (!isAiProcess(savedPid)) {
+      clearPid()
+      savedPid = null
+    }
+  }
 
   const isWin = process.platform === "win32"
   const venvUvicorn = path.join(

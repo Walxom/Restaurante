@@ -63,6 +63,8 @@ ai_engine/venv/
 skills-lock.json
 logs/
 *.log
+*.pid
+.ai_engine.pid
 PUNTOS_T2/.obsidian
 backups/
 
