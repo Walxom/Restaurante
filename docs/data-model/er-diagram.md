@@ -9,13 +9,14 @@
 
 ## 1. Diagrama Entidad-Relación (DER)
 
-A continuación se presenta la arquitectura relacional completa del sistema SIGER-IA modelada en Mermaid, contrastada al 100% con las 14 tablas de `schema.prisma`:
+A continuación se presenta la arquitectura relacional completa del sistema SIGER-IA modelada en Mermaid, contrastada al 100% con las 15 tablas de `schema.prisma`:
 
 ```mermaid
 erDiagram
     users ||--o{ orders : "registra (userId)"
     users ||--o{ invoices : "emite (issuedBy)"
     users ||--o{ printers : "crea/actualiza"
+    users ||--o{ cash_sessions : "abre/cierra turno (US-10)"
 
     tables ||--o{ orders : "contiene (tableId)"
 
@@ -195,6 +196,23 @@ erDiagram
         datetime updatedAt
     }
 
+    cash_sessions {
+        string id PK "CUID"
+        string status "ABIERTA | CERRADA (un solo turno abierto)"
+        decimal openingAmount "Fondo inicial"
+        datetime openedAt
+        string openedById FK
+        datetime closedAt "Nullable"
+        string closedById FK "Nullable"
+        decimal declaredAmount "Efectivo contado (arqueo ciego)"
+        decimal cashSales "Ventas EFECTIVO del turno"
+        decimal expectedAmount "Fondo + ventas en efectivo"
+        decimal difference "Declarado - esperado"
+        decimal otherSales "Yape, Plin, tarjeta, transferencia"
+        int invoiceCount
+        string notes
+    }
+
     system_config {
         string id PK "default"
         string companyName "Mr Frit / Fondo Marino"
@@ -219,7 +237,7 @@ erDiagram
    - El modelo define `role String @default("MESERO")`.
    - Los roles canónicos implementados en middleware y sembrados en `seed.ts` son **`JEFE`** y **`MESERO`**.
 2. **Tablas e Integridad Referencial:**
-   - Todas las 14 tablas son idénticas a las definidas en `schema.prisma`.
+   - Todas las 15 tablas son idénticas a las definidas en `schema.prisma`.
    - Se respetan íntegramente las eliminaciones en cascada (`onDelete: Cascade` en `OrderItem`, `InvoiceItem`, `Recipe` y `RecipeIngredient`).
 3. **Hardware Térmico:**
    - La impresora de cocina sembrada en `prisma/seed.ts` (L313) opera en red LAN con IP `192.168.0.100:9100` y ancho de papel de 58 mm.

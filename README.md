@@ -95,7 +95,7 @@ Toda la documentación técnica del incremento se mantiene y versiona directamen
 - **[Guía de Inicio Rápido (Quickstart)](docs/installation/quickstart.md)**: Despliegue en 1 paso, credenciales oficiales y diagnóstico.
 - **[Guía de Instalación y Despliegue Reproducible](docs/installation/deployment-guide.md)**: Procedimiento paso a paso para entorno local bare-metal y Docker Compose.
 - **[Especificación OpenAPI 3.1.0](docs/api/openapi.yaml)**: Contratos detallados de endpoints, parámetros, request bodies y respuestas HTTP.
-- **[Diagrama Entidad-Relación (DER)](docs/data-model/er-diagram.md)**: Modelo relacional completo de las 14 tablas en sintaxis Mermaid.
+- **[Diagrama Entidad-Relación (DER)](docs/data-model/er-diagram.md)**: Modelo relacional completo de las 15 tablas en sintaxis Mermaid.
 - **[Diccionario de Datos](docs/data-model/data-dictionary.md)**: Descripción detallada de campos, tipos, defaults y reglas de integridad.
 - **[Manifiesto de Documentación Viva](docs/architecture/living-docs-manifesto.md)**: Políticas de sincronización continua y prevención de drift en CI/CD.
 
