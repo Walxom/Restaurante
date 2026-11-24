@@ -38,6 +38,9 @@ Almacena el personal operativo y administrativo del restaurante con sus credenci
 | `password` | String | Not Null | - | Hash criptográfico de contraseña (bcrypt con salt 12). |
 | `role` | String | Not Null | `'MESERO'` | Rol operativo canónico: `'JEFE'` o `'MESERO'`. |
 | `isActive` | Boolean | Not Null | `true` | Bandera de vigencia de la cuenta. |
+| `failedLoginAttempts` | Int | Not Null | `0` | Intentos de inicio de sesión fallidos dentro de la ventana de 30 min. |
+| `firstFailedLoginAt` | DateTime | Nullable | `null` | Primer fallo de la ventana actual. |
+| `lockedUntil` | DateTime | Nullable | `null` | Fin del bloqueo temporal (15 min tras 3 fallos). Persiste ante reinicios. |
 | `createdAt`| DateTime | Not Null | `now()` | Timestamp de registro del usuario. |
 | `updatedAt`| DateTime | Not Null | - | Timestamp de última modificación. |
 
