@@ -92,6 +92,8 @@ Comandos útiles para la gestión de la base de datos:
 Toda la documentación técnica del incremento se mantiene y versiona directamente en el repositorio dentro del directorio [`docs/`](docs/README.md):
 
 - **[Índice Maestro de Documentación](docs/README.md)**: Mapa general del repositorio y matriz de entregables técnicos.
+- **[Manual de Usuario](docs/user/manual-usuario.md)**: Uso diario por rol con capturas reales y preguntas frecuentes.
+- **[Notas de Versión v1.0.0](docs/release/release-notes-v1.0.0.md)** y **[CHANGELOG](CHANGELOG.md)**: Novedades, evidencia de calidad, limitaciones y backlog residual.
 - **[Guía de Inicio Rápido (Quickstart)](docs/installation/quickstart.md)**: Despliegue en 1 paso, credenciales oficiales y diagnóstico.
 - **[Guía de Instalación y Despliegue Reproducible](docs/installation/deployment-guide.md)**: Procedimiento paso a paso para entorno local bare-metal y Docker Compose.
 - **[Especificación OpenAPI 3.1.0](docs/api/openapi.yaml)**: Contratos detallados de endpoints, parámetros, request bodies y respuestas HTTP.
