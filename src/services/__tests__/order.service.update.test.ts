@@ -127,6 +127,8 @@ describe("order.service.update — camino básico", () => {
     expect(vi.mocked(prisma.orderItem.createMany).mock.calls[0][0]?.data).toEqual([
       { orderId: "ord-1", productId: "p2", quantity: 3, unitPrice: 5, subtotal: 15, notes: "helada", status: "PENDING" },
     ])
+    // Total recalculado y pedido reabierto: 2 x 30 (it-1 editado) + 3 x 5 (p2
+    // creado) = 75; el pedido estaba SERVED y vuelve a CONFIRMED al modificarse.
     expect(vi.mocked(prisma.order.update).mock.calls[0][0].data).toEqual({ totalAmount: 75, status: "CONFIRMED" })
     expect(printOrderChanges).toHaveBeenCalledWith("ord-1", existing.orderItems, expect.any(Array))
   })
