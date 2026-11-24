@@ -16,6 +16,10 @@ jobs:
       DATABASE_URL: file:./dev.db
       NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-secret-placeholder-minimum-32-chars' }}
       NEXTAUTH_URL: http://localhost:3001
+      # Credenciales de k6: se toman de los secrets del repositorio y caen a la
+      # semilla de desarrollo si el secret no está configurado.
+      K6_USER: ${{ secrets.K6_USER || 'jefe' }}
+      K6_PASSWORD: ${{ secrets.K6_PASSWORD || 'admin123' }}
 
     steps:
       - name: Checkout del repositorio

@@ -14,6 +14,8 @@ import http from "k6/http"
 export function obtenerCookieSesion(baseUrl) {
   if (__ENV.K6_AUTH_COOKIE) return __ENV.K6_AUTH_COOKIE
 
+  // En CI las credenciales llegan desde los secrets K6_USER / K6_PASSWORD
+  // (ver load.yml); el fallback son las del seed de desarrollo.
   const usuario = __ENV.K6_USER || "jefe"
   const clave = __ENV.K6_PASSWORD || "admin123"
 

@@ -21,7 +21,9 @@ export default defineConfig({
         lines: 80,
         statements: 80,
         functions: 80,
-        branches: 80,
+        // Ramas por encima de la media: la medición real es 89.8 % y el margen
+        // evita que la cobertura se erosione sin que el CI lo note.
+        branches: 85,
       },
       reportsDirectory: "./coverage",
       // Enfocar la cobertura en la lógica de negocio (servicios y validaciones),
