@@ -11,6 +11,7 @@
 import http from "k6/http"
 import { check, sleep } from "k6"
 import { Rate, Trend } from "k6/metrics"
+import { obtenerCookieSesion } from "./auth.js"
 
 const errorRate = new Rate("tasa_error")
 const duracionRequest = new Trend("duracion_request", true)
@@ -32,10 +33,14 @@ export const options = {
 }
 
 const BASE_URL = __ENV.BASE_URL || "http://localhost:3001"
-const AUTH_COOKIE = __ENV.K6_AUTH_COOKIE || ""
-const headers = { "Content-Type": "application/json", Cookie: AUTH_COOKIE }
 
-export default function () {
+// Inicia sesión una sola vez (o usa K6_AUTH_COOKIE) y comparte la cookie.
+export function setup() {
+  return { cookie: obtenerCookieSesion(BASE_URL) }
+}
+
+export default function (data) {
+  const headers = { "Content-Type": "application/json", Cookie: data.cookie }
   // Solicitud representativa: consulta de pedidos activos
   const start = Date.now()
   const res = http.get(`${BASE_URL}/api/orders?status=active&limit=20`, {
