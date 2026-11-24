@@ -39,25 +39,31 @@ export function getNivelSla(
   return "VERDE"
 }
 
-/** Clases Tailwind del borde/insignia según el nivel. ROJO parpadea. */
-export function getSlaClasses(nivel: NivelSla | null): { borde: string; insignia: string } {
+/**
+ * Clases Tailwind según el nivel. `pulso` va en una capa superpuesta para que
+ * en ROJO parpadee solo el contorno, sin atenuar el contenido de la tarjeta.
+ */
+export function getSlaClasses(nivel: NivelSla | null): { borde: string; insignia: string; pulso: string } {
   switch (nivel) {
     case "VERDE":
       return {
         borde: "border-l-4 border-l-emerald-500",
         insignia: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
+        pulso: "",
       }
     case "AMBAR":
       return {
         borde: "border-l-4 border-l-amber-500",
         insignia: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30",
+        pulso: "",
       }
     case "ROJO":
       return {
-        borde: "border-l-4 border-l-red-600 ring-2 ring-red-500/60 animate-pulse",
+        borde: "border-l-4 border-l-red-600",
         insignia: "bg-red-600 text-white border-red-700",
+        pulso: "pointer-events-none absolute inset-0 rounded-[inherit] ring-2 ring-inset ring-red-500 animate-pulse",
       }
     default:
-      return { borde: "", insignia: "" }
+      return { borde: "", insignia: "", pulso: "" }
   }
 }

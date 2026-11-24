@@ -28,6 +28,7 @@ export function OrderCard({ order, onClick, onEdit, onComplete, onCancel, ahora 
       onClick={onClick}
     >
       <div className="absolute inset-0 bg-slate-500/[0.02] group-hover:bg-transparent transition-colors" />
+      {sla.pulso && <div aria-hidden className={cn(sla.pulso, "z-20")} />}
       <div className="relative z-10">
       <div className="mb-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">

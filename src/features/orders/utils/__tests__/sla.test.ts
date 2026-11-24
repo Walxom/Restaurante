@@ -32,10 +32,12 @@ describe("US-14 — SLA cromático de pedidos", () => {
     }
   })
 
-  it("ROJO parpadea; sin nivel no agrega clases", () => {
-    expect(getSlaClasses("ROJO").borde).toContain("animate-pulse")
+  it("solo ROJO parpadea (en una capa aparte); sin nivel no agrega clases", () => {
+    expect(getSlaClasses("ROJO").pulso).toContain("animate-pulse")
+    expect(getSlaClasses("ROJO").borde).not.toContain("animate-pulse")
+    expect(getSlaClasses("VERDE").pulso).toBe("")
     expect(getSlaClasses("VERDE").borde).toContain("emerald")
     expect(getSlaClasses("AMBAR").insignia).toContain("amber")
-    expect(getSlaClasses(null)).toEqual({ borde: "", insignia: "" })
+    expect(getSlaClasses(null)).toEqual({ borde: "", insignia: "", pulso: "" })
   })
 })

@@ -248,9 +248,10 @@ export default function PedidosPorServirWidget({
                   <div 
                     key={order.id}
                     data-sla={nivelSla ?? undefined}
-                    className={`group p-3 sm:p-4 bg-foreground/5 hover:bg-foreground/[0.08] border border-border/40 hover:border-foreground/20 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-md ${sla.borde}`}
+                    className={`relative group p-3 sm:p-4 bg-foreground/5 hover:bg-foreground/[0.08] border border-border/40 hover:border-foreground/20 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-md ${sla.borde}`}
                     onClick={() => handleOrderClick(order.id)}
                   >
+                    {sla.pulso && <div aria-hidden className={sla.pulso} />}
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
