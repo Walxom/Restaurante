@@ -23,6 +23,7 @@
 12. [`invoices` (Comprobantes de Pago y Facturación)](#12-tabla-invoices)
 13. [`invoice_items` (Detalle de Comprobante Fiscal)](#13-tabla-invoice_items)
 14. [`printers` (Impresoras Térmicas ESC/POS de Red)](#14-tabla-printers)
+15. [`cash_sessions` (Turnos de Caja y Arqueo Ciego)](#15-tabla-cash_sessions)
 
 ---
 
@@ -283,3 +284,25 @@ Registro de hardware de impresión térmica para cocina y caja.
 | `updatedBy` | String | FK -> users.id, Nullable | `null` | Usuario que editó la configuración. |
 | `createdAt` | DateTime | Not Null | `now()` | Registro del dispositivo. |
 | `updatedAt` | DateTime | Not Null | - | Modificación de parámetros. |
+
+---
+
+### 15. Tabla: `cash_sessions`
+Turnos de caja con arqueo ciego (US-10). Mientras el turno está `ABIERTA`, la API no expone el monto esperado; al cerrar se calcula el descuadre.
+
+| Campo | Tipo | Restricciones | Default | Descripción |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | String | PK, CUID | `cuid()` | Identificador del turno. |
+| `status` | String | Not Null, Index | `'ABIERTA'` | `'ABIERTA'` o `'CERRADA'`. Solo un turno abierto a la vez. |
+| `openingAmount` | Decimal | Not Null | - | Fondo inicial de caja. |
+| `openedAt` | DateTime | Not Null, Index | `now()` | Inicio del turno. |
+| `openedById` | String | FK -> users.id | - | Usuario que abrió la caja. |
+| `closedAt` | DateTime | Nullable | `null` | Cierre del turno. |
+| `closedById` | String | FK -> users.id, Nullable | `null` | Usuario que realizó el arqueo. |
+| `declaredAmount` | Decimal | Nullable | `null` | Efectivo físico contado y declarado. |
+| `cashSales` | Decimal | Nullable | `null` | Ventas en `EFECTIVO` (comprobantes `ISSUED`) del turno. |
+| `expectedAmount` | Decimal | Nullable | `null` | `openingAmount + cashSales`. |
+| `difference` | Decimal | Nullable | `null` | `declaredAmount - expectedAmount` (> 0 sobrante, < 0 faltante). |
+| `otherSales` | Decimal | Nullable | `null` | Ventas por Yape, Plin, tarjeta y transferencia. |
+| `invoiceCount` | Int | Nullable | `null` | Comprobantes emitidos en el turno. |
+| `notes` | String | Nullable | `null` | Observaciones del arqueo (máx. 300). |

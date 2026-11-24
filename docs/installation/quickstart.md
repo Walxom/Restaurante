@@ -22,7 +22,7 @@ Este comando realiza automáticamente:
 1. **Verificación de runtime de sistema**: Node.js (>= 20), gestor `pnpm` (activado vía Corepack si es necesario) y `uv` para Python.
 2. **Generación Criptográfica de `.env`**: Crea `.env` con un `NEXTAUTH_SECRET` único generado con `crypto.randomBytes(32)` y configuración de `DATABASE_URL="file:./dev.db"`.
 3. **Instalación de Dependencias**: Ejecución determinista de `pnpm install`.
-4. **Sincronización de Base de Datos**: Creación de las 14 tablas relacionales mediante `prisma db push` y ejecución de semillas (`prisma/seed.ts` con usuarios, mesas, categorías, platos y recetas).
+4. **Sincronización de Base de Datos**: Creación de las 15 tablas relacionales mediante `prisma db push` y ejecución de semillas (`prisma/seed.ts` con usuarios, mesas, categorías, platos y recetas).
 5. **Aprovisionamiento Automático de IA**: Creación del venv con Python 3.10 e instalación de FastAPI, Uvicorn y Scikit-Learn mediante `uv`.
 6. **Diagnóstico Pre-Vuelo (`doctor.js`)**: Comprobación integral de puertos 3001 y 8000, archivos, seeds y permisos de disco.
 

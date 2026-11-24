@@ -21,7 +21,7 @@ docs/
 ├── api/                               # Contratos formales de interfaces
 │   └── openapi.yaml                   # Especificación OpenAPI 3.1.0 completa de endpoints y esquemas
 ├── data-model/                        # Arquitectura y persistencia relacional
-│   ├── er-diagram.md                  # Diagrama Entidad-Relación (DER) en Mermaid (14 tablas)
+│   ├── er-diagram.md                  # Diagrama Entidad-Relación (DER) en Mermaid (15 tablas)
 │   └── data-dictionary.md             # Diccionario de datos canónico con restricciones y tipos
 └── architecture/                      # Principios rectores y calidad arquitectónica
     └── living-docs-manifesto.md       # Manifiesto y flujo de sincronización continua sin drift
@@ -43,7 +43,7 @@ docs/
 
 ### 3. Modelo de Datos y Persistencia (`docs/data-model/`)
 * **[Diagrama Entidad-Relación (DER)](data-model/er-diagram.md)**:  
-  Visualización interactiva en sintaxis Mermaid que modela la integridad referencial de las 14 tablas de la base de datos SQLite (usuarios, comandas, mesas, detalle de pedidos, recetas, insumos, inventario, facturas y configuración fiscal).
+  Visualización interactiva en sintaxis Mermaid que modela la integridad referencial de las 15 tablas de la base de datos SQLite (usuarios, comandas, mesas, detalle de pedidos, recetas, insumos, inventario, facturas y configuración fiscal).
 * **[Diccionario de Datos](data-model/data-dictionary.md)**:  
   Catálogo exhaustivo campo por campo que describe los nombres de columna, tipos de datos Prisma/SQLite, restricciones de clave primaria/foránea/unicidad, valores por defecto y reglas de negocio aplicadas.
 

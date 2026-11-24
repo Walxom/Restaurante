@@ -115,7 +115,8 @@ Opens the same SQLite DB **read-only** (`DATABASE_URL` in `ai_engine/.env`).
 ### Data model (Prisma / SQLite)
 `prisma/schema.prisma` — core entities: `User`, `Category`/`Product` (+ `Recipe`/`RecipeIngredient`),
 `Table`, `Order`/`OrderItem`, `Ingredient`/`IngredientCategory`, `Invoice`/`InvoiceItem`,
-`SystemConfig` (company info, IGV rate, boleta/factura counters), `Printer`.
+`SystemConfig` (company info, IGV rate, boleta/factura counters), `Printer`,
+`CashSession` (US-10 cash shifts with blind count — never expose `expectedAmount` while `ABIERTA`).
 
 Critical notes:
 - Enums stored as **plain strings** — validate with Zod, never assume valid values from DB.

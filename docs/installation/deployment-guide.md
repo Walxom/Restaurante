@@ -95,7 +95,7 @@ pnpm install
 ```
 
 ### Paso 3: Inicialización y Poblado de la Base de Datos
-Este comando ejecuta el script oficial `db:setup` definido en `package.json` (L18), el cual sincroniza las 14 tablas en SQLite y ejecuta la semilla `prisma/seed.ts`:
+Este comando ejecuta el script oficial `db:setup` definido en `package.json` (L18), el cual sincroniza las 15 tablas en SQLite y ejecuta la semilla `prisma/seed.ts`:
 ```bash
 pnpm db:setup
 ```

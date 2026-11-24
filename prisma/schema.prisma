@@ -20,8 +20,35 @@ model User {
   orders          Order[]
   updatedPrinters Printer[] @relation("PrinterUpdater")
   createdPrinters Printer[] @relation("PrinterCreator")
+  openedCashSessions CashSession[] @relation("CashSessionOpener")
+  closedCashSessions CashSession[] @relation("CashSessionCloser")
 
   @@map("users")
+}
+
+/// US-10 — Turno de caja con arqueo ciego. Mientras está ABIERTA, la API no
+/// expone el monto esperado: el cajero declara lo contado sin ver el sistema.
+model CashSession {
+  id             String    @id @default(cuid())
+  status         String    @default("ABIERTA") // ABIERTA | CERRADA
+  openingAmount  Decimal
+  openedAt       DateTime  @default(now())
+  openedById     String
+  closedAt       DateTime?
+  closedById     String?
+  declaredAmount Decimal?
+  cashSales      Decimal?
+  expectedAmount Decimal?
+  difference     Decimal?
+  otherSales     Decimal?
+  invoiceCount   Int?
+  notes          String?
+  openedBy       User      @relation("CashSessionOpener", fields: [openedById], references: [id])
+  closedBy       User?     @relation("CashSessionCloser", fields: [closedById], references: [id])
+
+  @@index([status])
+  @@index([openedAt])
+  @@map("cash_sessions")
 }
 
 model Category {

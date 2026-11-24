@@ -13,7 +13,7 @@ import PedidosServidosWidget from "@/features/dashboard/components/PedidosServid
 import {
   Users, Clock, DollarSign, TrendingUp, Package,
   BookOpen, Brain, FileText, Printer, Settings, Utensils,
-  ChevronRight,
+  ChevronRight, Wallet,
 } from "lucide-react"
 import { useSystemConfig } from "@/features/dashboard/hooks/useSystemConfig"
 import { useDashboardStats } from "@/features/dashboard/hooks/useDashboardStats"
@@ -62,6 +62,7 @@ export default function DashboardPage() {
   const navigateToVentas       = () => navigateWithLoading("/dashboard/ventas")
   const navigateToImpresion    = () => navigateWithLoading("/impresion")
   const navigateToInteligencia = () => navigateWithLoading("/dashboard/inteligencia")
+  const navigateToCaja         = () => navigateWithLoading("/dashboard/caja")
 
   const isLive = ordersConnected && tablesConnected
 
@@ -85,6 +86,7 @@ export default function DashboardPage() {
           <Link href="/impresion"               prefetch={true}><span /></Link>
           <Link href="/dashboard/configuracion" prefetch={true}><span /></Link>
           <Link href="/dashboard/inteligencia"  prefetch={true}><span /></Link>
+          <Link href="/dashboard/caja"         prefetch={true}><span /></Link>
         </div>
 
         {/* ── HEADER ── */}
@@ -272,12 +274,13 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="p-3 sm:p-5">
-              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-7 gap-2 sm:gap-3">
+              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-2 sm:gap-3">
                 {[
                   { label: 'Menú',         icon: BookOpen,   color: 'orange' as ActionColor, onClick: navigateToMenu },
                   { label: 'Inventario',   icon: Package,    color: 'purple' as ActionColor, onClick: navigateToInventario },
                   { label: 'Comprobantes', icon: FileText,   color: 'indigo' as ActionColor, onClick: navigateToFacturacion },
                   { label: 'Ventas',       icon: TrendingUp, color: 'pink'   as ActionColor, onClick: navigateToVentas },
+                  { label: 'Caja',         icon: Wallet,     color: 'blue'   as ActionColor, onClick: navigateToCaja },
                   { label: 'Impresión',    icon: Printer,    color: 'teal'   as ActionColor, onClick: navigateToImpresion },
                   { label: 'IA',           icon: Brain,      color: 'purple' as ActionColor, onClick: navigateToInteligencia },
                   { label: 'Config',       icon: Settings,   color: 'gray'   as ActionColor, onClick: navigateToConfig },
