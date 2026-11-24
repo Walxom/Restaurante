@@ -14,7 +14,15 @@ export default defineConfig({
     exclude: [...configDefaults.exclude, "e2e/**"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "html", "lcov"],
+      reporter: ["text", "html", "lcov", "json-summary"],
+      // Umbral mínimo exigido por la Definition of Done y el Plan de Calidad (≥ 80 %).
+      // `pnpm test:coverage` (y el job de CI) falla si la cobertura cae por debajo.
+      thresholds: {
+        lines: 80,
+        statements: 80,
+        functions: 80,
+        branches: 80,
+      },
       reportsDirectory: "./coverage",
       // Enfocar la cobertura en la lógica de negocio (servicios y validaciones),
       // que es lo que cubren las pruebas unitarias de camino básico (McCabe).
