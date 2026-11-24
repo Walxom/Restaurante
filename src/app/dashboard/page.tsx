@@ -63,6 +63,7 @@ export default function DashboardPage() {
   const navigateToImpresion    = () => navigateWithLoading("/impresion")
   const navigateToInteligencia = () => navigateWithLoading("/dashboard/inteligencia")
   const navigateToCaja         = () => navigateWithLoading("/dashboard/caja")
+  const navigateToUsuarios     = () => navigateWithLoading("/dashboard/usuarios")
 
   const isLive = ordersConnected && tablesConnected
 
@@ -87,6 +88,7 @@ export default function DashboardPage() {
           <Link href="/dashboard/configuracion" prefetch={true}><span /></Link>
           <Link href="/dashboard/inteligencia"  prefetch={true}><span /></Link>
           <Link href="/dashboard/caja"         prefetch={true}><span /></Link>
+          <Link href="/dashboard/usuarios"     prefetch={true}><span /></Link>
         </div>
 
         {/* ── HEADER ── */}
@@ -274,7 +276,7 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="p-3 sm:p-5">
-              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-2 sm:gap-3">
+              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-9 gap-2 sm:gap-3">
                 {[
                   { label: 'Menú',         icon: BookOpen,   color: 'orange' as ActionColor, onClick: navigateToMenu },
                   { label: 'Inventario',   icon: Package,    color: 'purple' as ActionColor, onClick: navigateToInventario },
@@ -283,6 +285,7 @@ export default function DashboardPage() {
                   { label: 'Caja',         icon: Wallet,     color: 'blue'   as ActionColor, onClick: navigateToCaja },
                   { label: 'Impresión',    icon: Printer,    color: 'teal'   as ActionColor, onClick: navigateToImpresion },
                   { label: 'IA',           icon: Brain,      color: 'purple' as ActionColor, onClick: navigateToInteligencia },
+                  { label: 'Usuarios',     icon: Users,      color: 'blue'   as ActionColor, onClick: navigateToUsuarios },
                   { label: 'Config',       icon: Settings,   color: 'gray'   as ActionColor, onClick: navigateToConfig },
                 ].map((action) => (
                   <QuickActionButton
