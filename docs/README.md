@@ -26,6 +26,8 @@ docs/
 ├── architecture/                      # Principios rectores y calidad arquitectónica
 │   ├── living-docs-manifesto.md       # Manifiesto y flujo de sincronización continua sin drift
 │   └── guia-desarrollo.md             # Guía de desarrollo: comandos, arquitectura y convenciones
+├── operations/                        # Operación y soporte post-lanzamiento
+│   └── manual-operaciones.md          # Runbooks, SLA, mantenimiento, secretos, licencias y CIs
 ├── user/                              # Documentación para el usuario final
 │   ├── manual-usuario.md              # Manual por rol (JEFE, MESERO, cocina, caja) + FAQ
 │   └── img/                           # Capturas reales del sistema
@@ -64,6 +66,10 @@ docs/
   Guía de uso diario por rol con capturas reales: pedidos, cobro, mesas, menú, inventario, caja con arqueo ciego, alertas de tiempo en cocina e IA, más preguntas frecuentes.
 * **[Notas de Versión v1.0.0](release/release-notes-v1.0.0.md)**:  
   Novedades, evidencia de calidad (cobertura, E2E, k6), instrucciones de actualización, limitaciones conocidas y backlog residual. Historial completo en [`CHANGELOG.md`](../CHANGELOG.md).
+
+### 6. Operación y Soporte (`docs/operations/`)
+* **[Manual de Operaciones y Soporte](operations/manual-operaciones.md)**:  
+  Paquete de transferencia a Operaciones: runbooks de arranque, parada, incidentes y respaldo; accesos y roles por entorno; gestión de secretos; plan de mantenimiento; SLA por severidad; inventario de licencias e ítems de configuración de la línea base v1.0.0.
 
 ---
 
