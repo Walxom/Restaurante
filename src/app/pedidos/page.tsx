@@ -16,6 +16,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import { OrderCard } from "@/features/orders/components/OrderCard"
 import { OrderFilters } from "@/features/orders/components/OrderFilters"
 import { OrderPagination } from "@/features/orders/components/OrderPagination"
+import { useAhora, useSlaBeep } from "@/features/orders/hooks/useSlaAlerts"
 import { type Order } from "@/types"
 
 export default function UnifiedOrdersPage() {
@@ -38,6 +39,10 @@ export default function UnifiedOrdersPage() {
   // (p.ej. el fetch de 'active' del montaje) pise a la del filtro/página actual
   // al resolverse fuera de orden, dejando la lista vacía por error.
   const latestReqRef = useRef('')
+
+  // US-14: reloj para el semáforo de SLA y bip al pasar un pedido a rojo (> 18 min).
+  const ahora = useAhora()
+  useSlaBeep(orders, ahora)
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -242,6 +247,7 @@ export default function UnifiedOrdersPage() {
                     <OrderCard
                       key={order.id}
                       order={order}
+                      ahora={ahora}
                       onClick={() => router.push(`/pedidos/${order.id}/detalles`)}
                       onEdit={(id) => router.push(`/pedidos/${id}/edit`)}
                       onComplete={(o) => {

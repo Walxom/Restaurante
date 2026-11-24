@@ -4,6 +4,7 @@ import { Eye, Clock, User, Pencil, CheckCircle2, Ban } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { getStatusColor, getStatusText, getOrderTypeInfo } from "@/features/orders/utils/order-utils"
+import { getNivelSla, getSlaClasses, minutosTranscurridos } from "@/features/orders/utils/sla"
 
 interface OrderCardProps {
   order: any
@@ -11,14 +12,19 @@ interface OrderCardProps {
   onEdit?: (id: string) => void
   onComplete?: (order: any) => void
   onCancel?: (id: string) => void
+  /** Marca de tiempo actual (ms) para recalcular el SLA de US-14 sin recargar. */
+  ahora?: number
 }
 
-export function OrderCard({ order, onClick, onEdit, onComplete, onCancel }: OrderCardProps) {
+export function OrderCard({ order, onClick, onEdit, onComplete, onCancel, ahora }: OrderCardProps) {
   const typeInfo = getOrderTypeInfo(order.type, order.table?.number)
+  const nivelSla = getNivelSla(order.status, order.createdAt, ahora)
+  const sla = getSlaClasses(nivelSla)
 
   return (
-    <div 
-      className="bg-white dark:bg-slate-900 rounded-2xl p-4 lg:p-6 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-xl transition-all duration-300 cursor-pointer group active:scale-[0.99] relative overflow-hidden"
+    <div
+      className={cn("bg-white dark:bg-slate-900 rounded-2xl p-4 lg:p-6 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-xl transition-all duration-300 cursor-pointer group active:scale-[0.99] relative overflow-hidden", sla.borde)}
+      data-sla={nivelSla ?? undefined}
       onClick={onClick}
     >
       <div className="absolute inset-0 bg-slate-500/[0.02] group-hover:bg-transparent transition-colors" />
@@ -88,6 +94,14 @@ export function OrderCard({ order, onClick, onEdit, onComplete, onCancel }: Orde
                 {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 <span className="mx-1">•</span>
                 {new Date(order.createdAt).toLocaleDateString()}
+                {nivelSla && (
+                  <span
+                    className={cn("ml-1 px-1.5 py-0.5 rounded-md border font-bold opacity-100", sla.insignia)}
+                    title="Tiempo de espera (alerta en rojo a partir de 18 min)"
+                  >
+                    {minutosTranscurridos(order.createdAt, ahora)} min
+                  </span>
+                )}
               </div>
             </div>
           </div>
