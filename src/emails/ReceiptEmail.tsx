@@ -31,7 +31,7 @@ interface ReceiptEmailProps {
 }
 
 export const ReceiptEmail = ({
-  companyName = "Bendistaurante",
+  companyName = "Fondo Marino",
   customerName = "Cliente",
   invoiceNumber = "B001-00000001",
   invoiceType = "BOLETA",

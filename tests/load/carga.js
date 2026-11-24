@@ -1,5 +1,5 @@
 /**
- * PRUEBA DE CARGA (Load Test) — Bendistaurante POS
+ * PRUEBA DE CARGA (Load Test) — SIGER-IA
  * Curso: Calidad y Pruebas de Software — Semana 8
  *
  * Escenario: 50 usuarios virtuales registrando pedidos simultáneamente

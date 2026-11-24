@@ -1,5 +1,5 @@
 /**
- * PRUEBA DE ESTRÉS (Stress Test) — Bendistaurante POS
+ * PRUEBA DE ESTRÉS (Stress Test) — SIGER-IA
  * Curso: Calidad y Pruebas de Software — Semana 9
  *
  * Escenario: Rampa creciente de usuarios hasta encontrar el punto de quiebre.
