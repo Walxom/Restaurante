@@ -33,7 +33,7 @@ export async function POST(
     const resend = new Resend(process.env.RESEND_API_KEY)
 
     const config = await prisma.systemConfig.findFirst()
-    const companyName = config?.companyName || "Bendistaurante"
+    const companyName = config?.companyName || "Fondo Marino"
 
     const invoice = await prisma.invoice.findUnique({
       where: { id: resolvedParams.id },

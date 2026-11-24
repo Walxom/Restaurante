@@ -54,4 +54,30 @@ test.describe('Autenticación y RBAC', () => {
     // El middleware debe expulsarlo (no permanece en /dashboard)
     await expect(page).not.toHaveURL(/\/dashboard$/, { timeout: 15_000 })
   })
+
+  test('CP-SEC-01: bloqueo temporal tras 3 intentos fallidos', async ({ page }) => {
+    // Usuario exclusivo de esta prueba: el bloqueo es por nombre de usuario y no
+    // debe afectar a las cuentas del seed que usan los demás casos.
+    const usuario = `bloqueo-e2e-${Date.now()}`
+
+    await page.goto('/login')
+    const intentar = async () => {
+      await page.getByTestId('username-input').fill(usuario)
+      await page.getByTestId('password-input').fill('contrasena-incorrecta')
+      const respuesta = page.waitForResponse((r) => r.url().includes('/api/auth/callback/credentials'))
+      await page.getByTestId('login-button').click()
+      await respuesta
+      await expect(page.getByTestId('error-message')).toBeVisible()
+    }
+
+    for (let i = 0; i < 3; i++) {
+      await intentar()
+      await expect(page.getByTestId('error-message')).not.toContainText(/bloqueada/i)
+    }
+
+    // Cuarto intento: la cuenta ya está bloqueada aunque la contraseña sea irrelevante
+    await intentar()
+    await expect(page.getByTestId('error-message')).toContainText(/bloqueada/i)
+    await expect(page).toHaveURL(/\/login/)
+  })
 })
