@@ -72,7 +72,7 @@ Si tras actualizar algo falla en el restaurante, se vuelve a la versión anterio
 y sin perder la operación del día anterior:
 
 1. Detener el servidor (`Ctrl+C` o `pm2 stop all`).
-2. Volver al código previo: `git checkout ef9af80` (último `main` antes de v1.0.0).
+2. Volver al código previo: `git checkout 96b4abe` (último `main` antes de v1.0.0).
 3. Restaurar la base de datos con el respaldo del paso 1 de la actualización:
    copiar `backups/dev_backup_<fecha>.db` sobre `prisma/dev.db`.
 4. `pnpm install && pnpm db:generate && pnpm build && pnpm start`.

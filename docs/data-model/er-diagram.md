@@ -233,7 +233,7 @@ erDiagram
 
 ## 2. Verificación Directa contra el Código
 
-1. **Usuarios y Roles (`schema.prisma` L19 & `CLAUDE.md` L9):**
+1. **Usuarios y Roles (`schema.prisma` L19 & `docs/architecture/guia-desarrollo.md`):**
    - El modelo define `role String @default("MESERO")`.
    - Los roles canónicos implementados en middleware y sembrados en `seed.ts` son **`JEFE`** y **`MESERO`**.
 2. **Tablas e Integridad Referencial:**

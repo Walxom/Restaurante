@@ -24,7 +24,8 @@ docs/
 │   ├── er-diagram.md                  # Diagrama Entidad-Relación (DER) en Mermaid (15 tablas)
 │   └── data-dictionary.md             # Diccionario de datos canónico con restricciones y tipos
 ├── architecture/                      # Principios rectores y calidad arquitectónica
-│   └── living-docs-manifesto.md       # Manifiesto y flujo de sincronización continua sin drift
+│   ├── living-docs-manifesto.md       # Manifiesto y flujo de sincronización continua sin drift
+│   └── guia-desarrollo.md             # Guía de desarrollo: comandos, arquitectura y convenciones
 ├── user/                              # Documentación para el usuario final
 │   ├── manual-usuario.md              # Manual por rol (JEFE, MESERO, cocina, caja) + FAQ
 │   └── img/                           # Capturas reales del sistema
@@ -55,6 +56,8 @@ docs/
 ### 4. Aseguramiento y Manifiesto de Calidad (`docs/architecture/`)
 * **[Manifiesto de Documentación Técnica Viva](architecture/living-docs-manifesto.md)**:  
   Marco conceptual que rige el proyecto: principios *Docs-as-Code*, especificaciones ejecutables mediante pruebas unitarias/E2E (Vitest y Playwright) y mecanismos de prevención de desincronización (*anti-drift*) en pipelines de integración continua.
+* **[Guía de Desarrollo](architecture/guia-desarrollo.md)**:  
+  Referencia para desarrolladores: comandos de pnpm, arquitectura por capas (página → hook → API → servicio → Prisma), contratos de API clave, tiempo real con Socket.IO, autenticación y convenciones del código.
 
 ### 5. Usuario Final y Entregas (`docs/user/`, `docs/release/`)
 * **[Manual de Usuario](user/manual-usuario.md)**:  
