@@ -1,0 +1,74 @@
+name: Rendimiento — Carga y Estrés (k6)
+
+# Ejecución manual: no bloquea el CI de cada push. Se lanza desde
+# Actions → "Rendimiento — Carga y Estrés (k6)" → Run workflow, o con:
+#   gh workflow run load.yml
+on:
+  workflow_dispatch:
+
+jobs:
+  k6:
+    name: k6 — carga (50 VU) y estrés (10→150 VU)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    env:
+      DATABASE_URL: file:./dev.db
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-secret-placeholder-minimum-32-chars' }}
+      NEXTAUTH_URL: http://localhost:3001
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Generar cliente Prisma y sembrar base de datos
+        run: pnpm db:setup
+
+      - name: Compilar aplicación Next.js
+        run: pnpm build
+
+      - name: Levantar servidor de producción en segundo plano
+        run: |
+          nohup pnpm start > server.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3001/api/public/health > /dev/null; then
+              echo "Servidor listo"; exit 0
+            fi
+            sleep 2
+          done
+          echo "El servidor no respondió a tiempo"; cat server.log; exit 1
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Prueba de carga (50 VU, 1 min)
+        run: k6 run --summary-export=k6-carga-summary.json tests/load/carga.js
+
+      - name: Prueba de estrés (rampa hasta 150 VU)
+        if: always()
+        run: k6 run --summary-export=k6-estres-summary.json tests/load/estres.js
+
+      - name: Publicar resultados de k6 como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-summary
+          path: |
+            k6-*-summary.json
+            tests/load/resultado_*.json
+            server.log
+          retention-days: 30
