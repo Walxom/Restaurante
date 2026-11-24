@@ -29,6 +29,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:setup": "node scripts/test-setup-all.js",
     "test:backup": "node scripts/test-backup-restore.js",
+    "test:power-loss": "node scripts/test-power-loss.js",
     "test:devops": "node scripts/test-devops-config.js",
     "verify": "pnpm tsc --noEmit && pnpm lint && pnpm test && pnpm build",
     "verify:full": "pnpm verify && pnpm ai:test && pnpm test:setup && pnpm test:backup && pnpm test:devops",

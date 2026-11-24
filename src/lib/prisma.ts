@@ -10,9 +10,11 @@ const globalForPrisma = globalThis as unknown as {
 //   contención interna entre handlers concurrentes.
 // - busy_timeout (abajo) hace que una escritura ESPERE hasta 5s por un lock en
 //   vez de fallar al instante (p.ej. cuando el motor IA tiene la BD abierta).
-// NO se usa WAL a propósito: el motor IA abre la BD en solo-lectura (?mode=ro) y
-// SQLite no permite abrir en solo-lectura una BD en modo WAL (requiere escribir
-// el archivo -shm). WAL rompería ese acceso.
+// - journal_mode=WAL: las lecturas (dashboard, motor IA) no bloquean las
+//   escrituras de pedidos y cobros. El motor IA abre la BD con ?mode=ro y SQLite
+//   (≥ 3.22) permite leer en solo-lectura una BD en WAL; se comprobó con y sin un
+//   escritor abierto. synchronous se deja en FULL (valor por defecto) para que una
+//   venta confirmada no se pierda ante un corte de luz.
 // Garantizar fallback seguro de DATABASE_URL si no se cargó el archivo .env
 if (!process.env.DATABASE_URL) {
   process.env.DATABASE_URL = 'file:./dev.db'
@@ -38,7 +40,7 @@ export const prisma =
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
-// Aplicar busy_timeout una vez por proceso. Con connection_limit=1 basta una
+// Aplicar WAL y busy_timeout una vez por proceso. Con connection_limit=1 basta una
 // conexión, así que el PRAGMA cubre todas las consultas posteriores.
 // Fire-and-forget: un fallo aquí no debe impedir importar el cliente.
 // PRAGMA busy_timeout=N devuelve una fila, por eso se usa $queryRawUnsafe
@@ -48,6 +50,7 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 // query en el navegador lanza "PrismaClient is unable to run in this browser".
 if (typeof window === 'undefined') {
   prisma
-    .$queryRawUnsafe('PRAGMA busy_timeout = 5000')
-    .catch((e) => console.error('No se pudo aplicar PRAGMA busy_timeout:', e))
+    .$queryRawUnsafe('PRAGMA journal_mode = WAL')
+    .then(() => prisma.$queryRawUnsafe('PRAGMA busy_timeout = 5000'))
+    .catch((e) => console.error('No se pudieron aplicar los PRAGMA de SQLite:', e))
 }
