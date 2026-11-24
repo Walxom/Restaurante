@@ -34,7 +34,8 @@ docs/
 │   ├── manual-usuario.md              # Manual por rol (JEFE, MESERO, cocina, caja) + FAQ
 │   └── img/                           # Capturas reales del sistema
 └── release/                           # Entregas versionadas
-    └── release-notes-v1.0.0.md        # Notas de versión, evidencia de calidad y backlog residual
+    ├── release-notes-v1.0.0.md        # Notas de versión, evidencia de calidad y backlog residual
+    └── release-notes-v1.1.0.md        # Usuarios, bloqueo persistente, WAL y simulacro de caída
 ```
 
 ---
@@ -68,6 +69,8 @@ docs/
   Guía de uso diario por rol con capturas reales: pedidos, cobro, mesas, menú, inventario, caja con arqueo ciego, alertas de tiempo en cocina e IA, más preguntas frecuentes.
 * **[Notas de Versión v1.0.0](release/release-notes-v1.0.0.md)**:  
   Novedades, evidencia de calidad (cobertura, E2E, k6), instrucciones de actualización, limitaciones conocidas y backlog residual. Historial completo en [`CHANGELOG.md`](../CHANGELOG.md).
+* **[Notas de Versión v1.1.0](release/release-notes-v1.1.0.md)**:  
+  Pantalla de usuarios, bloqueo por intentos persistente, SQLite en modo WAL y simulacro de caída abrupta, con instrucciones de actualización.
 
 ### 6. Diseño de Interfaz (`docs/design/`)
 * **[Guía de Estilo UI y Biblioteca de Componentes](design/guia-estilo-ui.md)**:  

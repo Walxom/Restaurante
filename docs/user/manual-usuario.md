@@ -1,7 +1,7 @@
-# Manual de Usuario — SIGER-IA v1.0.0
+# Manual de Usuario — SIGER-IA v1.1.0
 
 **Sistema:** Sistema Integral de Gestión de Restaurantes y POS Asistido por IA
-**Versión del sistema:** 1.0.0
+**Versión del sistema:** 1.1.0
 **Público:** personal del restaurante (Jefe/Administrador, Mesero, Cocina)
 **Capturas:** tomadas del sistema real (`docs/user/img/`), con datos de demostración.
 
@@ -135,6 +135,18 @@ El POS funciona con normalidad aunque la IA esté apagada.
 ![Configuración](img/12-configuracion.png)
 
 Datos de la empresa (nombre, RUC, dirección, teléfono), tasa de IGV, moneda y clave de Gemini.
+
+### 2.11 Usuarios
+
+Dashboard → **Usuarios**. Lista las cuentas con su rol y estado.
+
+- **Cambiar contraseña:** pulse *Cambiar contraseña*, escriba la nueva dos veces y *Guardar*.
+  Mínimo 8 caracteres, con letras y números. **Cambie las contraseñas iniciales** (`admin123`,
+  `mesero123`) el primer día de uso.
+- **Activa:** desactive la cuenta de alguien que ya no trabaja en el local; no podrá ingresar.
+  Su propia cuenta no se puede desactivar.
+- **Bloqueada por intentos:** tras 3 contraseñas incorrectas la cuenta se bloquea 15 minutos,
+  aunque se reinicie el servidor. Para desbloquearla antes, cámbiele la contraseña.
 
 ---
 
