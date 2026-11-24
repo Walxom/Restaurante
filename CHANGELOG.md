@@ -4,6 +4,19 @@ Todos los cambios relevantes de SIGER-IA se documentan en este archivo.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 versionado según [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.1] - 2026-11-24
+
+### Corregido
+- **Bloqueo por intentos fallidos:** el registro de intentos se borraba en cada intento que aún no
+  llegaba al límite, así que el bloqueo de 15 minutos tras 3 fallos nunca se activaba. Ahora solo se
+  limpia un bloqueo vencido. Nueva prueba E2E `CP-SEC-01` que lo verifica.
+- Nombre heredado "Bendistaurante" reemplazado en el correo de comprobantes (valor por defecto
+  "Fondo Marino") y en los scripts k6.
+
+### Añadido
+- Manual de operaciones y soporte (`docs/operations/manual-operaciones.md`): runbooks, SLA,
+  mantenimiento, secretos, licencias e ítems de configuración.
+
 ## [1.0.0] - 2026-11-24
 
 Primera versión estable para el piloto del restaurante. Notas completas en
@@ -66,4 +79,5 @@ Primera versión estable para el piloto del restaurante. Notas completas en
 - Arquitectura por features (Next.js 15 + Prisma + SQLite), roles JEFE y MESERO.
 - Pedidos, mesas, menú con recetas, inventario, boletas/facturas e impresión térmica ESC/POS.
 
+[1.0.1]: https://github.com/Walxom/Restaurante/releases/tag/v1.0.1
 [1.0.0]: https://github.com/Walxom/Restaurante/releases/tag/v1.0.0
