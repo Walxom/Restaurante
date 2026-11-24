@@ -11,6 +11,7 @@
 import http from "k6/http"
 import { check, sleep } from "k6"
 import { Rate, Trend } from "k6/metrics"
+import { obtenerCookieSesion } from "./auth.js"
 
 // ─── Métricas personalizadas ─────────────────────────────────────────────────
 const errorRate = new Rate("tasa_error")
@@ -37,25 +38,29 @@ export const options = {
 
 const BASE_URL = __ENV.BASE_URL || "http://localhost:3001"
 
-// ─── Configuración de autenticación ──────────────────────────────────────────
-// Token JWT de sesión válido (obtener con: POST /api/auth/signin)
-// Para CI/CD: exportar como variable de entorno K6_AUTH_TOKEN
-const AUTH_COOKIE = __ENV.K6_AUTH_COOKIE || ""
-
-const headers = {
-  "Content-Type": "application/json",
-  Cookie: AUTH_COOKIE,
+// ─── Autenticación y datos de prueba (una sola vez) ──────────────────────────
+// Inicia sesión (o usa K6_AUTH_COOKIE) y elige un producto disponible real.
+export function setup() {
+  const cookie = obtenerCookieSesion(BASE_URL)
+  let productId = __ENV.PRODUCT_ID_1
+  if (!productId) {
+    const res = http.get(`${BASE_URL}/api/products?isAvailable=true`, { headers: { Cookie: cookie } })
+    const productos = res.json()
+    productId = Array.isArray(productos) && productos.length > 0 ? productos[0].id : "sin-productos"
+  }
+  return { cookie, productId }
 }
 
 // ─── Escenario principal ──────────────────────────────────────────────────────
-export default function () {
+export default function (data) {
   const vuId = __VU   // ID del usuario virtual (1-50)
   const iter = __ITER // Número de iteración
+  const headers = { "Content-Type": "application/json", Cookie: data.cookie }
 
   // 1. Consultar productos disponibles (GET — lectura)
-  const resProductos = http.get(`${BASE_URL}/api/menu/products?isAvailable=true`, {
+  const resProductos = http.get(`${BASE_URL}/api/products?isAvailable=true`, {
     headers,
-    tags: { endpoint: "GET /api/menu/products" },
+    tags: { endpoint: "GET /api/products" },
   })
 
   check(resProductos, {
@@ -74,12 +79,12 @@ export default function () {
   sleep(0.5)
 
   // 2. Crear un pedido (POST — escritura bajo concurrencia)
+  // PARA_LLEVAR: no compite por mesas (un pedido MESA exige tableId y mesa libre).
   const payload = JSON.stringify({
-    type: "MESA",
-    tableId: null, // Sin mesa específica para pruebas de carga
+    type: "PARA_LLEVAR",
     customerName: `Cliente-VU${vuId}-Iter${iter}`,
     items: [
-      { productId: __ENV.PRODUCT_ID_1 || "test-product-1", quantity: 1 },
+      { productId: data.productId, quantity: 1 },
     ],
     notes: `Prueba de carga k6 — VU:${vuId} Iter:${iter}`,
   })

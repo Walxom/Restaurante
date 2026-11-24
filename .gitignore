@@ -72,3 +72,6 @@ backups/
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# Resultados locales de pruebas de carga k6 (se publican como artefacto en CI)
+tests/load/resultado_*.json
