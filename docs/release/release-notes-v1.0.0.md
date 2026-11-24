@@ -66,6 +66,23 @@ Detalle por versión en [`CHANGELOG.md`](../../CHANGELOG.md).
   ```
 - **Uso diario:** [Manual de usuario](../user/manual-usuario.md).
 
+### 5.1 Plan de reversión (*rollback*)
+
+Si tras actualizar algo falla en el restaurante, se vuelve a la versión anterior en unos 5 minutos
+y sin perder la operación del día anterior:
+
+1. Detener el servidor (`Ctrl+C` o `pm2 stop all`).
+2. Volver al código previo: `git checkout ef9af80` (último `main` antes de v1.0.0).
+3. Restaurar la base de datos con el respaldo del paso 1 de la actualización:
+   copiar `backups/dev_backup_<fecha>.db` sobre `prisma/dev.db`.
+4. `pnpm install && pnpm db:generate && pnpm build && pnpm start`.
+5. Comprobar con `pnpm doctor` y un inicio de sesión de prueba.
+
+**Criterio para revertir:** el inicio de sesión, la toma de pedidos o el cobro fallan y no se
+resuelven en 15 minutos. Las ventas registradas después de la actualización se pierden al restaurar;
+por eso se actualiza fuera del horario de atención. El respaldo y la restauración se prueban con
+`pnpm test:backup` (simulacro con `PRAGMA integrity_check`).
+
 ## 6. Problemas conocidos y limitaciones
 
 | # | Descripción | Mitigación |
