@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { getNivelSla, getSlaClasses, minutosTranscurridos } from "@/features/orders/utils/sla"
+import { useAhora, useSlaBeep } from "@/features/orders/hooks/useSlaAlerts"
 import { 
   Clock, 
   Eye, 
@@ -18,6 +20,7 @@ interface Order {
   status: string
   totalAmount: number
   type: string
+  createdAt: string
   table?: {
     number: number
   }
@@ -49,6 +52,9 @@ export default function PedidosPorServirWidget({
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // US-14: semáforo de SLA y bip al superar 18 min.
+  const ahora = useAhora()
+  useSlaBeep(orders, ahora)
 
   // Función para obtener pedidos por servir
   const fetchOrders = useCallback(async () => {
@@ -235,12 +241,17 @@ export default function PedidosPorServirWidget({
               </div>
             ) : (
               <div className="space-y-2 sm:space-y-3">
-                {orders.map((order) => (
+                {orders.map((order) => {
+                  const nivelSla = getNivelSla(order.status, order.createdAt, ahora)
+                  const sla = getSlaClasses(nivelSla)
+                  return (
                   <div 
                     key={order.id}
-                    className="group p-3 sm:p-4 bg-foreground/5 hover:bg-foreground/[0.08] border border-border/40 hover:border-foreground/20 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-md"
+                    data-sla={nivelSla ?? undefined}
+                    className={`relative group p-3 sm:p-4 bg-foreground/5 hover:bg-foreground/[0.08] border border-border/40 hover:border-foreground/20 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-md ${sla.borde}`}
                     onClick={() => handleOrderClick(order.id)}
                   >
+                    {sla.pulso && <div aria-hidden className={sla.pulso} />}
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
@@ -253,6 +264,14 @@ export default function PedidosPorServirWidget({
                           {order.status === 'READY' && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 animate-pulse">
                               ¡Listo!
+                            </span>
+                          )}
+                          {nivelSla && (
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${sla.insignia}`}
+                              title="Tiempo de espera (alerta en rojo a partir de 18 min)"
+                            >
+                              {minutosTranscurridos(order.createdAt, ahora)} min
                             </span>
                           )}
                         </div>
@@ -275,7 +294,8 @@ export default function PedidosPorServirWidget({
                       </div>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
