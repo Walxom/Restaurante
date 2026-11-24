@@ -13,7 +13,10 @@ function estaBloqueado(username: string): boolean {
   const entrada = intentosFallidos.get(username)
   if (!entrada) return false
   if (entrada.bloqueadoHasta > Date.now()) return true
-  intentosFallidos.delete(username)
+  // Solo se limpia un bloqueo ya vencido; borrar aquí los intentos que aún no
+  // llegaron al límite reiniciaba el contador en cada intento y el bloqueo
+  // nunca se activaba.
+  if (entrada.bloqueadoHasta > 0) intentosFallidos.delete(username)
   return false
 }
 
