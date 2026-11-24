@@ -83,8 +83,8 @@ Si prefieres realizar el procedimiento paso a paso de forma manual:
 
 ### Paso 1: Clonación del Repositorio y Checkout de Rama
 ```bash
-git clone https://github.com/josechafloque/siger-ia.git
-cd siger-ia
+git clone https://github.com/Walxom/Restaurante.git
+cd Restaurante
 git checkout main
 ```
 
@@ -152,12 +152,34 @@ Compruebe la integridad del sistema ejecutando las suites de prueba reales confi
 # 1. Pruebas unitarias y de servicios (Vitest)
 pnpm test
 
-# 2. Pruebas con reporte de cobertura (debe superar el 80% según DoD)
+# 2. Pruebas con reporte de cobertura (umbral 80 % en vitest.config.ts; falla si baja)
 pnpm test:coverage
 
 # 3. Pruebas End-to-End con Playwright
 pnpm test:e2e
 ```
+
+### Pruebas de rendimiento (k6)
+
+Requieren [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) instalado
+(`winget install k6 --source winget` en Windows) y el servidor levantado con `pnpm start`.
+Los scripts inician sesión una sola vez con el usuario semilla `jefe`
+(configurable con `K6_USER` / `K6_PASSWORD` o `K6_AUTH_COOKIE`).
+
+```bash
+# Carga: 50 usuarios virtuales durante 1 min — criterio p95 < 2000 ms, errores < 5 %
+pnpm test:load
+
+# Estrés: rampa 10 → 50 → 100 → 150 usuarios — criterio p95 < 5000 ms, errores < 15 %
+pnpm test:stress
+
+# Contra otro equipo de la LAN
+k6 run -e BASE_URL=http://192.168.0.10:3001 tests/load/carga.js
+```
+
+Los resultados se guardan en `tests/load/resultado_carga.json` y `resultado_estres.json`.
+En GitHub, el workflow manual **"Rendimiento — Carga y Estrés (k6)"** (`.github/workflows/load.yml`)
+ejecuta ambos escenarios y publica el artefacto `k6-summary`.
 
 ---
 
