@@ -213,14 +213,14 @@ export async function GET(request: NextRequest) {
           if (typeof prisma.$queryRaw === 'function') {
             const result = await prisma.$queryRaw<Array<{ hour: string; sales: number; orders: number }>>`
               SELECT 
-                strftime('%H', createdAt) as hour,
+                strftime('%H', createdAt / 1000, 'unixepoch', 'localtime') as hour,
                 COUNT(id) as orders,
-                COALESCE(SUM(totalAmount), 0) as sales
-              FROM "Order"
+                CAST(COALESCE(SUM(totalAmount), 0) AS REAL) as sales
+              FROM orders
               WHERE status = 'COMPLETED'
-                AND createdAt >= ${startDate}
-                AND createdAt <= ${endDate}
-              GROUP BY strftime('%H', createdAt)
+                AND createdAt >= ${startDate.getTime()}
+                AND createdAt <= ${endDate.getTime()}
+              GROUP BY hour
             `
             return Array.isArray(result) ? result : []
           }
