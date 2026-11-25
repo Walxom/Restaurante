@@ -11,7 +11,7 @@ SQLite, plus a separate Python AI microservice. Roles are `JEFE` (owner/admin) a
 
 ## Commands
 
-Package manager is **pnpm**. Node app runs on port **3001**; AI engine on **8000**.
+Package manager is **pnpm**. Node app runs on port **3001**; AI engine on **8000** or the next free port (chosen automatically, recorded in `logs/ai-engine.port`, read by `getAiEngineUrl()` in `src/lib/ai-engine.ts`).
 
 ```bash
 # Setup & Health Check (Turnkey DevEx)

@@ -59,10 +59,10 @@ export default function AiDashboard() {
 
     try {
       await startAiService()
-      setStartStep("Verificando modelos y preparando socket :8000...")
+      setStartStep("Verificando modelos y preparando la conexión...")
 
       let attempts = 0
-      const maxAttempts = 20
+      const maxAttempts = 40
       const pollInterval = setInterval(async () => {
         attempts++
 
@@ -91,7 +91,7 @@ export default function AiDashboard() {
           setIsStarting(false)
           setStartStep("")
           setErrorMessage(
-            "El microservicio tardó más de 30 segundos en inicializarse. Revisa los registros para diagnosticar el problema."
+            "El motor de IA no respondió en 60 segundos. Abajo se muestran los registros para revisar qué pasó."
           )
           const fetchedLogs = await getAiServiceLogs()
           setLogs(fetchedLogs)
@@ -160,7 +160,7 @@ export default function AiDashboard() {
               Conectando al motor de IA
             </h2>
             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
-              Verificando servicio en puerto 8000...
+              Verificando el servicio...
             </p>
           </div>
         </div>
@@ -280,9 +280,9 @@ export default function AiDashboard() {
               <div className="bg-background/90 border border-border/50 rounded-xl p-3.5 font-mono text-[10px] text-left text-muted-foreground/90 leading-relaxed select-all animate-in fade-in">
                 <span className="text-muted-foreground/50"># Terminal alternativa:</span>
                 <br />
-                cd ai_engine
+                pnpm ai:start
                 <br />
-                uvicorn main:app --reload --port 8000
+                <span className="text-muted-foreground/50"># o la web y la IA juntas:</span>
                 <br />
                 <span className="text-primary font-bold mt-1 inline-block">pnpm dev:ai</span>
               </div>

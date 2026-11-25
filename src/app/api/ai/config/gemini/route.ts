@@ -3,7 +3,7 @@ import { validateRole } from "@/lib/auth-utils"
 import { prisma } from "@/lib/prisma"
 import { invalidateConfigCache } from "@/services/system.service"
 
-import { AI_ENGINE_URL as AI_BASE_URL } from "@/lib/ai-engine"
+import { getAiEngineUrl } from "@/lib/ai-engine"
 
 export async function GET() {
   const auth = await validateRole(["JEFE"])
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
       // Notificar a FastAPI si está activo
       try {
-        await fetch(`${AI_BASE_URL}/api/config/gemini`, {
+        await fetch(`${getAiEngineUrl()}/api/config/gemini`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ apiKey: "", model }),
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     let validationError = ""
 
     try {
-      const fastApiRes = await fetch(`${AI_BASE_URL}/api/config/gemini`, {
+      const fastApiRes = await fetch(`${getAiEngineUrl()}/api/config/gemini`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ apiKey: rawKey, model }),

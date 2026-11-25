@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { AI_ENGINE_URL } from "@/lib/ai-engine"
+import { getAiEngineUrl } from "@/lib/ai-engine"
 
 /**
  * /api/public/health
@@ -41,7 +41,7 @@ export async function GET() {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 1000)
 
-      const res = await fetch(`${AI_ENGINE_URL}/health`, {
+      const res = await fetch(`${getAiEngineUrl()}/health`, {
         signal: controller.signal,
         cache: "no-store",
       })
