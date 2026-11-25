@@ -83,11 +83,16 @@ respaldar() {
 restaurar() {
   requisitos
   local archivo="${1:-}"
-  [[ -n "$archivo" ]] || error "Indique el archivo: ./siger.sh restaurar backups/siger-AAAAMMDD-HHMMSS.db"
+  [[ -n "$archivo" ]] || error "Indique el archivo: ./siger.sh restaurar backups/siger-AAAAMMDD-HHMMSS-mmm.db"
   [[ -f "$archivo" ]] || error "No existe el archivo: $archivo"
-  aviso "Primero se respalda la base actual por seguridad."
-  respaldar
+  # Primero se deja el archivo elegido en el volumen y después se respalda la base actual,
+  # así el respaldo de seguridad nunca puede reemplazar al archivo que se va a restaurar.
   docker compose cp "$archivo" siger-web:/data/restaurar.db >/dev/null
+  aviso "Respaldando la base actual por seguridad antes de restaurar."
+  ( respaldar ) || {
+    docker compose exec -T siger-web rm -f /data/restaurar.db
+    error "No se restauró nada: falló el respaldo de seguridad."
+  }
   docker compose restart >/dev/null
   esperar_sano
   info "Base restaurada desde $archivo"

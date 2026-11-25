@@ -113,7 +113,7 @@ Entre con `jefe` / `admin123` y **cambie las contraseñas iniciales en Dashboard
 | :--- | :--- | :--- |
 | Estado y salud | `.\siger.cmd estado` | `./siger.sh estado` |
 | Respaldo verificado (queda en `backups/`) | `.\siger.cmd respaldar` | `./siger.sh respaldar` |
-| Restaurar un respaldo (antes respalda la base actual) | `.\siger.cmd restaurar backups\siger-AAAAMMDD-HHMMSS.db` | `./siger.sh restaurar backups/siger-AAAAMMDD-HHMMSS.db` |
+| Restaurar un respaldo (antes respalda la base actual) | `.\siger.cmd restaurar backups\siger-AAAAMMDD-HHMMSS-mmm.db` | `./siger.sh restaurar backups/siger-AAAAMMDD-HHMMSS-mmm.db` |
 | Actualizar a la última versión o a una etiqueta (respalda antes) | `.\siger.cmd actualizar v1.2.0` | `./siger.sh actualizar v1.2.0` |
 | Ver registros | `.\siger.cmd logs` | `./siger.sh logs` |
 | Detener sin borrar datos | `.\siger.cmd detener` | `./siger.sh detener` |

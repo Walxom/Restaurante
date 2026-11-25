@@ -14,7 +14,8 @@ const { PrismaClient } = require('@prisma/client')
 const dbFile = (process.env.DATABASE_URL || 'file:/data/prod.db').replace(/^file:/, '').split('?')[0]
 // Carpeta fija dentro del volumen de datos del contenedor
 const carpeta = '/data/respaldos'
-const sello = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15)
+// AAAAMMDD-HHMMSS-mmm: con milisegundos para que dos respaldos seguidos no se pisen
+const sello = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').replace('.', '-').slice(0, 19)
 const destino = path.join(carpeta, `siger-${sello}.db`)
 
 async function main() {

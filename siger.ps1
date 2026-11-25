@@ -32,7 +32,7 @@ if (-not $Puerto) { $Puerto = "3001" }
 
 function Info($m)  { Write-Host "✔ $m" -ForegroundColor Green }
 function Aviso($m) { Write-Host "! $m" -ForegroundColor Yellow }
-function Fallo($m) { Write-Host "✖ $m" -ForegroundColor Red; exit 1 }
+function Fallo($m) { throw $m }
 
 function Invoke-Docker {
     # Ejecuta docker y falla si el comando devuelve error
@@ -130,11 +130,16 @@ function Backup-Siger {
 
 function Restore-Siger($archivo) {
     Test-Requisitos
-    if (-not $archivo) { Fallo "Indique el archivo: .\siger.ps1 restaurar backups\siger-AAAAMMDD-HHMMSS.db" }
+    if (-not $archivo) { Fallo "Indique el archivo: .\siger.ps1 restaurar backups\siger-AAAAMMDD-HHMMSS-mmm.db" }
     if (-not (Test-Path $archivo)) { Fallo "No existe el archivo: $archivo" }
-    Aviso "Primero se respalda la base actual por seguridad."
-    Backup-Siger
+    # Primero se deja el archivo elegido en el volumen y después se respalda la base actual,
+    # así el respaldo de seguridad nunca puede reemplazar al archivo que se va a restaurar.
     Invoke-Docker compose cp $archivo siger-web:/data/restaurar.db
+    Aviso "Respaldando la base actual por seguridad antes de restaurar."
+    try { Backup-Siger } catch {
+        docker compose exec -T siger-web rm -f /data/restaurar.db 2>&1 | Out-Null
+        throw "No se restauró nada: falló el respaldo de seguridad. $($_.Exception.Message)"
+    }
     Invoke-Docker compose restart
     Wait-Sano
     Info "Base restaurada desde $archivo"
@@ -164,5 +169,6 @@ try {
         default      { Fallo "Comando desconocido: $Comando. Use .\siger.ps1 ayuda" }
     }
 } catch {
-    Fallo $_.Exception.Message
+    Write-Host "✖ $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
 }
