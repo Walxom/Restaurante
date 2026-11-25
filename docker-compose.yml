@@ -1,61 +1,83 @@
-services:
-  siger-ai:
-    build:
-      context: .
-      dockerfile: ai_engine/Dockerfile
-    container_name: siger-ai
-    ports:
-      - "8000:8000"
-    environment:
-      PORT: 8000
-      ENVIRONMENT: production
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
-    networks:
-      - siger-network
+# ==============================================================================
+# SIGER-IA — despliegue con Docker Compose (contenedores Linux)
+# Funciona igual en un servidor Linux (Docker Engine) y en Windows 10/11
+# (Docker Desktop con WSL2). Instrucciones: README.md, sección "Despliegue".
+#
+#   cp .env.docker.example .env    # y completar NEXTAUTH_SECRET y NEXTAUTH_URL
+#   docker compose up -d --build
+# ==============================================================================
 
+services:
   siger-web:
     build:
       context: .
       dockerfile: Dockerfile
       target: runner
+    image: siger-ia/web:1.1.0
     container_name: siger-web
     ports:
-      - "3001:3001"
+      - "${WEB_PORT:-3001}:3001"
     volumes:
-      # Volumen persistente para la BD SQLite (sobrevive reinicios del contenedor)
+      # Base SQLite persistente (sobrevive a reinicios y actualizaciones)
       - sqlite_data:/data
     environment:
       NODE_ENV: production
       PORT: 3001
       DATABASE_URL: file:/data/prod.db
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-siger_default_dev_secret_change_in_production}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?Defina NEXTAUTH_SECRET en el archivo .env (ver .env.docker.example)}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3001}
       AI_ENGINE_URL: http://siger-ai:8000
       AI_ENGINE_ENABLED: "true"
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      TZ: ${TZ:-America/Lima}
     restart: unless-stopped
-    depends_on:
-      siger-ai:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/public/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/api/public/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
+    networks:
+      - siger-network
+
+  siger-ai:
+    build:
+      context: .
+      dockerfile: ai_engine/Dockerfile
+    image: siger-ia/ai:1.1.0
+    container_name: siger-ai
+    # Solo accesible desde la red interna; la web lo consume en http://siger-ai:8000
+    expose:
+      - "8000"
+    volumes:
+      # Misma base que la web. El motor la abre en solo lectura (?mode=ro); el
+      # volumen se monta con escritura porque el modo WAL de SQLite necesita el archivo -shm.
+      - sqlite_data:/data
+    environment:
+      PORT: 8000
+      ENVIRONMENT: production
+      DATABASE_URL: file:/data/prod.db?mode=ro
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      RESTAURANT_NAME: ${RESTAURANT_NAME:-Fondo Marino}
+      ALLOWED_ORIGINS: ${NEXTAUTH_URL:-http://localhost:3001}
+      TZ: ${TZ:-America/Lima}
+    restart: unless-stopped
+    depends_on:
+      # La web crea la base en el primer arranque; el motor de IA espera a que esté lista.
+      siger-web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       - siger-network
 
 volumes:
   sqlite_data:
-    driver: local
 
 networks:
   siger-network:
-    driver: bridge
