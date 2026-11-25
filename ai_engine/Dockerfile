@@ -23,8 +23,9 @@ RUN pip install --no-cache-dir -r ./ai_engine/requirements.txt
 # Copiar código fuente del microservicio de IA
 COPY ai_engine/ ./ai_engine/
 
-# Crear usuario sin privilegios para cumplimiento CIS Docker Benchmark
-RUN useradd -u 1001 -m appuser && \
+# Usuario sin privilegios (CIS Docker Benchmark). UID 1000 = mismo usuario "node" del
+# contenedor web: así el motor puede crear el archivo -shm del modo WAL en el volumen compartido.
+RUN useradd -u 1000 -m appuser && \
     mkdir -p /app/ai_engine/cache && \
     chown -R appuser:appuser /app
 
@@ -33,6 +34,6 @@ USER appuser
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')" || exit 1
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')" || exit 1
 
 CMD ["uvicorn", "ai_engine.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,4 +1,4 @@
-name: CI — Lint · Test (Node + Python) · Cold-Start · E2E · Build · SonarQube Cloud
+name: CI — Lint · Test (Node + Python) · Cold-Start · E2E · Build · Docker · SonarQube Cloud
 
 on:
   push:
@@ -194,3 +194,45 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # ─── Job 5: Despliegue con Docker Compose en Linux (prueba de humo) ──────────
+  docker:
+    name: Despliegue Docker (Linux)
+    runs-on: ubuntu-24.04
+    needs: quality
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar .env desde la plantilla de despliegue
+        run: |
+          cp .env.docker.example .env
+          sed -i "s|^NEXTAUTH_SECRET=.*|NEXTAUTH_SECRET=$(openssl rand -base64 32)|" .env
+
+      - name: Construir y levantar los contenedores
+        run: docker compose up -d --build --wait --wait-timeout 300
+
+      - name: Verificar web, base de datos y motor de IA
+        run: |
+          docker compose ps
+          curl -fsS http://localhost:3001/api/public/health | tee health.json
+          grep -q '"database":{"engine":"sqlite","status":"up"' health.json
+          grep -q '"aiEngine":{"enabled":true,"status":"up"' health.json
+          curl -fsS -o /dev/null -w "login %{http_code}
+" http://localhost:3001/login
+
+      - name: Verificar que los datos persisten tras reiniciar
+        run: |
+          docker compose restart
+          docker compose up -d --wait --wait-timeout 180
+          docker compose exec -T siger-web sh -c 'test -s /data/prod.db && ls -la /data'
+          curl -fsS http://localhost:3001/api/public/health
+
+      - name: Registros de los contenedores
+        if: always()
+        run: docker compose logs --no-color --tail 200
+
+      - name: Bajar los contenedores
+        if: always()
+        run: docker compose down -v

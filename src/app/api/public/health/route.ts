@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { AI_ENGINE_URL } from "@/lib/ai-engine"
 
 /**
  * /api/public/health
@@ -33,7 +34,6 @@ export async function GET() {
   let aiStatus: "up" | "down" | "disabled" = "disabled"
   let aiLatencyMs = 0
   const aiEngineEnabled = process.env.AI_ENGINE_ENABLED !== "false"
-  const aiEngineUrl = process.env.AI_ENGINE_URL || "http://localhost:8000"
 
   if (aiEngineEnabled) {
     try {
@@ -41,7 +41,7 @@ export async function GET() {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 1000)
 
-      const res = await fetch(`${aiEngineUrl}/docs`, {
+      const res = await fetch(`${AI_ENGINE_URL}/health`, {
         signal: controller.signal,
         cache: "no-store",
       })

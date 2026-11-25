@@ -1,9 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { validateRole } from "@/lib/auth-utils"
-
-const AI_HOST = "127.0.0.1"
-const AI_PORT = process.env.AI_PORT || 8000
-const AI_BASE_URL = `http://${AI_HOST}:${AI_PORT}`
+import { AI_ENGINE_URL as AI_BASE_URL } from "@/lib/ai-engine"
 
 async function forwardRequest(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   // Asegurar autenticación para proteger endpoints del motor de IA

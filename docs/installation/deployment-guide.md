@@ -116,20 +116,27 @@ pnpm dev:ai
 
 ---
 
-## 4. Ruta B: Despliegue Automatizado con Docker Compose
+## 4. Ruta B: Despliegue con Docker Compose (Windows y Linux)
 
-Para servidores dedicados en el salón o caja de cobranza:
+Para el servidor del local. Usa contenedores **Linux** en ambos sistemas: Docker Engine en Linux y
+Docker Desktop con WSL2 en Windows 10/11. El procedimiento completo (configuración de `.env`, firewall,
+respaldo, actualización) está en la sección **"Despliegue en producción (Docker)"** del
+[README](../../README.md#-despliegue-en-producción-docker). Resumen:
 
-### Paso 1: Construcción y Levantamiento
 ```bash
+cp .env.docker.example .env      # Windows: Copy-Item .env.docker.example .env
+# completar NEXTAUTH_SECRET y NEXTAUTH_URL (IP fija del servidor)
 docker compose up -d --build
+docker compose ps                # siger-web y siger-ai en estado healthy
 ```
 
-### Paso 2: Verificación de Contenedores Activos
-```bash
-docker compose ps
-```
-Debe observar los contenedores con estado `Up (healthy)`.
+| Contenedor | Contenido | Puerto |
+| :--- | :--- | :--- |
+| `siger-web` | Next.js + Socket.IO + Prisma; crea y actualiza la base en el volumen `sqlite_data` al arrancar | 3001 (publicado) |
+| `siger-ai` | Motor de IA FastAPI; lee la misma base en solo lectura | 8000 (solo red interna) |
+
+El job **Despliegue Docker (Linux)** del CI levanta ambos contenedores en cada cambio, verifica la salud
+de la web, la base y el motor de IA, y comprueba que los datos persisten tras un reinicio.
 
 ---
 

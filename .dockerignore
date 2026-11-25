@@ -1,0 +1,34 @@
+# Dependencias y artefactos generados en el host (se construyen dentro de la imagen)
+node_modules
+.next
+coverage
+playwright-report
+test-results
+*.tsbuildinfo
+
+# Secretos y bases de datos locales: nunca dentro de la imagen
+.env
+.env.*
+!.env.example
+!.env.docker.example
+ai_engine/.env
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+backups
+logs
+
+# Python
+ai_engine/venv
+ai_engine/cache
+**/__pycache__
+**/.pytest_cache
+
+# Repositorio, documentación y pruebas que no necesita el contenedor
+.git
+.github
+docs
+e2e
+tests
+*.md

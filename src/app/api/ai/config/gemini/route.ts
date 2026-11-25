@@ -3,7 +3,7 @@ import { validateRole } from "@/lib/auth-utils"
 import { prisma } from "@/lib/prisma"
 import { invalidateConfigCache } from "@/services/system.service"
 
-const AI_BASE_URL = `http://127.0.0.1:${process.env.AI_PORT || 8000}`
+import { AI_ENGINE_URL as AI_BASE_URL } from "@/lib/ai-engine"
 
 export async function GET() {
   const auth = await validateRole(["JEFE"])

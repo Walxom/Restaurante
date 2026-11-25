@@ -3,13 +3,14 @@ import { validateRole } from "@/lib/auth-utils"
 import { spawn, execSync } from "child_process"
 import path from "path"
 import fs from "fs"
+import { AI_ENGINE_URL } from "@/lib/ai-engine"
 
 const LOGS_DIR = path.join(process.cwd(), "logs")
 const PID_FILE = path.join(LOGS_DIR, "ai-engine.pid")
 const LEGACY_PID_FILE = path.join(process.cwd(), ".ai_engine.pid")
 const LOG_FILE = path.join(LOGS_DIR, "ai-engine.log")
 const AI_PORT = 8000
-const AI_HEALTH_URL = `http://127.0.0.1:${AI_PORT}/health`
+const AI_HEALTH_URL = `${AI_ENGINE_URL}/health`
 
 async function checkAiHealth(timeoutMs = 1500): Promise<boolean> {
   try {
