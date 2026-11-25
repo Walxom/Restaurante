@@ -35,15 +35,16 @@ ENV NODE_ENV=production \
     PORT=3001 \
     DATABASE_URL=file:/data/prod.db
 
-COPY --from=builder --chown=node:node /app/public ./public
-COPY --from=builder --chown=node:node /app/.next ./.next
-COPY --from=builder --chown=node:node /app/node_modules ./node_modules
-COPY --from=builder --chown=node:node /app/prisma ./prisma
-COPY --from=builder --chown=node:node /app/server.js /app/package.json /app/next.config.ts ./
-COPY --chown=node:node docker-entrypoint.sh ./docker-entrypoint.sh
+# El código queda a nombre de root (solo lectura para el usuario del contenedor).
+# Solo son escribibles /data (base de datos) y .next/cache (caché de Next.js).
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/server.js /app/package.json /app/next.config.ts ./
+COPY --chmod=755 docker-entrypoint.sh ./docker-entrypoint.sh
 
-# /data guarda la base SQLite en un volumen persistente
-RUN mkdir -p /data && chown node:node /data && chmod +x ./docker-entrypoint.sh
+RUN mkdir -p /data .next/cache && chown node:node /data .next/cache
 
 USER node
 VOLUME ["/data"]
