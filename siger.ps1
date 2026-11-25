@@ -118,10 +118,10 @@ function Show-Estado {
 
 function Backup-Siger {
     Test-Requisitos
-    $remoto = (docker compose exec -T siger-web node scripts/docker/respaldo.js 2>$null | Select-Object -Last 1)
-    if ($LASTEXITCODE -ne 0 -or -not $remoto) { Fallo "No se pudo crear el respaldo." }
-    $remoto = $remoto.Trim()
-    $nombre = Split-Path $remoto -Leaf
+    $nombre = (docker compose exec -T siger-web node scripts/docker/respaldo.js 2>$null | Select-Object -Last 1)
+    if ($LASTEXITCODE -ne 0 -or -not $nombre) { Fallo "No se pudo crear el respaldo." }
+    $nombre = $nombre.Trim()
+    $remoto = "/data/respaldos/$nombre"
     New-Item -ItemType Directory -Force -Path backups | Out-Null
     Invoke-Docker compose cp "siger-web:$remoto" "backups/$nombre"
     Invoke-Docker compose exec -T siger-web rm -f $remoto

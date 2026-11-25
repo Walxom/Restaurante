@@ -71,9 +71,9 @@ estado() {
 respaldar() {
   requisitos
   local remoto nombre
-  remoto="$(docker compose exec -T siger-web node scripts/docker/respaldo.js | tail -n 1 | tr -d '\r')"
-  [ -n "$remoto" ] || error "No se pudo crear el respaldo."
-  nombre="$(basename "$remoto")"
+  nombre="$(docker compose exec -T siger-web node scripts/docker/respaldo.js | tail -n 1 | tr -d '\r')"
+  [[ -n "$nombre" ]] || error "No se pudo crear el respaldo."
+  remoto="/data/respaldos/${nombre}"
   mkdir -p backups
   docker compose cp "siger-web:${remoto}" "backups/${nombre}" >/dev/null
   docker compose exec -T siger-web rm -f "$remoto"
@@ -83,8 +83,8 @@ respaldar() {
 restaurar() {
   requisitos
   local archivo="${1:-}"
-  [ -n "$archivo" ] || error "Indique el archivo: ./siger.sh restaurar backups/siger-AAAAMMDD-HHMMSS.db"
-  [ -f "$archivo" ] || error "No existe el archivo: $archivo"
+  [[ -n "$archivo" ]] || error "Indique el archivo: ./siger.sh restaurar backups/siger-AAAAMMDD-HHMMSS.db"
+  [[ -f "$archivo" ]] || error "No existe el archivo: $archivo"
   aviso "Primero se respalda la base actual por seguridad."
   respaldar
   docker compose cp "$archivo" siger-web:/data/restaurar.db >/dev/null
@@ -98,7 +98,7 @@ actualizar() {
   command -v git >/dev/null 2>&1 || error "Se necesita git para actualizar."
   respaldar
   git fetch --tags --quiet
-  if [ -n "${1:-}" ]; then git checkout --quiet "$1"; else git pull --ff-only --quiet; fi
+  if [[ -n "${1:-}" ]]; then git checkout --quiet "$1"; else git pull --ff-only --quiet; fi
   info "Código en: $(git describe --tags --always)"
   instalar
 }

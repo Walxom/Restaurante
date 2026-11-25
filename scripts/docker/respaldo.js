@@ -12,7 +12,8 @@ const path = require('path')
 const { PrismaClient } = require('@prisma/client')
 
 const dbFile = (process.env.DATABASE_URL || 'file:/data/prod.db').replace(/^file:/, '').split('?')[0]
-const carpeta = path.join(path.dirname(dbFile), 'respaldos')
+// Carpeta fija dentro del volumen de datos del contenedor
+const carpeta = '/data/respaldos'
 const sello = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15)
 const destino = path.join(carpeta, `siger-${sello}.db`)
 
@@ -32,7 +33,8 @@ async function main() {
   } finally {
     await copia.$disconnect()
   }
-  console.log(destino)
+  // Solo el nombre del archivo; el script del host arma la ruta /data/respaldos/<nombre>
+  console.log(path.basename(destino))
 }
 
 main().catch((err) => {

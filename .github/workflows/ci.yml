@@ -18,8 +18,6 @@ jobs:
 
       - name: Instalar pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-        with:
-          version: 10
 
       - name: Configurar Node.js
         uses: actions/setup-node@v4
@@ -84,8 +82,6 @@ jobs:
 
       - name: Instalar pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-        with:
-          version: 10
 
       - name: Configurar Node.js
         uses: actions/setup-node@v4
@@ -133,8 +129,6 @@ jobs:
 
       - name: Instalar pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-        with:
-          version: 10
 
       - name: Configurar Node.js
         uses: actions/setup-node@v4
@@ -226,7 +220,8 @@ jobs:
           IP=$(hostname -I | awk '{print $1}')
           for HOST in localhost "$IP"; do
             rm -f jar
-            CSRF=$(curl -fsS -c jar "http://$HOST:3001/api/auth/csrf" | python3 -c 'import json,sys;print(json.load(sys.stdin)["csrfToken"])')
+            curl -fsS -c jar -o csrf.json "http://$HOST:3001/api/auth/csrf"
+            CSRF=$(jq -r .csrfToken csrf.json)
             curl -fsS -b jar -c jar -o /dev/null -X POST "http://$HOST:3001/api/auth/callback/credentials"               -d "csrfToken=$CSRF&username=jefe&password=admin123&json=true"
             curl -fsS -b jar "http://$HOST:3001/api/auth/session" | tee sesion.json
             grep -q '"role":"JEFE"' sesion.json
