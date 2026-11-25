@@ -2,40 +2,7 @@ import { type NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
-
-const MAX_INTENTOS = 3
-const BLOQUEO_MS = 15 * 60 * 1000
-const VENTANA_MS = 30 * 60 * 1000
-
-const intentosFallidos = new Map<string, { count: number; bloqueadoHasta: number; primerFallo: number }>()
-
-function estaBloqueado(username: string): boolean {
-  const entrada = intentosFallidos.get(username)
-  if (!entrada) return false
-  if (entrada.bloqueadoHasta > Date.now()) return true
-  // Solo se limpia un bloqueo ya vencido; borrar aquí los intentos que aún no
-  // llegaron al límite reiniciaba el contador en cada intento y el bloqueo
-  // nunca se activaba.
-  if (entrada.bloqueadoHasta > 0) intentosFallidos.delete(username)
-  return false
-}
-
-function registrarFallo(username: string): void {
-  const ahora = Date.now()
-  const existente = intentosFallidos.get(username)
-  const entrada = (!existente || ahora - existente.primerFallo > VENTANA_MS)
-    ? { count: 0, bloqueadoHasta: 0, primerFallo: ahora }
-    : existente
-  entrada.count += 1
-  if (entrada.count >= MAX_INTENTOS) {
-    entrada.bloqueadoHasta = ahora + BLOQUEO_MS
-  }
-  intentosFallidos.set(username, entrada)
-}
-
-function limpiarIntentos(username: string): void {
-  intentosFallidos.delete(username)
-}
+import { estaBloqueado, limpiarIntentos, registrarFallo } from "@/services/login-attempts.service"
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || (process.env.NODE_ENV !== "production" ? "siger_default_dev_secret_2026_upn" : undefined),
@@ -51,7 +18,7 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        if (estaBloqueado(credentials.username)) {
+        if (await estaBloqueado(credentials.username)) {
           throw new Error("Bloqueado")
         }
 
@@ -62,7 +29,7 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user || !user.isActive) {
-          registrarFallo(credentials.username)
+          await registrarFallo(credentials.username)
           return null
         }
 
@@ -72,11 +39,11 @@ export const authOptions: NextAuthOptions = {
         )
 
         if (!isPasswordValid) {
-          registrarFallo(credentials.username)
+          await registrarFallo(credentials.username)
           return null
         }
 
-        limpiarIntentos(credentials.username)
+        await limpiarIntentos(credentials.username)
 
         return {
           id: user.id,

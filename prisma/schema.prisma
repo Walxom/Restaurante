@@ -8,20 +8,24 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  username        String    @unique
-  name            String
-  password        String
-  role            String    @default("MESERO")
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  invoices        Invoice[]
-  orders          Order[]
-  updatedPrinters Printer[] @relation("PrinterUpdater")
-  createdPrinters Printer[] @relation("PrinterCreator")
-  openedCashSessions CashSession[] @relation("CashSessionOpener")
-  closedCashSessions CashSession[] @relation("CashSessionCloser")
+  id                  String        @id @default(cuid())
+  username            String        @unique
+  name                String
+  password            String
+  role                String        @default("MESERO")
+  isActive            Boolean       @default(true)
+  // Bloqueo por intentos fallidos (persistente: sobrevive a reinicios del servidor)
+  failedLoginAttempts Int           @default(0)
+  firstFailedLoginAt  DateTime?
+  lockedUntil         DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  invoices            Invoice[]
+  orders              Order[]
+  updatedPrinters     Printer[]     @relation("PrinterUpdater")
+  createdPrinters     Printer[]     @relation("PrinterCreator")
+  openedCashSessions  CashSession[] @relation("CashSessionOpener")
+  closedCashSessions  CashSession[] @relation("CashSessionCloser")
 
   @@map("users")
 }

@@ -4,6 +4,19 @@ Todos los cambios relevantes de SIGER-IA se documentan en este archivo.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 versionado según [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.1.0] - 2026-11-24
+
+Notas completas en [`docs/release/release-notes-v1.1.0.md`](docs/release/release-notes-v1.1.0.md).
+
+### Añadido
+- **Pantalla Usuarios** (JEFE): cambiar contraseñas, activar o desactivar cuentas y ver bloqueos.
+  API `GET /api/users` y `PATCH /api/users/{id}`. Pruebas E2E `CP-USR-01` y `CP-USR-02`.
+- **Simulacro de caída abrupta** `pnpm test:power-loss`, también en el CI.
+
+### Cambiado
+- El bloqueo por intentos fallidos se guarda en la tabla `users` y sobrevive a reinicios.
+- SQLite pasa a modo **WAL** (`synchronous` sigue en FULL).
+
 ## [1.0.1] - 2026-11-24
 
 ### Corregido
@@ -79,5 +92,6 @@ Primera versión estable para el piloto del restaurante. Notas completas en
 - Arquitectura por features (Next.js 15 + Prisma + SQLite), roles JEFE y MESERO.
 - Pedidos, mesas, menú con recetas, inventario, boletas/facturas e impresión térmica ESC/POS.
 
+[1.1.0]: https://github.com/Walxom/Restaurante/releases/tag/v1.1.0
 [1.0.1]: https://github.com/Walxom/Restaurante/releases/tag/v1.0.1
 [1.0.0]: https://github.com/Walxom/Restaurante/releases/tag/v1.0.0

@@ -42,6 +42,9 @@ erDiagram
         string password "Hash bcrypt"
         string role "JEFE | MESERO (default: MESERO)"
         boolean isActive "Estado de cuenta"
+        int failedLoginAttempts "Intentos fallidos"
+        datetime firstFailedLoginAt "Primer fallo de la ventana"
+        datetime lockedUntil "Fin del bloqueo temporal"
         datetime createdAt
         datetime updatedAt
     }

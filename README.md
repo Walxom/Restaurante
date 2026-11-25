@@ -1,6 +1,6 @@
 # Restaurant System
 
-![Project Version](https://img.shields.io/badge/version-1.0.1-blue.svg)
+![Project Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
 ![Next.js](https://img.shields.io/badge/Next.js-15-black)
 ![Prisma](https://img.shields.io/badge/Prisma-6-1B222D?logo=Prisma)
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwind-css)

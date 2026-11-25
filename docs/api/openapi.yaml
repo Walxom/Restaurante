@@ -458,6 +458,59 @@ paths:
         '404':
           description: No hay un turno de caja abierto.
 
+  /api/users:
+    get:
+      summary: Listar cuentas de usuario (solo JEFE)
+      description: Devuelve id, username, name, role, isActive y lockedUntil. Nunca incluye el hash de contraseña.
+      operationId: listUsers
+      tags:
+        - Autenticación
+      responses:
+        '200':
+          description: "{ users: Usuario[] }"
+        '403':
+          description: Permisos insuficientes.
+
+  /api/users/{id}:
+    patch:
+      summary: Cambiar contraseña o activar/desactivar una cuenta (solo JEFE)
+      description: Cambiar la contraseña la guarda con bcrypt (costo 12) y levanta un bloqueo por intentos fallidos. El JEFE no puede desactivar su propia cuenta.
+      operationId: updateUser
+      tags:
+        - Autenticación
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 72
+                  description: Debe incluir al menos una letra y un número.
+                isActive:
+                  type: boolean
+      responses:
+        '200':
+          description: Usuario actualizado (sin hash de contraseña).
+        '400':
+          description: Contraseña inválida o cuerpo vacío.
+        '403':
+          description: Permisos insuficientes.
+        '404':
+          description: Usuario no encontrado.
+        '409':
+          description: El JEFE intentó desactivar su propia cuenta.
+
   /api/ingredients:
     get:
       summary: Consultar kardex e inventario de insumos

@@ -117,6 +117,8 @@ Opens the same SQLite DB **read-only** (`DATABASE_URL` in `ai_engine/.env`).
 `Table`, `Order`/`OrderItem`, `Ingredient`/`IngredientCategory`, `Invoice`/`InvoiceItem`,
 `SystemConfig` (company info, IGV rate, boleta/factura counters), `Printer`,
 `CashSession` (US-10 cash shifts with blind count — never expose `expectedAmount` while `ABIERTA`).
+`User` also stores login lockout state (`failedLoginAttempts`, `firstFailedLoginAt`, `lockedUntil`) — use `src/services/login-attempts.service.ts`, never a module-level map.
+SQLite runs in **WAL** mode (set in `src/lib/prisma.ts`); `pnpm test:power-loss` checks crash safety.
 
 Critical notes:
 - Enums stored as **plain strings** — validate with Zod, never assume valid values from DB.
