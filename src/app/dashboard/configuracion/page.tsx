@@ -60,7 +60,7 @@ export default function ConfiguracionSistemaPage() {
       }
     }
 
-    fetchConfig()
+    void fetchConfig()
   }, [])
 
   // Sincronizar cambios

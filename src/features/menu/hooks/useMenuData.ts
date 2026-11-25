@@ -118,7 +118,7 @@ export default function useMenuData() {
   }
 
   useEffect(() => {
-    refresh()
+    void refresh()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

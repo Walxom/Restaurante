@@ -52,7 +52,7 @@ export default function ProductModal({ isOpen, onClose, onSave, product, categor
   // Cargar ingredientes disponibles
   useEffect(() => {
     if (isOpen) {
-      fetchIngredients()
+      void fetchIngredients()
     }
   }, [isOpen])
 

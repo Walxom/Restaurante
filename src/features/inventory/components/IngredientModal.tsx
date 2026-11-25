@@ -51,7 +51,7 @@ export default function IngredientModal({
 
   useEffect(() => {
     if (isOpen) {
-      fetchCategories()
+      void fetchCategories()
     }
   }, [isOpen])
 

@@ -91,12 +91,12 @@ export default function FacturaDetailsPage({
       const resolvedParams = await params
       setInvoiceId(resolvedParams.id)
     }
-    resolveParams()
+    void resolveParams()
   }, [params])
 
   useEffect(() => {
     if (invoiceId && session?.user?.role === "JEFE") {
-      fetchInvoice()
+      void fetchInvoice()
     }
   }, [invoiceId, session])
 

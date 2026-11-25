@@ -48,7 +48,7 @@ export function ReprintDialog({
     setPhase('checking')
     setServiceStatus(null)
     setDocInfo(null)
-    checkService()
+    void checkService()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
@@ -185,7 +185,7 @@ export function ReprintDialog({
                 Cerrar
               </Button>
               <Button
-                onClick={() => { setPhase('checking'); checkService() }}
+                onClick={() => { setPhase('checking'); void checkService() }}
                 className="flex-1 h-10 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-foreground text-background hover:opacity-90"
               >
                 <Loader2 className="h-3.5 w-3.5 mr-1.5" />

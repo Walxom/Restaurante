@@ -264,7 +264,7 @@ class LLMService:
 
     def _cache_key(self, ml_data: dict) -> str:
         raw = json.dumps(ml_data, sort_keys=True, ensure_ascii=False)
-        return hashlib.md5(raw.encode()).hexdigest()
+        return hashlib.sha256(raw.encode()).hexdigest()
 
     def _cache_get(self, key: str) -> dict | None:
         entry = self._narrative_cache.get(key)

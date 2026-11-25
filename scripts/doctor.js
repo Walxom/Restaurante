@@ -79,11 +79,11 @@ async function runDoctor() {
   const webPort = parseInt(process.env.PORT || '3001', 10)
   const aiPort = 8000
 
-  if (!check('NEXTAUTH_SECRET configurado', !!secret && secret.length >= 16, secret ? `(seguro: ${secret.length} chars)` : '(FALTA o es inseguro)')) {
+  if (!check('NEXTAUTH_SECRET configurado', !!secret && secret.length >= 16, secret ? '(longitud suficiente)' : '(FALTA o es inseguro)')) {
     hasErrors = true
   }
 
-  if (!check('DATABASE_URL configurada', !!dbUrl, dbUrl ? `(${dbUrl})` : '(FALTA)')) {
+  if (!check('DATABASE_URL configurada', !!dbUrl, dbUrl ? '(configurada)' : '(FALTA)')) {
     hasErrors = true
   }
 

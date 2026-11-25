@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto'
 import { type NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { type Prisma } from '@prisma/client'
@@ -12,7 +13,7 @@ function generateOrderNumber(): string {
   const year = now.getFullYear().toString().slice(-2)
   const month = (now.getMonth() + 1).toString().padStart(2, '0')
   const day = now.getDate().toString().padStart(2, '0')
-  const random = Math.floor(Math.random() * 9999).toString().padStart(4, '0')
+  const random = randomInt(0, 10000).toString().padStart(4, '0')
   return `${year}${month}${day}${random}`
 }
 

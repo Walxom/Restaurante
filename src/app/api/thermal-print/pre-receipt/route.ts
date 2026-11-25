@@ -150,9 +150,14 @@ async function printPreReceipt(data: PreReceiptData): Promise<{ success: boolean
 }
 
 async function sendToCashPrinter(port: string, data: string, timeout: number = 5000): Promise<void> {
-    return new Promise(async (resolve, reject) => {
+    let SerialPort: typeof import('serialport').SerialPort
+    try {
+        ;({ SerialPort } = await import('serialport'))
+    } catch (error) {
+        throw new Error(`Error iniciando impresión de caja: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+    }
+    return new Promise((resolve, reject) => {
         try {
-            const { SerialPort } = await import('serialport')
             const printer = new SerialPort({ path: port, baudRate: 115200, autoOpen: false })
             const timeoutId = setTimeout(() => {
                 printer.close()
