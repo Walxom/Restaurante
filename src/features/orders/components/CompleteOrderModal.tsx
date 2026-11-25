@@ -130,8 +130,10 @@ export default function CompleteOrderModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md bg-card/40 backdrop-blur-2xl border-border/50 rounded-[2.5rem] p-0 overflow-hidden shadow-2xl">
-        <DialogHeader className="p-8 pb-4">
+      {/* Alto limitado a la pantalla: el cuerpo hace scroll y los botones quedan siempre visibles.
+          En PC (lg) el formulario se reparte en dos columnas para no necesitar scroll. */}
+      <DialogContent className="max-w-md lg:max-w-4xl max-h-[calc(100dvh-2rem)] flex flex-col bg-card/40 backdrop-blur-2xl border-border/50 rounded-[2.5rem] p-0 overflow-hidden shadow-2xl">
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-3 lg:px-8">
           <DialogTitle className="text-xl font-black text-foreground uppercase tracking-tighter flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500">
               <Receipt className="w-5 h-5" />
@@ -141,7 +143,7 @@ export default function CompleteOrderModal({
         </DialogHeader>
 
         {showSuccess ? (
-          <div className="p-8 pt-4 space-y-8 animate-in fade-in zoom-in duration-300">
+          <div className="min-h-0 overflow-y-auto p-8 pt-4 space-y-8 animate-in fade-in zoom-in duration-300">
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="w-20 h-20 bg-emerald-500/10 rounded-[2rem] flex items-center justify-center text-emerald-500 relative">
                 <Check className="w-10 h-10" />
@@ -178,9 +180,11 @@ export default function CompleteOrderModal({
             </Button>
           </div>
         ) : (
-          <div className="p-8 pt-4 space-y-8">
+          <div className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4 pt-1 lg:px-8 grid gap-6 lg:grid-cols-2 lg:items-start">
+            <div className="space-y-6">
             {/* Total Display */}
-            <div className="bg-foreground/5 rounded-3xl p-6 border border-border/50 flex justify-between items-center">
+            <div className="bg-foreground/5 rounded-3xl p-5 border border-border/50 flex justify-between items-center">
               <div>
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total a Cobrar</p>
                 <h4 className="text-3xl font-black text-foreground tracking-tighter">S/ {(typeof totalAmount === 'string' ? parseFloat(totalAmount) : totalAmount).toFixed(2)}</h4>
@@ -215,7 +219,7 @@ export default function CompleteOrderModal({
                     type="button"
                     onClick={() => setPaymentMethod(method.id as any)}
                     className={cn(
-                      "flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 gap-2 text-center cursor-pointer",
+                      "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300 gap-2 text-center cursor-pointer",
                       paymentMethod === method.id
                         ? COLOR_CLASSES[method.color].active
                         : "bg-foreground/5 border-border/50 hover:border-foreground/20"
@@ -262,6 +266,9 @@ export default function CompleteOrderModal({
               )}
             </div>
 
+            </div>
+
+            <div className="space-y-6">
             {/* Selection Grid */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">Tipo de Comprobante</Label>
@@ -275,7 +282,7 @@ export default function CompleteOrderModal({
                     key={type.id}
                     onClick={() => setSelectedType(type.id as any)}
                     className={cn(
-                      "flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 text-left",
+                      "flex items-center gap-4 p-3 rounded-2xl border transition-all duration-300 text-left",
                       selectedType === type.id
                         ? COLOR_CLASSES[type.color].active
                         : "bg-foreground/5 border-border/50 hover:border-foreground/20"
@@ -377,8 +384,11 @@ export default function CompleteOrderModal({
               </div>
             )}
 
-            {/* Footer Actions */}
-            <div className="flex gap-3 pt-4">
+            </div>
+            </div>
+
+            {/* Footer Actions: fuera del área con scroll, siempre a la vista */}
+            <div className="shrink-0 flex gap-3 px-6 py-4 lg:px-8 border-t border-border/50">
               <Button
                 variant="ghost"
                 onClick={handleClose}
