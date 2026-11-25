@@ -33,6 +33,7 @@ export default function GeminiKeyModal({
 }: GeminiKeyModalProps) {
   const [apiKey, setApiKey] = useState("")
   const [model, setModel] = useState(currentModel)
+  const [savedModel, setSavedModel] = useState(currentModel)
   const [showKey, setShowKey] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -52,7 +53,10 @@ export default function GeminiKeyModal({
         .then((data) => {
           if (data) {
             setKeyPreview(data.keyPreview || null)
-            if (data.model) setModel(data.model)
+            if (data.model) {
+              setModel(data.model)
+              setSavedModel(data.model)
+            }
           }
         })
         .catch(() => {})
@@ -61,12 +65,19 @@ export default function GeminiKeyModal({
 
   if (!isOpen) return null
 
+  // Con una clave ya guardada, el campo de clave es opcional: vacío conserva la actual.
+  const tieneClave = isCurrentlyConfigured || !!keyPreview
+  const soloCambiaModelo = tieneClave && !apiKey.trim()
+  const puedeGuardar = apiKey.trim() !== "" || (tieneClave && model !== savedModel)
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!apiKey.trim()) {
+    if (!puedeGuardar) {
       setStatusMessage({
         type: "error",
-        text: "Por favor, ingresa una clave válida.",
+        text: tieneClave
+          ? "Elige otro modelo o ingresa una clave nueva."
+          : "Por favor, ingresa una clave válida.",
       })
       return
     }
@@ -78,13 +89,13 @@ export default function GeminiKeyModal({
       const res = await fetch("/api/ai/config/gemini", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: apiKey.trim(), model }),
+        body: JSON.stringify(soloCambiaModelo ? { model } : { apiKey: apiKey.trim(), model }),
       })
 
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || "Fallo en la validación de la API Key")
+        throw new Error(data.error || "No se pudo guardar la configuración de Gemini")
       }
 
       setStatusMessage({
@@ -92,6 +103,7 @@ export default function GeminiKeyModal({
         text: data.message || "Clave verificada y activada exitosamente.",
       })
       setKeyPreview(data.gemini?.keyPreview || null)
+      setSavedModel(model)
       setApiKey("")
 
       setTimeout(() => {
@@ -122,7 +134,7 @@ export default function GeminiKeyModal({
       const res = await fetch("/api/ai/config/gemini", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: "" }),
+        body: JSON.stringify({ action: "delete", model }),
       })
 
       if (!res.ok) {
@@ -183,7 +195,7 @@ export default function GeminiKeyModal({
                 Estado Actual
               </span>
               <p className="text-xs font-bold text-foreground">
-                {isCurrentlyConfigured ? (
+                {tieneClave ? (
                   <span className="text-emerald-500 flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4" />
                     Conectado ({keyPreview || "Clave configurada"})
@@ -197,7 +209,7 @@ export default function GeminiKeyModal({
               </p>
             </div>
 
-            {isCurrentlyConfigured && (
+            {tieneClave && (
               <Button
                 variant="outline"
                 size="sm"
@@ -219,30 +231,6 @@ export default function GeminiKeyModal({
           <form onSubmit={handleSave} className="space-y-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-wider text-foreground">
-                API Key de Google Gemini
-              </label>
-              <div className="relative">
-                <input
-                  type={showKey ? "text" : "password"}
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="AIzaSy... o AQ...."
-                  disabled={isLoading}
-                  autoComplete="off"
-                  className="w-full h-11 px-4 pr-11 bg-background/50 border border-border/60 rounded-xl text-xs font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all disabled:opacity-50"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKey(!showKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
-                >
-                  {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-wider text-foreground">
                 Modelo de Inteligencia Artificial
               </label>
               <select
@@ -255,6 +243,35 @@ export default function GeminiKeyModal({
                 <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Free Tier Balanceado)</option>
                 <option value="gemini-3.5-flash">gemini-3.5-flash (Free Tier Alta Capacidad)</option>
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-wider text-foreground">
+                {tieneClave ? "Nueva API Key (opcional)" : "API Key de Google Gemini"}
+              </label>
+              <div className="relative">
+                <input
+                  type={showKey ? "text" : "password"}
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder={tieneClave ? "Déjalo vacío para conservar la clave actual" : "AIzaSy... o AQ...."}
+                  disabled={isLoading}
+                  autoComplete="off"
+                  className="w-full h-11 px-4 pr-11 bg-background/50 border border-border/60 rounded-xl text-xs font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowKey(!showKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                >
+                  {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {tieneClave && (
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  Para cambiar solo de modelo no hace falta volver a escribir la clave.
+                </p>
+              )}
             </div>
 
             {/* Enlace para obtener clave gratis */}
@@ -312,18 +329,18 @@ export default function GeminiKeyModal({
                 type="submit"
                 variant="default"
                 size="sm"
-                disabled={isLoading || !apiKey.trim()}
+                disabled={isLoading || !puedeGuardar}
                 className="h-10 px-5 rounded-xl text-xs font-black uppercase tracking-wider shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all gap-2"
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Validando con Google...
+                    {soloCambiaModelo ? "Probando el modelo..." : "Validando con Google..."}
                   </>
                 ) : (
                   <>
                     <ShieldCheck className="w-3.5 h-3.5" />
-                    Validar y Guardar
+                    {soloCambiaModelo ? "Cambiar modelo" : "Validar y Guardar"}
                   </>
                 )}
               </Button>
