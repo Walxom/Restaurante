@@ -38,7 +38,7 @@ export function useSystemConfig() {
       }
     }
 
-    loadConfig()
+    void loadConfig()
   }, [])
 
   const refetch = async () => {
@@ -115,7 +115,7 @@ export function usePublicCompanyInfo() {
       }
     }
 
-    loadPublicInfo()
+    void loadPublicInfo()
   }, [])
 
   return { companyName, currency, loading, error }

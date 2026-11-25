@@ -211,10 +211,10 @@ export default function OrderDetailPage() {
                   <Button
                     key={action.status}
                     onClick={() => {
-                      if (action.action === 'markAllServed') markAllItemsAsServed()
-                      else if (action.action === 'complete') handleCompleteOrder()
-                      else if (action.action === 'cancel') handleCancelOrder()
-                      else updateStatus(action.status)
+                      if (action.action === 'markAllServed') void markAllItemsAsServed()
+                      else if (action.action === 'complete') void handleCompleteOrder()
+                      else if (action.action === 'cancel') void handleCancelOrder()
+                      else void updateStatus(action.status)
                     }}
                     disabled={action.action === 'markAllServed' && isMarkingAllServed}
                     className={`w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all ${action.color} text-white`}

@@ -200,4 +200,7 @@ async function runDisasterRecoveryDrill() {
   }
 }
 
-runDisasterRecoveryDrill()
+runDisasterRecoveryDrill().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})

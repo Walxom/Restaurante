@@ -424,7 +424,10 @@ export async function update(id: string, dto: UpdateOrderDto) {
       const { printOrderChanges } = await import("./printer/kitchen-printer.service")
       // No esperamos (await) a la impresión para no bloquear la respuesta de la API
       const prevItems = (existingOrder as unknown as { orderItems: unknown[] }).orderItems || []
-      printOrderChanges(id, prevItems as never, dto.items)
+      const nuevosItems = dto.items
+      void Promise.resolve()
+        .then(() => printOrderChanges(id, prevItems as never, nuevosItems))
+        .catch((e) => console.error("Error al imprimir cambios del pedido:", e))
     } catch (e) {
       console.error("Error al intentar imprimir cambios:", e)
     }

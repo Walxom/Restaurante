@@ -43,7 +43,7 @@ function InvoiceWidget() {
 
   useEffect(() => {
     setMounted(true)
-    fetchInvoiceStats()
+    void fetchInvoiceStats()
   }, [])
 
   if (!mounted || loading) {

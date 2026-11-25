@@ -41,7 +41,7 @@ export function useEditOrder(orderId: string) {
   }
 
   // Generar ID único temporal para nuevos items
-  const generateItemId = () => `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+  const generateItemId = () => `item_${Date.now()}_${crypto.getRandomValues(new Uint32Array(1))[0].toString(36)}`
 
   // Cargar pedido y catálogo de productos
   const loadOrder = useCallback(async () => {
@@ -299,13 +299,13 @@ export function useEditOrder(orderId: string) {
         cancelText: "Cancelar",
         onConfirm: () => {
           closeDialog()
-          performSaveOrder()
+          void performSaveOrder()
         }
       })
       return
     }
 
-    performSaveOrder()
+    void performSaveOrder()
   }
 
   const performSaveOrder = async () => {
@@ -379,7 +379,7 @@ export function useEditOrder(orderId: string) {
       cancelText: "No cancelar",
       onConfirm: () => {
         closeDialog()
-        performCancelOrder()
+        void performCancelOrder()
       }
     })
   }

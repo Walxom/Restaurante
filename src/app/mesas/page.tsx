@@ -61,7 +61,7 @@ export default function MesasPage() {
 
   // Cargar mesas
   useEffect(() => {
-    fetchTables()
+    void fetchTables()
   }, [])
 
   const fetchTables = async () => {
@@ -79,7 +79,7 @@ export default function MesasPage() {
   }
 
   const handleModalSave = () => {
-    fetchTables()
+    void fetchTables()
   }
 
   const openEditModal = (table: Table) => {

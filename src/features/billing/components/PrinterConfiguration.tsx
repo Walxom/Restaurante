@@ -72,7 +72,7 @@ export default function PrinterConfiguration() {
   })
 
   useEffect(() => {
-    loadPrinterConfigs()
+    void loadPrinterConfigs()
   }, [])
 
   const loadPrinterConfigs = async () => {

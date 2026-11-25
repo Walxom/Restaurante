@@ -42,7 +42,9 @@ if (process.argv[2] === '--writer') {
     await prisma.$executeRawUnsafe(
       'CREATE TABLE IF NOT EXISTS venta_item (venta_id INTEGER NOT NULL REFERENCES venta(id), cantidad INTEGER NOT NULL)'
     )
-    for (;;) {
+    // Tope de seguridad: si el padre muere sin matarlo, el hijo termina solo.
+    const limite = Date.now() + 60_000
+    while (Date.now() < limite) {
       // Venta + detalle en una sola transacción: o se guardan las dos o ninguna.
       await prisma.$transaction(async (tx) => {
         const [{ id }] = await tx.$queryRawUnsafe(
@@ -52,6 +54,7 @@ if (process.argv[2] === '--writer') {
       })
       process.stdout.write('ACK\n') // solo tras el commit
     }
+    await prisma.$disconnect()
   })().catch((e) => {
     console.error(e)
     process.exit(1)
