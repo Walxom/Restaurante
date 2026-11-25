@@ -1,4 +1,4 @@
-name: CI — Lint · Test (Node + Python) · Cold-Start · E2E · Build
+name: CI — Lint · Test (Node + Python) · Cold-Start · E2E · Build · SonarQube Cloud
 
 on:
   push:
@@ -169,3 +169,28 @@ jobs:
           path: .next/
           include-hidden-files: true
           retention-days: 3
+
+  # ─── Job 4: Análisis estático y deuda técnica (SonarQube Cloud) ─────────────
+  sonarcloud:
+    name: SonarQube Cloud
+    runs-on: ubuntu-24.04
+    needs: quality
+    # Los PRs desde forks no reciben el secreto; el análisis se omite sin fallar.
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+
+    steps:
+      - name: Checkout del repositorio (historial completo para blame y código nuevo)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Descargar reporte de cobertura del job quality
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: Escanear con SonarQube Cloud
+        uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
