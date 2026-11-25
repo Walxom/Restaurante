@@ -1,6 +1,10 @@
 const { execSync } = require('child_process');
 const path = require('path');
 
+// Ejecutables del venv: venv\Scripts\*.exe en Windows, venv/bin/* en Linux y macOS
+const venvBin = (venv, nombre) =>
+  process.platform === 'win32' ? path.join(venv, 'Scripts', `${nombre}.exe`) : path.join(venv, 'bin', nombre)
+
 // Códigos de colores ANSI para la consola
 const colors = {
   reset: '\x1b[0m',
@@ -103,7 +107,7 @@ const setupWithUV = () => {
     // 2. Instalar dependencias con uv pip
     console.log(`\n   -> Instalando dependencias desde ${colors.cyan}${colors.bright}${requirementsPath}${colors.reset}...`);
     // En Windows se usa el ejecutable de uv dentro del venv o se llama a uv pip apuntando al venv
-    execSync(`uv pip install -r "${requirementsPath}" --python "${path.join(venvPath, 'Scripts', 'python.exe')}"`, { stdio: 'inherit' });
+    execSync(`uv pip install -r "${requirementsPath}" --python "${venvBin(venvPath, 'python')}"`, { stdio: 'inherit' });
     
     console.log(`\n${colors.green}${colors.bright}✔ ¡Entorno virtual creado exitosamente con uv (Python 3.10)!${colors.reset}\n`);
   } catch (error) {
@@ -137,7 +141,7 @@ const setupNativo = (pythonCmd) => {
     
     // 2. Instalar dependencias con pip local del venv
     console.log(`\n   -> Instalando dependencias con pip...`);
-    const pipPath = path.join(venvPath, 'Scripts', 'pip.exe');
+    const pipPath = venvBin(venvPath, 'pip');
     execSync(`"${pipPath}" install -r "${requirementsPath}"`, { stdio: 'inherit' });
     
     console.log(`\n${colors.green}${colors.bright}✔ ¡Entorno virtual creado exitosamente de forma nativa (Python 3.10)!${colors.reset}\n`);

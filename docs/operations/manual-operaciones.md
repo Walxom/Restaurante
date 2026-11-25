@@ -29,7 +29,7 @@ opere, mantenga y recupere el sistema sin depender del equipo de desarrollo.
 ### RB-01 Arranque diario
 
 1. Encender la PC servidor y conectarla al router del local (IP fija recomendada).
-2. En la carpeta del proyecto: `pnpm start:network` (o `pm2 start ecosystem.config.js` si se usa PM2).
+2. En la carpeta del proyecto: `pnpm start:production` (o `pm2 start ecosystem.config.js` si se usa PM2).
 3. Opcional, IA: `pnpm ai:start`.
 4. Verificar: `pnpm doctor` y abrir `http://<IP-del-servidor>:3001/api/public/health` desde una tablet.
 5. Encender la impresora térmica y hacer una impresión de prueba desde **Impresión**.
@@ -47,7 +47,7 @@ opere, mantenga y recupere el sistema sin depender del equipo de desarrollo.
 | :--- | :--- | :--- | :--- |
 | RB-03 | Las tablets no abren el sistema | Servidor apagado, IP cambiada o firewall | Comprobar RB-01 paso 4 en la PC; revisar IP con `ipconfig`; permitir el puerto 3001 en el Firewall de Windows |
 | RB-04 | "Puerto 3001 en uso" al arrancar | Quedó un proceso anterior | `pnpm doctor` lo identifica; cerrar el proceso `node` o reiniciar la PC |
-| RB-05 | Los pedidos no aparecen en tiempo real | Socket desconectado (red o servidor iniciado con `dev:next`) | Recargar la página; iniciar siempre con `pnpm start:network` |
+| RB-05 | Los pedidos no aparecen en tiempo real | Socket desconectado (red o servidor iniciado con `dev:next`) | Recargar la página; iniciar siempre con `pnpm start:production` |
 | RB-06 | No imprime la comanda | Impresora apagada, sin papel o IP distinta | Revisar papel y red; corregir IP en **Impresión**; reimprimir desde el pedido |
 | RB-07 | Usuario bloqueado | 3 intentos fallidos | Esperar 15 minutos, o que el JEFE le cambie la contraseña en **Usuarios** (el bloqueo se guarda en la base y no se levanta reiniciando) |
 | RB-08 | La IA no responde | Motor apagado, sin internet o cuota de Gemini agotada | El POS sigue funcionando; reiniciar con `pnpm ai:start`; revisar `GEMINI_API_KEY` |
@@ -57,7 +57,7 @@ opere, mantenga y recupere el sistema sin depender del equipo de desarrollo.
 
 | ID | Tarea | Frecuencia | Comando |
 | :--- | :--- | :--- | :--- |
-| RB-10 | Respaldo de la base de datos (`VACUUM INTO`, retención de 7 días en `backups/`) | Diaria, al cierre | `pnpm db:backup` (con copia externa: `scripts/backup-db.ps1 -DestinoExtra "E:\Backups"`) |
+| RB-10 | Respaldo de la base de datos (`VACUUM INTO`, retención de 7 días en `backups/`) | Diaria, al cierre | `pnpm db:backup` (con copia externa: `pnpm db:backup:usb E:\Backups`); con Docker: `./siger.sh respaldar` o `.\siger.cmd respaldar` |
 | RB-11 | Restaurar un respaldo | Ante incidente | Detener el servidor, copiar `backups/dev_backup_<fecha>.db` sobre `prisma/dev.db`, arrancar (RB-01) |
 | RB-12 | Simulacro de restauración | Mensual | `pnpm test:backup` (verifica integridad, claves foráneas y datos restaurados) |
 | RB-13 | Simulacro de caída abrupta | Mensual y tras actualizar | `pnpm test:power-loss` (mata el proceso 5 veces en plena escritura y verifica que no haya corrupción ni ventas perdidas; también corre en cada CI) |

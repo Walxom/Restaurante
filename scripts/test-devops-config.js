@@ -76,8 +76,10 @@ function runDevOpsManifestAudit() {
   assert('Archivo docker-compose.yml presente', fs.existsSync(composePath))
 
   const composeContent = fs.readFileSync(composePath, 'utf-8')
-  assert('Servicio siger-ai declarado con puerto 8000', composeContent.includes('siger-ai:') && composeContent.includes('"8000:8000"'))
-  assert('Servicio siger-web declarado con puerto 3001', composeContent.includes('siger-web:') && composeContent.includes('"3001:3001"'))
+  assert('Servicio siger-ai expuesto solo en la red interna (puerto 8000)', composeContent.includes('siger-ai:') && composeContent.includes('- "8000"'))
+  assert('Servicio siger-web publica el puerto 3001 (configurable con WEB_PORT)', composeContent.includes('siger-web:') && composeContent.includes('"${WEB_PORT:-3001}:3001"'))
+  assert('Despliegue sin configuración previa: clave de sesiones opcional (SIGER_SECRET)', composeContent.includes('SIGER_SECRET: ${SIGER_SECRET:-}') && !composeContent.includes('NEXTAUTH_SECRET:'))
+  assert('Motor de IA lee la base en solo lectura', composeContent.includes('file:/data/prod.db?mode=ro'))
   assert('Health-gating configurado (depends_on condition: service_healthy)', composeContent.includes('condition: service_healthy'))
   assert('Volumen persistente sqlite_data declarado', composeContent.includes('sqlite_data:'))
   assert('Red interna aislada siger-network declarada', composeContent.includes('siger-network:'))
@@ -91,6 +93,13 @@ function runDevOpsManifestAudit() {
 
   const entrypointPath = path.join(rootDir, 'docker-entrypoint.sh')
   assert('Script docker-entrypoint.sh presente', fs.existsSync(entrypointPath))
+  const entrypointContent = fs.readFileSync(entrypointPath, 'utf-8')
+  assert('Entrypoint con finales de línea LF (ejecutable en Linux)', !entrypointContent.includes('\r'))
+  assert('Entrypoint genera y conserva la clave de sesiones en el volumen', entrypointContent.includes('.nextauth_secret'))
+
+  for (const script of ['siger.sh', 'siger.ps1']) {
+    assert(`Script de despliegue ${script} presente`, fs.existsSync(path.join(rootDir, script)))
+  }
 
   const aiDockerPath = path.join(rootDir, 'ai_engine', 'Dockerfile')
   assert('Dockerfile del microservicio de IA presente', fs.existsSync(aiDockerPath))
