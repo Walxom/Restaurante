@@ -68,102 +68,66 @@ Para comprobar la salud del sistema en cualquier momento: `pnpm doctor`.
 
 ## 🚀 Despliegue en producción (Docker)
 
-El sistema se despliega con **Docker Compose** en dos contenedores Linux: `siger-web` (aplicación web,
-WebSockets y base SQLite) y `siger-ai` (motor de IA). Las mismas imágenes funcionan en un servidor
-**Linux** y en un PC **Windows 10/11**; los pasos son iguales y solo cambian los comandos de consola
-marcados abajo. La base de datos vive en el volumen `sqlite_data` y no se pierde al reiniciar ni al
-actualizar.
+El sistema se despliega con **un solo comando**. Corre en dos contenedores Linux: `siger-web`
+(aplicación web, WebSockets y base SQLite) y `siger-ai` (motor de IA). Las mismas imágenes funcionan en
+un servidor **Linux** y en un PC **Windows 10/11**. No hay que crear claves ni editar archivos: la clave
+de sesiones se genera sola y se guarda junto a la base, y el sistema responde con la dirección que use
+cada equipo (localhost o la IP del servidor en la red).
 
 ### 1. Requisitos
 
 | | Windows 10/11 | Linux (Ubuntu, Debian, etc.) |
 | :--- | :--- | :--- |
-| Docker | [Docker Desktop](https://www.docker.com/products/docker-desktop/) con backend **WSL2** (modo *Linux containers*, el predeterminado) | Docker Engine + plugin Compose: `curl -fsSL https://get.docker.com \| sh` |
+| Docker | [Docker Desktop](https://www.docker.com/products/docker-desktop/) (`winget install Docker.DockerDesktop`) | `curl -fsSL https://get.docker.com \| sh` |
 | Git | `winget install Git.Git` | `sudo apt install git` |
-| Hardware | 2 núcleos, 4 GB de RAM, 5 GB libres en disco | igual |
+| Hardware | 2 núcleos, 4 GB de RAM, 5 GB libres | igual |
 
-Compruebe la instalación con `docker compose version` (v2.20 o superior).
-
-### 2. Obtener el código
-
-```bash
-git clone https://github.com/Walxom/Restaurante.git
-cd Restaurante
-git checkout v1.1.0        # última versión publicada
-```
-
-### 3. Configurar
-
-Copie la plantilla de variables y genere la clave de sesiones:
+### 2. Instalar
 
 **Windows (PowerShell)**
 ```powershell
-Copy-Item .env.docker.example .env
-[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))   # copie el resultado
-notepad .env
+git clone https://github.com/Walxom/Restaurante.git
+cd Restaurante
+.\siger.cmd
 ```
+
+También se puede hacer doble clic en `siger.cmd` desde el Explorador de archivos.
 
 **Linux**
 ```bash
-cp .env.docker.example .env
-openssl rand -base64 32     # copie el resultado
-nano .env
+git clone https://github.com/Walxom/Restaurante.git
+cd Restaurante
+./siger.sh
 ```
 
-En `.env` complete:
-- `NEXTAUTH_SECRET`: la clave generada (obligatoria; sin ella Compose no arranca).
-- `NEXTAUTH_URL`: la dirección con la que se abrirá el sistema desde las tablets, con la **IP fija del
-  servidor**, por ejemplo `http://192.168.1.50:3001`. Para probar en el mismo equipo deje
-  `http://localhost:3001`.
-- `GEMINI_API_KEY` (opcional): habilita el chat con IA; sin ella el motor usa reglas locales.
+El script comprueba Docker (en Windows lo inicia si está cerrado), construye e inicia los contenedores,
+espera a que estén sanos y muestra las direcciones para abrir el sistema, por ejemplo
+`http://192.168.1.50:3001`. En Windows, si se ejecuta como administrador, también abre el puerto 3001 en
+el firewall; si no, muestra el comando para hacerlo. La primera vez tarda unos minutos.
 
-### 4. Levantar
+Entre con `jefe` / `admin123` y **cambie las contraseñas iniciales en Dashboard → Usuarios**.
 
-```bash
-docker compose up -d --build
-docker compose ps           # esperar a que ambos contenedores digan "healthy" (1-2 min)
-```
+### 3. Operación diaria
 
-En el primer arranque se crea la base y se cargan los datos iniciales. Abra
-`http://IP-DEL-SERVIDOR:3001` (o `http://localhost:3001`) y entre con `jefe` / `admin123`.
-**Cambie de inmediato las contraseñas iniciales en Dashboard → Usuarios.**
+| Tarea | Windows | Linux |
+| :--- | :--- | :--- |
+| Estado y salud | `.\siger.cmd estado` | `./siger.sh estado` |
+| Respaldo verificado (queda en `backups/`) | `.\siger.cmd respaldar` | `./siger.sh respaldar` |
+| Restaurar un respaldo (antes respalda la base actual) | `.\siger.cmd restaurar backups\siger-AAAAMMDD-HHMMSS-mmm.db` | `./siger.sh restaurar backups/siger-AAAAMMDD-HHMMSS-mmm.db` |
+| Actualizar a la última versión o a una etiqueta (respalda antes) | `.\siger.cmd actualizar v1.2.0` | `./siger.sh actualizar v1.2.0` |
+| Ver registros | `.\siger.cmd logs` | `./siger.sh logs` |
+| Detener sin borrar datos | `.\siger.cmd detener` | `./siger.sh detener` |
 
-Para que las tablets lleguen al servidor, abra el puerto 3001:
-- **Windows** (PowerShell como administrador):
-  `New-NetFirewallRule -DisplayName "SIGER-IA" -Direction Inbound -Protocol TCP -LocalPort 3001 -Action Allow`
-- **Linux** con ufw: `sudo ufw allow 3001/tcp`
+Los contenedores se reinician solos con el equipo (`restart: unless-stopped`); en Windows active en Docker
+Desktop *Start Docker Desktop when you sign in*. Al actualizar, el esquema de la base se migra solo y los
+datos se conservan.
 
-### 5. Operación
+**Ajustes opcionales:** copie `.env.docker.example` como `.env` para cambiar el puerto (`WEB_PORT`),
+activar el chat con Gemini (`GEMINI_API_KEY`), el nombre del restaurante o la zona horaria.
 
-| Tarea | Comando |
-| :--- | :--- |
-| Ver estado | `docker compose ps` · `curl http://localhost:3001/api/public/health` |
-| Ver registros | `docker compose logs -f siger-web` (o `siger-ai`) |
-| Detener / iniciar | `docker compose stop` · `docker compose start` |
-| Actualizar a una versión nueva | `git fetch --tags && git checkout vX.Y.Z && docker compose up -d --build` (el esquema de la base se actualiza solo, sin borrar datos) |
-| Respaldar la base (copia consistente, en caliente) | ver abajo |
-| Desinstalar conservando datos | `docker compose down` |
-| Borrar todo, **incluida la base** | `docker compose down -v` |
+**Sin los scripts** (mismo resultado): `docker compose up -d --build --wait`.
 
-**Respaldo** (los mismos comandos en PowerShell y en bash). Deja `respaldo.db` en la carpeta actual:
-
-```bash
-echo "VACUUM INTO '/data/respaldo.db';" | docker compose exec -T siger-web node node_modules/prisma/build/index.js db execute --stdin --url file:/data/prod.db
-docker compose cp siger-web:/data/respaldo.db ./respaldo.db
-docker compose exec siger-web rm /data/respaldo.db
-```
-
-Para restaurar un respaldo (reemplaza los datos actuales):
-
-```bash
-docker compose cp ./respaldo.db siger-web:/data/restaurar.db
-docker compose restart
-```
-
-Los contenedores se reinician solos si el servidor se reinicia (`restart: unless-stopped`); en Windows,
-active en Docker Desktop *Start Docker Desktop when you sign in*.
-
-### 6. Limitaciones y alternativa sin Docker
+### 4. Limitaciones y alternativa sin Docker
 
 - **Impresoras térmicas:** las de red (ESC/POS por TCP, puerto 9100) funcionan desde el contenedor. Las
   conectadas por USB o puerto serie no son visibles dentro de Docker Desktop en Windows; en ese caso use

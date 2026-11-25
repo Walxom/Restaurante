@@ -32,6 +32,7 @@ WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PRISMA_HIDE_UPDATE_MESSAGE=1 \
+    AUTH_TRUST_HOST=true \
     PORT=3001 \
     DATABASE_URL=file:/data/prod.db
 
@@ -42,6 +43,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/server.js /app/package.json /app/next.config.ts ./
+COPY --from=builder /app/scripts/docker ./scripts/docker
 COPY --chmod=755 docker-entrypoint.sh ./docker-entrypoint.sh
 
 RUN mkdir -p /data .next/cache && chown node:node /data .next/cache

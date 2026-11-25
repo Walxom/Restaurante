@@ -112,31 +112,28 @@ Inicie de forma concurrente el servidor web con WebSockets (`server.js` en el pu
 ```bash
 pnpm dev:ai
 ```
-*(Si desea probar el frontend rápido con Turbopack sin WebSockets, puede ejecutar alternativamente `pnpm dev:ai:next` en el puerto 3000).*
+*(`pnpm dev:next` levanta solo el frontend con Turbopack, sin WebSockets; úselo únicamente para depurar la interfaz).*
 
 ---
 
-## 4. Ruta B: Despliegue con Docker Compose (Windows y Linux)
+## 4. Ruta B: Despliegue con Docker (Windows y Linux)
 
 Para el servidor del local. Usa contenedores **Linux** en ambos sistemas: Docker Engine en Linux y
-Docker Desktop con WSL2 en Windows 10/11. El procedimiento completo (configuración de `.env`, firewall,
-respaldo, actualización) está en la sección **"Despliegue en producción (Docker)"** del
-[README](../../README.md#-despliegue-en-producción-docker). Resumen:
+Docker Desktop con WSL2 en Windows 10/11. Un solo comando, sin crear claves ni editar archivos:
 
 ```bash
-cp .env.docker.example .env      # Windows: Copy-Item .env.docker.example .env
-# completar NEXTAUTH_SECRET y NEXTAUTH_URL (IP fija del servidor)
-docker compose up -d --build
-docker compose ps                # siger-web y siger-ai en estado healthy
+./siger.sh          # Linux
+.\siger.cmd          # Windows, en PowerShell (o doble clic en siger.cmd)
 ```
 
 | Contenedor | Contenido | Puerto |
 | :--- | :--- | :--- |
-| `siger-web` | Next.js + Socket.IO + Prisma; crea y actualiza la base en el volumen `sqlite_data` al arrancar | 3001 (publicado) |
+| `siger-web` | Next.js + Socket.IO + Prisma; crea y migra la base en el volumen `sqlite_data` y genera la clave de sesiones la primera vez | 3001 (publicado) |
 | `siger-ai` | Motor de IA FastAPI; lee la misma base en solo lectura | 8000 (solo red interna) |
 
-El job **Despliegue Docker (Linux)** del CI levanta ambos contenedores en cada cambio, verifica la salud
-de la web, la base y el motor de IA, y comprueba que los datos persisten tras un reinicio.
+Operación (`estado`, `respaldar`, `restaurar`, `actualizar`, `logs`, `detener`): ver la sección
+**"Despliegue en producción (Docker)"** del [README](../../README.md). El job **Despliegue Docker
+(Linux)** del CI ejecuta esos mismos comandos en cada cambio.
 
 ---
 

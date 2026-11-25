@@ -1,10 +1,12 @@
 # ==============================================================================
 # SIGER-IA — despliegue con Docker Compose (contenedores Linux)
 # Funciona igual en un servidor Linux (Docker Engine) y en Windows 10/11
-# (Docker Desktop con WSL2). Instrucciones: README.md, sección "Despliegue".
+# (Docker Desktop con WSL2). No requiere configuración previa:
 #
-#   cp .env.docker.example .env    # y completar NEXTAUTH_SECRET y NEXTAUTH_URL
-#   docker compose up -d --build
+#   ./siger.sh           (Linux)       |   .\siger.ps1        (Windows)
+#   docker compose up -d --build       (equivalente manual)
+#
+# Ajustes opcionales en .env (ver .env.docker.example). Guía: README.md, "Despliegue".
 # ==============================================================================
 
 services:
@@ -24,8 +26,12 @@ services:
       NODE_ENV: production
       PORT: 3001
       DATABASE_URL: file:/data/prod.db
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?Defina NEXTAUTH_SECRET en el archivo .env (ver .env.docker.example)}
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3001}
+      # Clave de sesiones: si SIGER_SECRET está vacío, el contenedor genera una y la
+      # guarda en el volumen (docker-entrypoint.sh).
+      SIGER_SECRET: ${SIGER_SECRET:-}
+      # Sin NEXTAUTH_URL fija: el sistema responde con la dirección que use cada
+      # equipo (localhost, IP de la red local o nombre del servidor).
+      AUTH_TRUST_HOST: "true"
       AI_ENGINE_URL: http://siger-ai:8000
       AI_ENGINE_ENABLED: "true"
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
@@ -60,7 +66,6 @@ services:
       DATABASE_URL: file:/data/prod.db?mode=ro
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       RESTAURANT_NAME: ${RESTAURANT_NAME:-Fondo Marino}
-      ALLOWED_ORIGINS: ${NEXTAUTH_URL:-http://localhost:3001}
       TZ: ${TZ:-America/Lima}
     restart: unless-stopped
     depends_on:
