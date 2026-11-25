@@ -9,8 +9,26 @@ vi.mock("@/lib/auth", () => ({
   authOptions: {},
 }))
 
+// El puerto real del equipo no debe influir en las pruebas
+vi.mock("@/lib/ai-engine", () => ({
+  PUERTO_PREFERIDO: 8000,
+  getAiEngineUrl: () => "http://127.0.0.1:8000",
+  leerPuertoLocal: () => 8000,
+  usaMotorRemoto: vi.fn(() => false),
+  buscarPuertoLibre: vi.fn(),
+  guardarPuertoLocal: vi.fn(),
+}))
+
+vi.mock("child_process", async (importOriginal) => {
+  const real = await importOriginal<typeof import("child_process")>()
+  return { ...real, spawn: vi.fn(() => ({ pid: 4321, unref: vi.fn() })) }
+})
+
 import { getServerSession } from "next-auth/next"
 import { GET, POST } from "../route"
+import { buscarPuertoLibre, guardarPuertoLocal, usaMotorRemoto } from "@/lib/ai-engine"
+import { spawn } from "child_process"
+import fs from "fs"
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -97,7 +115,7 @@ describe("API /api/ai/service", () => {
     expect(data.data.isRunning).toBe(false)
   })
 
-  describe("POST start cuando el puerto ya responde", () => {
+  describe("POST start", () => {
     const reqStart = () =>
       new NextRequest("http://localhost:3000/api/ai/service", {
         method: "POST",
@@ -109,13 +127,20 @@ describe("API /api/ai/service", () => {
         user: { id: "1", name: "Jefe", role: "JEFE" },
         expires: "2099-01-01",
       })
+      // Sin PID guardado: no hay un arranque en curso
+      vi.spyOn(fs, "existsSync").mockImplementation((p) => !String(p).endsWith(".pid"))
+      vi.spyOn(fs, "openSync").mockReturnValue(99)
+      vi.spyOn(fs, "writeSync").mockReturnValue(0)
+      vi.spyOn(fs, "closeSync").mockReturnValue(undefined)
+      vi.spyOn(fs, "writeFileSync").mockReturnValue(undefined)
     })
 
     afterEach(() => {
       vi.unstubAllGlobals()
+      vi.restoreAllMocks()
     })
 
-    it("responde 409 con un mensaje claro si otra aplicación ocupa el puerto", async () => {
+    it("si otra aplicación ocupa el puerto, arranca el motor en el siguiente libre sin pedir nada al usuario", async () => {
       vi.stubGlobal(
         "fetch",
         vi.fn().mockResolvedValue({
@@ -123,13 +148,16 @@ describe("API /api/ai/service", () => {
           json: async () => ({ status: "healthy", app: "Otra aplicación" }),
         })
       )
+      vi.mocked(buscarPuertoLibre).mockResolvedValue(8001)
 
       const response = await POST(reqStart())
-      expect(response.status).toBe(409)
+      expect(response.status).toBe(200)
       const data = await response.json()
-      expect(data.success).toBe(false)
-      expect(data.error).toContain("ocupado por otra aplicación")
-      expect(data.error).toContain("AI_PORT")
+      expect(data.success).toBe(true)
+      expect(data.data.port).toBe(8001)
+      expect(guardarPuertoLocal).toHaveBeenCalledWith(8001)
+      const args = vi.mocked(spawn).mock.calls[0][1] as string[]
+      expect(args).toContain("8001")
     })
 
     it("no lanza otro proceso si el motor de SIGER ya responde", async () => {
@@ -145,6 +173,27 @@ describe("API /api/ai/service", () => {
       expect(response.status).toBe(200)
       const data = await response.json()
       expect(data.message).toContain("ya se encuentra en ejecución")
+      expect(spawn).not.toHaveBeenCalled()
+    })
+
+    it("explica el problema si no queda ningún puerto libre", async () => {
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("ECONNREFUSED")))
+      vi.mocked(buscarPuertoLibre).mockResolvedValue(null)
+
+      const response = await POST(reqStart())
+      expect(response.status).toBe(500)
+      const data = await response.json()
+      expect(data.details).toContain("No hay puertos libres")
+      expect(spawn).not.toHaveBeenCalled()
+    })
+
+    it("no intenta lanzar el motor cuando corre en otro contenedor (Docker)", async () => {
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("ECONNREFUSED")))
+      vi.mocked(usaMotorRemoto).mockReturnValueOnce(true)
+
+      const response = await POST(reqStart())
+      expect(response.status).toBe(409)
+      expect(spawn).not.toHaveBeenCalled()
     })
   })
 })

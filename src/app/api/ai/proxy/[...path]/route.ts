@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { validateRole } from "@/lib/auth-utils"
-import { AI_ENGINE_URL as AI_BASE_URL } from "@/lib/ai-engine"
+import { getAiEngineUrl } from "@/lib/ai-engine"
 
 async function forwardRequest(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   // Asegurar autenticación para proteger endpoints del motor de IA
@@ -12,7 +12,7 @@ async function forwardRequest(request: NextRequest, { params }: { params: Promis
   const resolvedParams = await params
   const targetPath = (resolvedParams.path || []).join("/")
   const search = request.nextUrl.search || ""
-  const targetUrl = `${AI_BASE_URL}/${targetPath}${search}`
+  const targetUrl = `${getAiEngineUrl()}/${targetPath}${search}`
 
   try {
     const controller = new AbortController()

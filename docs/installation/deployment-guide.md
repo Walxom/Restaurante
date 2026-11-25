@@ -59,7 +59,8 @@ NEXTAUTH_URL="http://localhost:3001"
 NEXTAUTH_SECRET="siger_super_secret_jwt_key_2026_upn_trujillo"
 
 # --- Motor de Inteligencia Artificial (Microservicio Python FastAPI) ---
-AI_ENGINE_URL="http://localhost:8000"
+# El puerto se elige solo: desde 8000 (o AI_PORT) hasta el primero libre.
+# AI_ENGINE_URL solo se define si el motor corre en otro equipo o contenedor.
 AI_ENGINE_ENABLED=true
 
 # --- Red de Impresión Térmica ESC/POS (Seed Oficial) ---

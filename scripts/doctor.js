@@ -96,11 +96,28 @@ async function runDoctor() {
     check(`Puerto web :${webPort} (Next.js / Sockets)`, true, `(en uso - posible servidor ya en ejecución)`)
   }
 
-  const aiPortFree = await isPortAvailable(aiPort)
-  if (aiPortFree) {
+  // El motor de IA elige solo un puerto libre (src/lib/ai-engine.ts), así que un
+  // puerto ocupado por otra aplicación no es un error: solo se informa.
+  let aiPortActual = aiPort
+  try {
+    aiPortActual = parseInt(fs.readFileSync(path.join(process.cwd(), 'logs', 'ai-engine.port'), 'utf-8'), 10) || aiPort
+  } catch {
+    // Sin archivo: el motor aún no se ha iniciado en este equipo
+  }
+  let esMotorSiger = false
+  try {
+    const res = await fetch(`http://127.0.0.1:${aiPortActual}/health`, { signal: AbortSignal.timeout(1500) })
+    const data = await res.json()
+    esMotorSiger = data?.service === 'ai-engine'
+  } catch {
+    // No responde
+  }
+  if (esMotorSiger) {
+    check(`Motor de IA (Python FastAPI)`, true, `(en ejecución en 127.0.0.1:${aiPortActual})`)
+  } else if (await isPortAvailable(aiPort)) {
     check(`Puerto IA :${aiPort} (Python FastAPI)`, true, '(disponible para arrancar)')
   } else {
-    check(`Puerto IA :${aiPort} (Python FastAPI)`, true, `(en uso - microservicio ya activo)`)
+    check(`Puerto IA :${aiPort} (Python FastAPI)`, true, '(ocupado por otra aplicación: el motor usará el siguiente puerto libre automáticamente)')
   }
 
   // ─── 3. CONECTIVIDAD Y DATOS (SQLITE / PRISMA) ─────────────────────────────

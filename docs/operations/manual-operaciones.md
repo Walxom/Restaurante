@@ -89,7 +89,7 @@ El primer día se **cambian las contraseñas semilla** (`admin123`, `mesero123`)
 | `PORT`, `NODE_ENV`, `NEXTAUTH_URL`, `NEXT_PUBLIC_SOCKET_URL` | Red y modo de ejecución | No |
 | `NEXTAUTH_SECRET` | Firma de sesiones JWT | **Sí** — generado por `pnpm setup:all` |
 | `GEMINI_API_KEY` | Chat de IA (también en `ai_engine/.env`) | **Sí** |
-| `AI_ENGINE_URL`, `AI_ENGINE_ENABLED`, `GEMINI_MODEL` | Motor de IA | No |
+| `AI_ENGINE_URL` (solo motor en otro equipo o contenedor), `AI_PORT` (puerto inicial, 8000), `AI_ENGINE_ENABLED`, `GEMINI_MODEL` | Motor de IA. En una instalación local el puerto se elige solo y se anota en `logs/ai-engine.port` | No |
 | `PRINTER_SERVICE_ENABLED`, `DEFAULT_KITCHEN_PRINTER_IP`, `DEFAULT_PRINTER_PORT` | Impresora térmica | No |
 
 Reglas: los archivos `.env` **nunca** se versionan (están en `.gitignore`); la plantilla es `.env.example`.

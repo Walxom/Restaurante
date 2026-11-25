@@ -3,46 +3,81 @@ import { validateRole } from "@/lib/auth-utils"
 import { spawn, execSync } from "child_process"
 import path from "path"
 import fs from "fs"
-import { AI_ENGINE_URL } from "@/lib/ai-engine"
+import {
+  buscarPuertoLibre,
+  getAiEngineUrl,
+  guardarPuertoLocal,
+  leerPuertoLocal,
+  PUERTO_PREFERIDO,
+  usaMotorRemoto,
+} from "@/lib/ai-engine"
 
 const LOGS_DIR = path.join(process.cwd(), "logs")
 const PID_FILE = path.join(LOGS_DIR, "ai-engine.pid")
 const LEGACY_PID_FILE = path.join(process.cwd(), ".ai_engine.pid")
 const LOG_FILE = path.join(LOGS_DIR, "ai-engine.log")
-const AI_PORT = Number(process.env.AI_PORT) || 8000
-const AI_HEALTH_URL = `${AI_ENGINE_URL}/health`
 
-/**
- * Estado del puerto del motor de IA:
- * - "ok": responde el motor de SIGER.
- * - "ajeno": responde otra aplicación (por ejemplo, otro proyecto en WSL o Docker).
- * - "caido": no responde nada.
- */
-type EstadoPuerto = "ok" | "ajeno" | "caido"
-
-async function getAiPortState(timeoutMs = 1500): Promise<EstadoPuerto> {
+async function checkAiHealth(timeoutMs = 1500): Promise<boolean> {
   try {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), timeoutMs)
-    const res = await fetch(AI_HEALTH_URL, {
+    const res = await fetch(`${getAiEngineUrl()}/health`, {
       signal: controller.signal,
       cache: "no-store",
     })
     clearTimeout(timer)
     const data = await res.json().catch(() => null)
-    return data?.status === "ok" && data?.service === "ai-engine" ? "ok" : "ajeno"
+    // Solo cuenta el motor de SIGER: otra aplicación en el mismo puerto no es "en línea"
+    return data?.status === "ok" && data?.service === "ai-engine"
   } catch {
-    return "caido"
+    return false
   }
 }
 
-async function checkAiHealth(timeoutMs = 1500): Promise<boolean> {
-  return (await getAiPortState(timeoutMs)) === "ok"
-}
+/**
+ * Elige un puerto libre, lo anota para el resto de la web y lanza uvicorn en él.
+ * El usuario nunca tiene que configurar puertos.
+ */
+async function lanzarMotor(): Promise<{ pid?: number; puerto: number }> {
+  const puerto = await buscarPuertoLibre()
+  if (puerto === null) {
+    throw new Error(
+      `No hay puertos libres entre ${PUERTO_PREFERIDO} y ${PUERTO_PREFERIDO + 19} para el motor de IA. Cierre otras aplicaciones e intente de nuevo.`
+    )
+  }
+  guardarPuertoLocal(puerto)
 
-const MENSAJE_PUERTO_AJENO =
-  `El puerto ${AI_PORT} está ocupado por otra aplicación, no por el motor de IA de SIGER. ` +
-  `Cierre esa aplicación o inicie SIGER con otro puerto (PowerShell: $env:AI_PORT = "8010"; pnpm dev).`
+  const { command, args } = resolveUvicornCommand(puerto)
+  if (!fs.existsSync(LOGS_DIR)) {
+    fs.mkdirSync(LOGS_DIR, { recursive: true })
+  }
+  const logFd = fs.openSync(LOG_FILE, "a")
+  const aviso =
+    puerto === PUERTO_PREFERIDO ? "" : ` (el ${PUERTO_PREFERIDO} lo ocupa otra aplicación; se usa el ${puerto})`
+  fs.writeSync(
+    logFd,
+    `
+[${new Date().toISOString()}] === INICIANDO MOTOR DE IA en 127.0.0.1:${puerto}${aviso} ===
+Comando: ${command} ${args.join(" ")}
+`
+  )
+
+  const child = spawn(command, args, {
+    cwd: process.cwd(),
+    detached: true,
+    stdio: ["ignore", logFd, logFd],
+    windowsHide: true,
+    shell: false,
+  })
+  if (child.pid) {
+    savePid(child.pid)
+    fs.writeSync(logFd, `[${new Date().toISOString()}] Subproceso lanzado con PID: ${child.pid}
+`)
+  }
+  child.unref()
+  fs.closeSync(logFd)
+  return { pid: child.pid, puerto }
+}
 
 function isAiProcess(pid: number): boolean {
   if (!pid || isNaN(pid) || pid <= 0) return false
@@ -121,7 +156,7 @@ function clearPid(): void {
   }
 }
 
-function resolveUvicornCommand(): { command: string; args: string[] } {
+function resolveUvicornCommand(puerto: number): { command: string; args: string[] } {
   const isWin = process.platform === "win32"
   const venvUvicorn = path.join(
     process.cwd(),
@@ -134,7 +169,7 @@ function resolveUvicornCommand(): { command: string; args: string[] } {
   if (fs.existsSync(venvUvicorn)) {
     return {
       command: venvUvicorn,
-      args: ["ai_engine.main:app", "--host", "127.0.0.1", "--port", String(AI_PORT)],
+      args: ["ai_engine.main:app", "--host", "127.0.0.1", "--port", String(puerto)],
     }
   }
 
@@ -143,13 +178,13 @@ function resolveUvicornCommand(): { command: string; args: string[] } {
     execSync("uv --version", { stdio: "ignore" })
     return {
       command: "uv",
-      args: ["run", "--directory", "ai_engine", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", String(AI_PORT)],
+      args: ["run", "--directory", "ai_engine", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", String(puerto)],
     }
   } catch {
     // Fallback a python general
     return {
       command: isWin ? "python" : "python3",
-      args: ["-m", "uvicorn", "ai_engine.main:app", "--host", "127.0.0.1", "--port", String(AI_PORT)],
+      args: ["-m", "uvicorn", "ai_engine.main:app", "--host", "127.0.0.1", "--port", String(puerto)],
     }
   }
 }
@@ -175,7 +210,8 @@ function stopProcessTree(pid: number | null): void {
     }
   }
 
-  // Liberar el puerto 8000 en Windows solo si el proceso pertenece a python/uvicorn
+  // Liberar el puerto del motor solo si el proceso pertenece a python/uvicorn
+  const AI_PORT = leerPuertoLocal()
   if (isWin) {
     try {
       const netstatOutput = execSync(`netstat -ano | findstr :${AI_PORT}`, {
@@ -248,7 +284,7 @@ export async function GET(request: NextRequest) {
       isRunning,
       pid: savedPid,
       venvReady,
-      port: AI_PORT,
+      port: leerPuertoLocal(),
       logs: includeLogs ? recentLogs : undefined,
     },
   })
@@ -263,62 +299,39 @@ export async function POST(request: NextRequest) {
     const action = body.action || "start"
 
     if (action === "start") {
-      // 1. Verificar si ya está corriendo o si otra aplicación ocupa el puerto
-      const estado = await getAiPortState()
-      if (estado === "ajeno") {
-        return NextResponse.json(
-          { success: false, error: MENSAJE_PUERTO_AJENO },
-          { status: 409 }
-        )
-      }
-      if (estado === "ok") {
+      // 1. Verificar si ya está corriendo
+      if (await checkAiHealth()) {
         return NextResponse.json({
           success: true,
           message: "El motor de IA ya se encuentra en ejecución.",
           data: { isRunning: true, pid: getSavedPid() },
         })
       }
-
-      // 2. Resolver comando y argumentos
-      const { command, args } = resolveUvicornCommand()
-
-      // 3. Asegurar carpeta de logs
-      if (!fs.existsSync(LOGS_DIR)) {
-        fs.mkdirSync(LOGS_DIR, { recursive: true })
+      // Un clic repetido mientras el motor carga sus modelos no debe lanzar otro proceso
+      const pidActual = getSavedPid()
+      if (pidActual && isAiProcess(pidActual)) {
+        return NextResponse.json({
+          success: true,
+          message: "El motor de IA se está iniciando.",
+          data: { isRunning: true, pid: pidActual, port: leerPuertoLocal() },
+        })
       }
-      const logFd = fs.openSync(LOG_FILE, "a")
-
-      // Marca de tiempo en el log
-      fs.writeSync(
-        logFd,
-        `\n[${new Date().toISOString()}] === INICIANDO MOTOR DE IA (PID pending) ===\nComando: ${command} ${args.join(" ")}\n`
-      )
-
-      // 4. Iniciar subproceso desacoplado
-      const child = spawn(command, args, {
-        cwd: process.cwd(),
-        detached: true,
-        stdio: ["ignore", logFd, logFd],
-        windowsHide: true,
-        shell: false,
-      })
-
-      const childPid = child.pid
-      if (childPid) {
-        savePid(childPid)
-        fs.writeSync(logFd, `[${new Date().toISOString()}] Subproceso lanzado con PID: ${childPid}\n`)
+      if (usaMotorRemoto()) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "El motor de IA corre en otro contenedor o equipo y no se puede iniciar desde aquí. Revise que esté encendido.",
+          },
+          { status: 409 }
+        )
       }
 
-      child.unref()
-      fs.closeSync(logFd)
-
+      // 2. Lanzar en un puerto libre
+      const { pid, puerto } = await lanzarMotor()
       return NextResponse.json({
         success: true,
         message: "Microservicio de IA iniciado en segundo plano.",
-        data: {
-          pid: childPid,
-          isRunning: true,
-        },
+        data: { pid, port: puerto, isRunning: true },
       })
     }
 
@@ -340,26 +353,11 @@ export async function POST(request: NextRequest) {
       // Breve pausa para liberar socket
       await new Promise((r) => setTimeout(r, 1200))
 
-      const { command, args } = resolveUvicornCommand()
-      if (!fs.existsSync(LOGS_DIR)) {
-        fs.mkdirSync(LOGS_DIR, { recursive: true })
-      }
-      const logFd = fs.openSync(LOG_FILE, "a")
-      const child = spawn(command, args, {
-        cwd: process.cwd(),
-        detached: true,
-        stdio: ["ignore", logFd, logFd],
-        windowsHide: true,
-        shell: false,
-      })
-      if (child.pid) savePid(child.pid)
-      child.unref()
-      fs.closeSync(logFd)
-
+      const { pid: nuevoPid, puerto } = await lanzarMotor()
       return NextResponse.json({
         success: true,
         message: "Microservicio de IA reiniciado en segundo plano.",
-        data: { pid: child.pid, isRunning: true },
+        data: { pid: nuevoPid, port: puerto, isRunning: true },
       })
     }
 
