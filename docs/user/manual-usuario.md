@@ -128,6 +128,9 @@ Requiere el motor de IA (servicio Python). Si aparece **Motor de IA desconectado
 - Predicción de inventario.
 - Chat con el asistente (necesita una clave de Gemini cargada en Configuración).
 
+Para cambiar el modelo de Gemini basta con elegirlo en la ventana de Gemini y pulsar
+**Cambiar modelo**: la clave guardada se conserva y no hay que escribirla de nuevo.
+
 El POS funciona con normalidad aunque la IA esté apagada.
 
 ### 2.10 Configuración
