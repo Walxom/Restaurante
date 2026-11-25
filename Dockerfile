@@ -31,6 +31,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
+    PRISMA_HIDE_UPDATE_MESSAGE=1 \
     PORT=3001 \
     DATABASE_URL=file:/data/prod.db
 
