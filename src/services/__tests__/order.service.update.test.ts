@@ -132,4 +132,18 @@ describe("order.service.update — camino básico", () => {
     expect(vi.mocked(prisma.order.update).mock.calls[0][0].data).toEqual({ totalAmount: 75, status: "CONFIRMED" })
     expect(printOrderChanges).toHaveBeenCalledWith("ord-1", existing.orderItems, expect.any(Array))
   })
+
+  it("un fallo de la impresora de cocina no rompe la actualización ni queda sin manejar", async () => {
+    vi.mocked(prisma.order.findUnique).mockResolvedValue(existing as never)
+    vi.mocked(prisma.product.findMany).mockResolvedValue([{ id: "p1", price: 30 }] as never)
+    vi.mocked(prisma.orderItem.findMany).mockResolvedValue([{ id: "it-1", status: "PENDING" }] as never)
+    printOrderChanges.mockRejectedValueOnce(new Error("Impresora desconectada"))
+    const consola = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    await expect(update("ord-1", { items: [{ id: "it-1", productId: "p1", quantity: 1 }] })).resolves.toBeDefined()
+    await vi.waitFor(() =>
+      expect(consola).toHaveBeenCalledWith("Error al imprimir cambios del pedido:", expect.any(Error)),
+    )
+    consola.mockRestore()
+  })
 })
