@@ -100,7 +100,7 @@ async function runDoctor() {
   // puerto ocupado por otra aplicación no es un error: solo se informa.
   let aiPortActual = aiPort
   try {
-    aiPortActual = parseInt(fs.readFileSync(path.join(process.cwd(), 'logs', 'ai-engine.port'), 'utf-8'), 10) || aiPort
+    aiPortActual = Number.parseInt(fs.readFileSync(path.join(process.cwd(), 'logs', 'ai-engine.port'), 'utf-8'), 10) || aiPort
   } catch {
     // Sin archivo: el motor aún no se ha iniciado en este equipo
   }

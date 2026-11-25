@@ -81,4 +81,7 @@ async function main() {
   process.exit(r.status ?? 1)
 }
 
-main()
+main().catch((error) => {
+  console.error(`No se pudo iniciar el motor de IA: ${error.message}`)
+  process.exit(1)
+})
