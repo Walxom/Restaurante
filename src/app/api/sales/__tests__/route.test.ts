@@ -138,4 +138,35 @@ describe("GET /api/sales", () => {
     expect(json.stats.completedOrders).toBe(0)
     expect(json.totalPages).toBe(0)
   })
+
+  it("agrupa las ventas por hora sobre la tabla orders con fechas en milisegundos", async () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { role: "JEFE", name: "Jefe Admin" },
+      expires: "2099-01-01",
+    })
+    vi.mocked(prisma.order.findMany).mockResolvedValue([])
+    vi.mocked(prisma.order.count).mockResolvedValue(0)
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([
+      { hour: "13", sales: 600, orders: BigInt(15) },
+      { hour: "20", sales: 996, orders: BigInt(31) },
+    ] as any)
+
+    const res = await GET(new NextRequest("http://localhost:3001/api/sales?filter=week"))
+    expect(res.status).toBe(200)
+
+    // Prisma guarda los DateTime de SQLite como milisegundos en la tabla "orders"
+    const [sql, inicio, fin] = vi.mocked(prisma.$queryRaw).mock.calls[0] as unknown as [string[], unknown, unknown]
+    const consulta = sql.join("?")
+    expect(consulta).toContain("FROM orders")
+    expect(consulta).not.toContain('"Order"')
+    expect(consulta).toContain("'unixepoch'")
+    expect(consulta).toContain("AS REAL")
+    expect(typeof inicio).toBe("number")
+    expect(typeof fin).toBe("number")
+
+    const json = await res.json()
+    expect(json.stats.salesByHour).toHaveLength(24)
+    expect(json.stats.salesByHour[13]).toEqual({ hour: 13, sales: 600, orders: 15 })
+    expect(json.stats.salesByHour[20]).toEqual({ hour: 20, sales: 996, orders: 31 })
+  })
 })

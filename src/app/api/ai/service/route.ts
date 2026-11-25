@@ -9,10 +9,18 @@ const LOGS_DIR = path.join(process.cwd(), "logs")
 const PID_FILE = path.join(LOGS_DIR, "ai-engine.pid")
 const LEGACY_PID_FILE = path.join(process.cwd(), ".ai_engine.pid")
 const LOG_FILE = path.join(LOGS_DIR, "ai-engine.log")
-const AI_PORT = 8000
+const AI_PORT = Number(process.env.AI_PORT) || 8000
 const AI_HEALTH_URL = `${AI_ENGINE_URL}/health`
 
-async function checkAiHealth(timeoutMs = 1500): Promise<boolean> {
+/**
+ * Estado del puerto del motor de IA:
+ * - "ok": responde el motor de SIGER.
+ * - "ajeno": responde otra aplicación (por ejemplo, otro proyecto en WSL o Docker).
+ * - "caido": no responde nada.
+ */
+type EstadoPuerto = "ok" | "ajeno" | "caido"
+
+async function getAiPortState(timeoutMs = 1500): Promise<EstadoPuerto> {
   try {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), timeoutMs)
@@ -21,13 +29,20 @@ async function checkAiHealth(timeoutMs = 1500): Promise<boolean> {
       cache: "no-store",
     })
     clearTimeout(timer)
-    if (!res.ok) return false
-    const data = await res.json()
-    return data?.status === "ok"
+    const data = await res.json().catch(() => null)
+    return data?.status === "ok" && data?.service === "ai-engine" ? "ok" : "ajeno"
   } catch {
-    return false
+    return "caido"
   }
 }
+
+async function checkAiHealth(timeoutMs = 1500): Promise<boolean> {
+  return (await getAiPortState(timeoutMs)) === "ok"
+}
+
+const MENSAJE_PUERTO_AJENO =
+  `El puerto ${AI_PORT} está ocupado por otra aplicación, no por el motor de IA de SIGER. ` +
+  `Cierre esa aplicación o inicie SIGER con otro puerto (PowerShell: $env:AI_PORT = "8010"; pnpm dev).`
 
 function isAiProcess(pid: number): boolean {
   if (!pid || isNaN(pid) || pid <= 0) return false
@@ -248,9 +263,15 @@ export async function POST(request: NextRequest) {
     const action = body.action || "start"
 
     if (action === "start") {
-      // 1. Verificar si ya está corriendo
-      const isAlreadyRunning = await checkAiHealth()
-      if (isAlreadyRunning) {
+      // 1. Verificar si ya está corriendo o si otra aplicación ocupa el puerto
+      const estado = await getAiPortState()
+      if (estado === "ajeno") {
+        return NextResponse.json(
+          { success: false, error: MENSAJE_PUERTO_AJENO },
+          { status: 409 }
+        )
+      }
+      if (estado === "ok") {
         return NextResponse.json({
           success: true,
           message: "El motor de IA ya se encuentra en ejecución.",

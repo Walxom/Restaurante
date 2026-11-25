@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { NextRequest } from "next/server"
 
 vi.mock("next-auth/next", () => ({
@@ -95,5 +95,56 @@ describe("API /api/ai/service", () => {
     const data = await response.json()
     expect(data.success).toBe(true)
     expect(data.data.isRunning).toBe(false)
+  })
+
+  describe("POST start cuando el puerto ya responde", () => {
+    const reqStart = () =>
+      new NextRequest("http://localhost:3000/api/ai/service", {
+        method: "POST",
+        body: JSON.stringify({ action: "start" }),
+      })
+
+    beforeEach(() => {
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: { id: "1", name: "Jefe", role: "JEFE" },
+        expires: "2099-01-01",
+      })
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it("responde 409 con un mensaje claro si otra aplicación ocupa el puerto", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ status: "healthy", app: "Otra aplicación" }),
+        })
+      )
+
+      const response = await POST(reqStart())
+      expect(response.status).toBe(409)
+      const data = await response.json()
+      expect(data.success).toBe(false)
+      expect(data.error).toContain("ocupado por otra aplicación")
+      expect(data.error).toContain("AI_PORT")
+    })
+
+    it("no lanza otro proceso si el motor de SIGER ya responde", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ status: "ok", service: "ai-engine" }),
+        })
+      )
+
+      const response = await POST(reqStart())
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.message).toContain("ya se encuentra en ejecución")
+    })
   })
 })
