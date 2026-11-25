@@ -77,7 +77,7 @@ async function runDoctor() {
   const secret = process.env.NEXTAUTH_SECRET
   const dbUrl = process.env.DATABASE_URL
   const webPort = parseInt(process.env.PORT || '3001', 10)
-  const aiPort = 8000
+  const aiPort = Number(process.env.AI_PORT) || 8000
 
   if (!check('NEXTAUTH_SECRET configurado', !!secret && secret.length >= 16, secret ? '(longitud suficiente)' : '(FALTA o es inseguro)')) {
     hasErrors = true
