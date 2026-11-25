@@ -93,6 +93,13 @@ Si deseas restablecer todas las comandas, mesas y catálogo a su estado original
 pnpm db:setup
 ```
 
+### Cargar datos de demostración
+Para que el módulo de Inteligencia muestre pronósticos y venta cruzada hace falta historial (al menos 7 días de ventas). Este comando **borra los pedidos existentes** y genera un año de ventas simuladas (unos 2 000 pedidos, tarda 1 a 2 minutos). Haga antes un respaldo:
+```bash
+pnpm db:backup
+pnpm db:seed:demo
+```
+
 ### Respaldar la base de datos local
 Para generar una instantánea de seguridad con marca de tiempo en la carpeta `backups/`:
 ```bash

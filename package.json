@@ -16,6 +16,7 @@
     "db:push": "pnpm prisma db push",
     "db:seed": "pnpm tsx --env-file-if-exists=.env prisma/seed.ts",
     "db:setup": "pnpm prisma db push && pnpm db:seed",
+    "db:seed:demo": "pnpm tsx --env-file-if-exists=.env prisma/seed-sales.ts",
     "db:backup": "node scripts/backup-db.js",
     "db:backup:usb": "node scripts/backup-db.js --extra",
     "test": "vitest run",
